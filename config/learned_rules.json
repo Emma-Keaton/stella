@@ -1,0 +1,29 @@
+[
+    {
+        "id": "54e2f299",
+        "rule": "Always summarize responses in bullet points",
+        "category": "formatting",
+        "origin": "user_correction",
+        "active": true,
+        "created_at": 1789123651.134041,
+        "updated_at": 1789123691.1998818
+    },
+    {
+        "id": "b85e700e",
+        "rule": "Always reply to technical questions with bullet points and code samples",
+        "category": "formatting",
+        "origin": "unit_test",
+        "active": true,
+        "created_at": 1789123906.1792374,
+        "updated_at": 1789123906.1792374
+    },
+    {
+        "id": "5e09ef56",
+        "rule": "Always format system diagnostic reports in bullet points",
+        "category": "general",
+        "origin": "headless_test_suite",
+        "active": true,
+        "created_at": 1789730604.1118119,
+        "updated_at": 1789730828.869923
+    }
+]

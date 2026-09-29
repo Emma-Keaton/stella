@@ -1,0 +1,32 @@
+[
+  {
+    "id": "a5dc1636",
+    "title": "Birthday",
+    "date": "2026-03-01",
+    "time": "17:49",
+    "duration_minutes": 30,
+    "location": "",
+    "description": "",
+    "created_at": "2026-08-22T17:49:39.039040"
+  },
+  {
+    "id": "6e499bd0",
+    "title": "Test Meeting with Client",
+    "date": "2026-09-10",
+    "time": "16:00",
+    "duration_minutes": 45,
+    "location": "",
+    "description": "",
+    "created_at": "2026-09-10T15:22:49.246898"
+  },
+  {
+    "id": "bdb77267",
+    "title": "Test Meeting with Client",
+    "date": "2026-09-10",
+    "time": "16:00",
+    "duration_minutes": 45,
+    "location": "",
+    "description": "",
+    "created_at": "2026-09-10T15:22:53.776857"
+  }
+]

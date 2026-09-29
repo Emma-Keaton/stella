@@ -1,0 +1,23 @@
+{
+    "owner": {
+        "name": "Suryaansh",
+        "preferred_name": "Suryaansh",
+        "role": "Developer",
+        "location": "",
+        "interests": [],
+        "about": ""
+    },
+    "assistant": {
+        "name": "Ultron",
+        "application_name": "Ultron AI",
+        "title": "Personal AI Assistant"
+    },
+    "behavior": {
+        "mode": "casual",
+        "proactive": true,
+        "custom_instructions": ""
+    },
+    "system": {
+        "shared_computer": false
+    }
+}

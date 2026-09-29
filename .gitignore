@@ -1,0 +1,50 @@
+# Environments
+.venv/
+venv/
+ENV/
+env/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Node dependencies & builds
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Installer build artifacts & large binaries (>100MB)
+installer/build_setup/
+installer/dist/
+installer/build/
+
+# Android build outputs & IDE
+brahma-connect-android/.gradle/
+brahma-connect-android/**/build/
+brahma-connect-android/local.properties
+brahma-connect-android/.idea/
+brahma-connect-android/.cxx/
+*.apk
+*.aab
+
+# Scratch & temporary logs
+scratch/
+*.log
+
+# Browser & runtime cache / backups
+config/ig_browser_profile/
+config/patch_backups/
+config/ppt_template_cache/
+
+# Credentials & Sensitive Configurations
+config/api_keys.json
+config/email_credentials.json
+config/ig_session.json
+config/*.key
+config/.*key
+config/*.sqlite3
+*.sqlite3
