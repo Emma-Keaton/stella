@@ -188,14 +188,15 @@ Brahma AI Evo/
 
 ## 📄 License
 
-Personal and non-commercial use only.
+**Personal & Private Local Use Only — No Distribution.**
 
-This project is licensed under the **Brahma AI Evo Source-Available Non-Commercial License** (governed by non-commercial terms compatible with CC BY-NC 4.0).
+This project is licensed under the **Brahma AI Evo Source-Available Personal Use License**.
 
-- ✅ **Allowed:** Download, run locally, inspect, fork, modify, and build custom plugins for personal, educational, research, and non-commercial purposes with attribution.
-- ❌ **Prohibited:** Commercial use, sale, sublicensing, monetization, paid SaaS hosting, or bundling with commercial products without explicit written permission from the copyright holder.
+- ✅ **Allowed:** You may download, clone, inspect, build, and run the software locally strictly on your own personal device for private, personal, educational, and research use.
+- 🚫 **Strictly Prohibited (No Distribution):** You may **NOT** distribute, redistribute, re-upload, mirror, share, transmit, sublicense, or publish this software, repository, binaries, or derivative works anywhere (including other Git hosts, public repositories, or cloud platforms). The only official distribution source is this repository.
+- 🚫 **Strictly Prohibited (No Commercial Use):** You may **NOT** sell, rent, monetize, bundle, commercialize, or host this software as a paid SaaS/cloud service.
 
-For full terms and conditions, see the [LICENSE](LICENSE) file. For commercial inquiries, reach out via [Discord](https://discord.gg/gEYmJKKtq3) or the maintainers.
+For full terms and legal conditions, see the [LICENSE](LICENSE) file. For commercial licensing inquiries, reach out via [Discord](https://discord.gg/gEYmJKKtq3).
 
 <div align="center">
 <b>Brahma AI Evo</b> • Built with intelligence, precision, and autonomy.
