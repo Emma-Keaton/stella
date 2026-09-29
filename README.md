@@ -188,7 +188,14 @@ Brahma AI Evo/
 
 ## 📄 License
 
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
+Personal and non-commercial use only.
+
+This project is licensed under the **Brahma AI Evo Source-Available Non-Commercial License** (governed by non-commercial terms compatible with CC BY-NC 4.0).
+
+- ✅ **Allowed:** Download, run locally, inspect, fork, modify, and build custom plugins for personal, educational, research, and non-commercial purposes with attribution.
+- ❌ **Prohibited:** Commercial use, sale, sublicensing, monetization, paid SaaS hosting, or bundling with commercial products without explicit written permission from the copyright holder.
+
+For full terms and conditions, see the [LICENSE](LICENSE) file. For commercial inquiries, reach out via [Discord](https://discord.gg/gEYmJKKtq3) or the maintainers.
 
 <div align="center">
 <b>Brahma AI Evo</b> • Built with intelligence, precision, and autonomy.

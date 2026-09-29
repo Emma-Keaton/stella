@@ -1,0 +1,71 @@
+BRAHMA AI EVO SOURCE-AVAILABLE NON-COMMERCIAL LICENSE
+Version 1.0 (September 2026)
+
+Copyright (c) 2024-2026 TiTech Prabha Solutions / Suryaansh Tiwari
+All rights reserved.
+
+================================================================================
+TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+================================================================================
+
+1. GRANT OF LICENSE
+Subject to the terms and conditions of this License, the Copyright Holder 
+hereby grants you a worldwide, royalty-free, non-exclusive, non-transferable 
+license to:
+  (a) Download, clone, inspect, compile, and run the Software locally for personal,
+      educational, academic, research, and non-commercial evaluation purposes.
+  (b) Modify, adapt, translate, enhance, or create derivative works of the Software,
+      including writing custom skills, tools, or plugins, strictly for personal or
+      non-commercial use.
+  (c) Distribute or share verbatim copies or modifications of the Software, provided
+      that any distribution is accompanied by this complete License file and retains
+      all original copyright and attribution notices.
+
+2. NON-COMMERCIAL RESTRICTION (STRICTLY PROHIBITED USES)
+You may NOT use the Software, its source code, compiled binaries, documentation, 
+derivative works, or components thereof, directly or indirectly, for any 
+Commercial Purposes without prior express written authorization from the Copyright Holder.
+
+Commercial Purposes include, but are not limited to:
+  (a) Selling, leasing, renting, sublicensing, or distributing the Software or any
+      portion of it in exchange for monetary compensation, subscription fees, or
+      commercial consideration.
+  (b) Incorporating the Software into a commercial product, service, app, or platform.
+  (c) Hosting the Software or any derivative work as a paid cloud service, SaaS
+      (Software as a Service), API endpoint, or managed commercial backend.
+  (d) Using the Software within a for-profit enterprise or commercial organization to
+      generate commercial revenue or deliver billable client services.
+  (e) Removing, obscuring, or altering any copyright notices, branding, or
+      attribution references present in the Software or its user interface.
+
+3. REDISTRIBUTION & ATTRIBUTION
+You may redistribute the Software under the following mandatory conditions:
+  (a) You must include an unaltered copy of this LICENSE file with any distribution.
+  (b) You must provide prominent attribution to TiTech Prabha Solutions and Suryaansh
+      Tiwari as the original creators of Brahma AI / Brahma AI Evo.
+  (c) Any derivative work or distribution must be licensed under these exact same
+      non-commercial terms.
+
+4. COMMERCIAL INQUIRIES & LICENSING
+If you wish to use Brahma AI Evo for commercial purposes, integrate it into a business
+workflow, or license it for proprietary deployment, you must obtain a separate written 
+Commercial License.
+For commercial licensing inquiries, please contact:
+  - Repository: https://github.com/titechprabhasolutions/Brahma-Ai-Evo
+  - Discord: https://discord.gg/gEYmJKKtq3
+
+5. DISCLAIMER OF WARRANTY
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+6. LIMITATION OF LIABILITY
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL THE
+COPYRIGHT HOLDER BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING PROCUREMENT OF SUBSTITUTE GOODS
+OR SERVICES, LOSS OF USE, DATA, REVENUE, OR PROFITS) ARISING IN ANY WAY OUT OF
+THE USE OR INABILITY TO USE THE SOFTWARE.
