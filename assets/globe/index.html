@@ -40,7 +40,17 @@
             height: 100%;
             cursor: grab;
             z-index: 5;
-            transition: opacity 0.3s ease;
+            transition: opacity 0.25s ease;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            will-change: transform;
+        }
+
+        #globe3d-container canvas {
+            display: block;
+            width: 100% !important;
+            height: 100% !important;
+            outline: none;
         }
 
         #globe3d-container:active {
@@ -67,10 +77,9 @@
         }
 
         .leaflet-bar a {
-            background-color: rgba(15, 23, 42, 0.9) !important;
+            background-color: rgba(15, 23, 42, 0.95) !important;
             color: #38bdf8 !important;
             border-color: rgba(56, 189, 248, 0.3) !important;
-            backdrop-filter: blur(10px);
         }
 
         .leaflet-bar a:hover {
@@ -124,11 +133,10 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            background: rgba(15, 23, 42, 0.88);
+            background: rgba(11, 19, 41, 0.94);
             border: 1px solid rgba(56, 189, 248, 0.35);
             border-radius: 20px;
             padding: 5px 12px;
-            backdrop-filter: blur(12px);
             box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
         }
 
@@ -167,12 +175,11 @@
         /* Mode Switcher */
         .mode-switcher {
             display: flex;
-            background: rgba(15, 23, 42, 0.88);
+            background: rgba(11, 19, 41, 0.94);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 20px;
             padding: 3px;
             gap: 3px;
-            backdrop-filter: blur(12px);
         }
 
         .mode-btn {
@@ -207,7 +214,7 @@
         }
 
         .hud-btn {
-            background: rgba(15, 23, 42, 0.88);
+            background: rgba(11, 19, 41, 0.94);
             border: 1px solid rgba(255, 255, 255, 0.12);
             color: #cbd5e1;
             padding: 5px 11px;
@@ -219,7 +226,6 @@
             display: flex;
             align-items: center;
             gap: 5px;
-            backdrop-filter: blur(12px);
         }
 
         .hud-btn:hover {
@@ -246,11 +252,10 @@
             left: 12px;
             right: 12px;
             max-width: 440px;
-            background: rgba(15, 23, 42, 0.94);
+            background: rgba(11, 19, 41, 0.96);
             border: 1px solid rgba(56, 189, 248, 0.4);
             border-radius: 14px;
             padding: 12px 14px;
-            backdrop-filter: blur(14px);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
             z-index: 25;
             display: none;
@@ -358,11 +363,10 @@
             position: absolute;
             top: 54px;
             left: 12px;
-            background: rgba(15, 23, 42, 0.94);
+            background: rgba(11, 19, 41, 0.96);
             border: 1px solid rgba(56, 189, 248, 0.4);
             border-radius: 12px;
             padding: 8px 12px;
-            backdrop-filter: blur(12px);
             box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
             z-index: 25;
             display: none;
@@ -403,11 +407,10 @@
         }
 
         .status-pill {
-            background: rgba(15, 23, 42, 0.85);
+            background: rgba(11, 19, 41, 0.92);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 12px;
             padding: 3px 8px;
-            backdrop-filter: blur(8px);
         }
 
         .status-pill span.val {
@@ -483,7 +486,7 @@
             flex-wrap: wrap;
         }
         .tactical-btn {
-            background: rgba(15, 23, 42, 0.88);
+            background: rgba(11, 19, 41, 0.94);
             border: 1px solid rgba(255, 255, 255, 0.12);
             color: #94a3b8;
             padding: 3px 8px;
@@ -491,7 +494,6 @@
             font-weight: 600;
             border-radius: 12px;
             cursor: pointer;
-            backdrop-filter: blur(10px);
             transition: all 0.2s ease;
             display: flex;
             align-items: center;
@@ -516,12 +518,11 @@
             right: 12px;
             width: 280px;
             max-height: 400px;
-            background: rgba(15, 23, 42, 0.92);
+            background: rgba(11, 19, 41, 0.96);
             border: 1px solid rgba(56, 189, 248, 0.35);
             border-radius: 16px;
             padding: 12px;
             box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(16px);
             z-index: 35;
             pointer-events: auto;
             display: flex;
@@ -778,7 +779,7 @@
             Live Flights: <span class="val" id="status-flights-count">0</span>
         </div>
         <div class="status-pill">
-            Engine: <span class="val status-fps">60 FPS // DUAL HYBRID</span>
+            Engine: <span class="val status-fps" id="status-fps-val">180 FPS // DIRECT3D 11</span>
         </div>
     </div>
 
@@ -795,10 +796,30 @@
         let routeCurveMesh = null, pulseParticle = null;
         let originMarker = null, destMarker = null, locationMarker = null;
         let flightGroup = null;
+        let flightGeometry = null, flightMaterial = null;
         let autoSpin = true;
         let isCamAnimating = false;
+        let isUserDragging = false;
+        let dragEndTimeout = null;
         let camTarget = null;
+        let targetOrbitDist = 220;
         let pulseProgress = 0;
+        let lastHudUpdate = 0;
+        let elStatusCoords = null;
+        let elStatusZoom = null;
+        let lastFrameTime = (typeof performance !== 'undefined') ? performance.now() : Date.now();
+        let fpsFrames = 0;
+        let fpsLastTime = (typeof performance !== 'undefined') ? performance.now() : Date.now();
+        let elStatusFps = null;
+        let isPaused = false;
+        let animFrameId = null;
+        const _camDirVec = new THREE.Vector3();
+        const _pulseVec = new THREE.Vector3();
+        const _flyCurDir = new THREE.Vector3();
+        const _flyTgtDir = new THREE.Vector3();
+        const _flyRotQ = new THREE.Quaternion();
+        const _flyIdentityQ = new THREE.Quaternion();
+        const _flyStepQ = new THREE.Quaternion();
 
         // Leaflet 2D High-Resolution Objects
         let map2D = null;
@@ -837,29 +858,74 @@
             camera = new THREE.PerspectiveCamera(45, w / h, 1, 1500);
             camera.position.set(0, 40, 240);
 
-            renderer = new THREE.WebGLRenderer({ antialias: false, alpha: false, powerPreference: "high-performance" });
+            renderer = new THREE.WebGLRenderer({
+                antialias: false,
+                alpha: false,
+                powerPreference: "high-performance",
+                precision: "mediump",
+                stencil: false,
+                depth: true,
+                failIfMajorPerformanceCaveat: false
+            });
             renderer.setSize(w, h);
-            renderer.setPixelRatio(1.0);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.0));
             container.appendChild(renderer.domElement);
 
             controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
-            controls.dampingFactor = 0.08;
-            controls.rotateSpeed = 0.7;
-            controls.zoomSpeed = 0.9;
+            controls.dampingFactor = 0.14;
+            controls.rotateSpeed = 1.25;
+            controls.zoomSpeed = 1.3;
+            controls.enablePan = false;
             controls.minDistance = 102; // Close surface approach
             controls.maxDistance = 420;
             controls.autoRotate = true;
-            controls.autoRotateSpeed = 0.6;
+            controls.autoRotateSpeed = 2.0;
+            controls.addEventListener('start', () => {
+                isUserDragging = true;
+                if (dragEndTimeout) {
+                    clearTimeout(dragEndTimeout);
+                    dragEndTimeout = null;
+                }
+            });
+            controls.addEventListener('end', () => {
+                if (dragEndTimeout) clearTimeout(dragEndTimeout);
+                dragEndTimeout = setTimeout(() => {
+                    isUserDragging = false;
+                    dragEndTimeout = null;
+                }, 1800);
+            });
 
             const ambient = new THREE.AmbientLight(0xffffff, 1.0);
             scene.add(ambient);
 
-            // Load local 3D Earth texture
+            // Load optimized 2K Earth texture with fallback (disable mipmap generation for instant zero-lag upload)
             const texLoader = new THREE.TextureLoader();
-            const earthTex = texLoader.load('earth-night.jpg', () => {
+            const earthTex = texLoader.load('earth-night-2k.jpg', (tex) => {
+                tex.generateMipmaps = false;
+                tex.minFilter = THREE.LinearFilter;
+                tex.magFilter = THREE.LinearFilter;
+                if (earthMat) earthMat.needsUpdate = true;
                 renderer.render(scene, camera);
+            }, undefined, () => {
+                const fallbackTex = texLoader.load('earth-night.jpg', (fTex) => {
+                    fTex.generateMipmaps = false;
+                    fTex.minFilter = THREE.LinearFilter;
+                    fTex.magFilter = THREE.LinearFilter;
+                    if (earthMat) {
+                        earthMat.map = fTex;
+                        earthMat.needsUpdate = true;
+                    }
+                    renderer.render(scene, camera);
+                });
+                if (earthMat) {
+                    earthMat.map = fallbackTex;
+                    earthMat.needsUpdate = true;
+                }
             });
+            earthTex.generateMipmaps = false;
+            earthTex.minFilter = THREE.LinearFilter;
+            earthTex.magFilter = THREE.LinearFilter;
 
             const earthGeo = new THREE.SphereGeometry(GLOBE_RADIUS, 32, 32);
             const earthMat = new THREE.MeshBasicMaterial({ map: earthTex });
@@ -872,13 +938,17 @@
                 color: 0x38bdf8,
                 transparent: true,
                 opacity: 0.12,
-                side: THREE.BackSide
+                side: THREE.BackSide,
+                depthWrite: false
             });
             atmosphereMesh = new THREE.Mesh(atmoGeo, atmoMat);
             scene.add(atmosphereMesh);
 
             flightGroup = new THREE.Group();
             scene.add(flightGroup);
+            flightGeometry = new THREE.ConeGeometry(1.0, 3.0, 6);
+            flightGeometry.rotateX(Math.PI / 2);
+            flightMaterial = new THREE.MeshBasicMaterial({ color: 0x10b981 });
 
             // Default focus on India
             flyTo(20.5937, 78.9629, 230);
@@ -898,6 +968,7 @@
                 zoom: 5,
                 minZoom: 2,
                 maxZoom: 18,
+                preferCanvas: true,
                 zoomControl: true,
                 attributionControl: false
             });
@@ -1004,10 +1075,9 @@
         }
 
         function getCameraLatLon() {
-            const dir = new THREE.Vector3();
-            camera.getWorldDirection(dir).negate();
-            const phi = Math.acos(Math.max(-1, Math.min(1, dir.y)));
-            const theta = Math.atan2(dir.z, -dir.x);
+            camera.getWorldDirection(_camDirVec).negate();
+            const phi = Math.acos(Math.max(-1, Math.min(1, _camDirVec.y)));
+            const theta = Math.atan2(_camDirVec.z, -_camDirVec.x);
             let lat = 90 - (phi * 180 / Math.PI);
             let lon = ((theta * 180 / Math.PI) - 180);
             if (lon < -180) lon += 360;
@@ -1018,65 +1088,131 @@
         // ==========================================
         // 4. ANIMATION LOOP & AUTO-TRANSITION
         // ==========================================
-        function animate() {
-            requestAnimationFrame(animate);
+        function animate(now = performance.now()) {
+            if (isPaused) return;
+            animFrameId = requestAnimationFrame(animate);
 
-            if (currentMode === "3D") {
-                if (isCamAnimating && camTarget) {
-                    camera.position.lerp(camTarget, 0.08);
-                    if (camera.position.distanceTo(camTarget) < 1.0) {
-                        isCamAnimating = false;
-                        camTarget = null;
-                    }
+            if (currentMode !== "3D") return;
+
+            const dt = Math.min(Math.max((now - lastFrameTime) / 1000, 0.0005), 0.05);
+            lastFrameTime = now;
+            const dtScale = dt * 60; // 1.0 at 60fps, 0.333 at 180fps
+
+            if (isCamAnimating && camTarget) {
+                const curLen = camera.position.length();
+                _flyCurDir.copy(camera.position).normalize();
+                _flyTgtDir.copy(camTarget).normalize();
+                const slerpFactor = 1.0 - Math.pow(Math.max(0.0001, 1.0 - 0.08), dtScale);
+
+                if (_flyCurDir.dot(_flyTgtDir) > 0.9999) {
+                    const newDist = THREE.MathUtils.lerp(curLen, targetOrbitDist, slerpFactor);
+                    camera.position.setLength(newDist);
+                } else {
+                    _flyRotQ.setFromUnitVectors(_flyCurDir, _flyTgtDir);
+                    _flyStepQ.copy(_flyIdentityQ).slerp(_flyRotQ, slerpFactor);
+                    camera.position.applyQuaternion(_flyStepQ);
+                    const newDist = THREE.MathUtils.lerp(curLen, targetOrbitDist, slerpFactor);
+                    camera.position.setLength(Math.max(115, newDist));
                 }
 
-                controls.autoRotate = autoSpin && !isCamAnimating;
-                controls.update();
+                controls.target.set(0, 0, 0);
+                if (camera.position.distanceTo(camTarget) < 1.5) {
+                    camera.position.copy(camTarget);
+                    isCamAnimating = false;
+                    camTarget = null;
+                }
+            }
 
-                // Google Maps Globe style: zooming very close into surface auto-transitions to Street Map!
-                const dist = camera.position.length();
-                if (dist < 108 && !isCamAnimating && currentMode === "3D") {
-                    switchMode("STREET");
-                    return;
-                }
+            controls.autoRotate = autoSpin && !isCamAnimating && !isUserDragging;
+            controls.update(dt);
 
-                // Animate Route Pulse Photon
-                if (pulseParticle && pulseParticle.curve) {
-                    pulseProgress = (pulseProgress + 0.008) % 1.0;
-                    const pt = pulseParticle.curve.getPoint(pulseProgress);
-                    pulseParticle.position.copy(pt);
-                }
+            // Google Maps Globe style: zooming very close into surface auto-transitions to Street Map!
+            const dist = camera.position.length();
+            if (dist < 108 && !isCamAnimating) {
+                switchMode("STREET");
+                return;
+            }
 
-                // Animate Markers
-                const t = performance.now() * 0.005;
-                if (originMarker) {
-                    const s = 1.0 + 0.2 * Math.sin(t);
-                    originMarker.scale.set(s, s, s);
-                }
-                if (destMarker) {
-                    const s = 1.0 + 0.2 * Math.cos(t);
-                    destMarker.scale.set(s, s, s);
-                }
-                if (locationMarker) {
-                    const s = 1.0 + 0.25 * Math.sin(t * 1.5);
-                    locationMarker.scale.set(s, s, s);
-                }
+            // Animate Route Pulse Photon (Zero-allocation, frame-rate independent)
+            if (pulseParticle && pulseParticle.curve) {
+                pulseProgress = (pulseProgress + 0.48 * dt) % 1.0;
+                pulseParticle.curve.getPoint(pulseProgress, _pulseVec);
+                pulseParticle.position.copy(_pulseVec);
+            }
 
-                // Update Status Bar
+            // Animate Markers
+            const t = now * 0.005;
+            if (originMarker) {
+                const s = 1.0 + 0.2 * Math.sin(t);
+                originMarker.scale.set(s, s, s);
+            }
+            if (destMarker) {
+                const s = 1.0 + 0.2 * Math.cos(t);
+                destMarker.scale.set(s, s, s);
+            }
+            if (locationMarker) {
+                const s = 1.0 + 0.25 * Math.sin(t * 1.5);
+                locationMarker.scale.set(s, s, s);
+            }
+
+            // Real-time High Refresh FPS Telemetry
+            fpsFrames++;
+            if (now - fpsLastTime >= 400) {
+                const measuredFps = Math.round((fpsFrames * 1000) / (now - fpsLastTime));
+                fpsFrames = 0;
+                fpsLastTime = now;
+                if (!elStatusFps) elStatusFps = document.getElementById('status-fps-val');
+                if (elStatusFps) {
+                    elStatusFps.innerText = `${measuredFps} FPS // DIRECT3D 11`;
+                }
+            }
+
+            if (now - lastHudUpdate >= 250) {
+                if (!elStatusCoords) elStatusCoords = document.getElementById('status-coords');
+                if (!elStatusZoom) elStatusZoom = document.getElementById('status-zoom');
                 const c = getCameraLatLon();
                 const latStr = `${Math.abs(c.lat).toFixed(1)}° ${c.lat >= 0 ? 'N' : 'S'}`;
                 const lonStr = `${Math.abs(c.lon).toFixed(1)}° ${c.lon >= 0 ? 'E' : 'W'}`;
-                document.getElementById('status-coords').innerText = `${latStr}, ${lonStr}`;
-                document.getElementById('status-zoom').innerText = `Altitude ~${Math.round((dist - 100) * 64)} km`;
+                if (elStatusCoords) elStatusCoords.innerText = `${latStr}, ${lonStr}`;
+                if (elStatusZoom) elStatusZoom.innerText = `Altitude ~${Math.round((dist - 100) * 64)} km`;
+                lastHudUpdate = now;
+            }
 
-                renderer.render(scene, camera);
+            renderer.render(scene, camera);
+        }
+
+        function pauseGlobe() {
+            isPaused = true;
+            if (animFrameId) {
+                cancelAnimationFrame(animFrameId);
+                animFrameId = null;
             }
         }
+
+        function resumeGlobe() {
+            if (!isPaused) return;
+            isPaused = false;
+            lastFrameTime = (typeof performance !== 'undefined') ? performance.now() : Date.now();
+            fpsLastTime = (typeof performance !== 'undefined') ? performance.now() : Date.now();
+            fpsFrames = 0;
+            if (!animFrameId) {
+                animFrameId = requestAnimationFrame(animate);
+            }
+        }
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                pauseGlobe();
+            } else {
+                resumeGlobe();
+            }
+        });
 
         function flyTo(lat, lon, dist = 220) {
             autoSpin = false;
             document.getElementById('btn-spin').innerHTML = '<span>▶</span> Spin';
-            const v = latLonToVector3(lat, lon, dist);
+            targetOrbitDist = dist || 220;
+            const v = latLonToVector3(lat, lon, targetOrbitDist);
             camTarget = v;
             isCamAnimating = true;
         }
@@ -1909,9 +2045,7 @@
             activeFlights = flights || [];
 
             // 3D Flights
-            while (flightGroup.children.length > 0) {
-                flightGroup.remove(flightGroup.children[0]);
-            }
+            flightGroup.clear();
 
             // 2D Flights
             if (flightLayer2D) flightLayer2D.clearLayers();
@@ -1923,10 +2057,9 @@
                 pill.style.display = 'block';
                 cnt.innerText = activeFlights.length;
 
-                // 3D Cones
-                const planeGeo = new THREE.ConeGeometry(1.0, 3.0, 6);
-                planeGeo.rotateX(Math.PI / 2);
-                const planeMat = new THREE.MeshBasicMaterial({ color: 0x10b981 });
+                // Batch aircraft into one draw call instead of creating one mesh per plane.
+                const planes = new THREE.InstancedMesh(flightGeometry, flightMaterial, activeFlights.length);
+                const transform = new THREE.Object3D();
 
                 for (let i = 0; i < activeFlights.length; i++) {
                     const f = activeFlights[i];
@@ -1935,10 +2068,10 @@
 
                     // 3D Plane
                     const pos = latLonToVector3(lat, lon, GLOBE_RADIUS + 2.0);
-                    const plane = new THREE.Mesh(planeGeo, planeMat);
-                    plane.position.copy(pos);
-                    plane.lookAt(pos.clone().multiplyScalar(2));
-                    flightGroup.add(plane);
+                    transform.position.copy(pos);
+                    transform.lookAt(pos.clone().multiplyScalar(2));
+                    transform.updateMatrix();
+                    planes.setMatrixAt(i, transform.matrix);
 
                     // 2D Plane
                     if (flightLayer2D && map2D) {
@@ -1952,6 +2085,8 @@
                         flightLayer2D.addLayer(m);
                     }
                 }
+                planes.instanceMatrix.needsUpdate = true;
+                flightGroup.add(planes);
             } else {
                 pill.style.display = 'none';
             }
@@ -1983,24 +2118,32 @@
             }
         }
 
+        let resizeTimeout = null;
         function onWindowResize() {
-            const container = document.getElementById('globe3d-container');
-            const w = container.clientWidth || window.innerWidth;
-            const h = container.clientHeight || window.innerHeight;
-            if (camera && renderer) {
-                camera.aspect = w / h;
-                camera.updateProjectionMatrix();
-                renderer.setSize(w, h);
-            }
-            if (map2D) {
-                map2D.invalidateSize();
-            }
+            if (resizeTimeout) cancelAnimationFrame(resizeTimeout);
+            resizeTimeout = requestAnimationFrame(() => {
+                const container = document.getElementById('globe3d-container');
+                if (!container) return;
+                const w = container.clientWidth || window.innerWidth;
+                const h = container.clientHeight || window.innerHeight;
+                if (camera && renderer) {
+                    camera.aspect = w / h;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(w, h);
+                    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.0));
+                }
+                if (map2D) {
+                    map2D.invalidateSize();
+                }
+            });
         }
 
         // ==========================================
         // 8. GLOBAL PYTHON / WEBCHANNEL API
         // ==========================================
         window.BrahmaGlobe = {
+            pause: () => pauseGlobe(),
+            resume: () => resumeGlobe(),
             showLocation: (data) => showLocation(data),
             showRoute: (data) => showRoute(data.originLat, data.originLon, data.destLat, data.destLon, data),
             showDrivingRoute: (data) => showDrivingRoute(data),

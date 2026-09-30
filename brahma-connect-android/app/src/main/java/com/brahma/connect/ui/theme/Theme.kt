@@ -6,9 +6,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 private val BrahmaDarkColors = darkColorScheme(
-    primary = Color(0xFFF4B400),
+    primary = Color(0xFFFFFFFF),
     onPrimary = Color.Black,
-    secondary = Color(0xFFFFD54F),
+    secondary = Color(0xFF00E5FF),
     background = Color(0xFF020305),
     surface = Color(0xFF0B0D12),
     surfaceVariant = Color(0xFF10131A),

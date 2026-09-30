@@ -9,6 +9,7 @@ hot-reloading, execution dispatch, and lifecycle management.
 from __future__ import annotations
 
 import asyncio
+import ast
 import importlib.util
 import inspect
 import json
@@ -33,7 +34,7 @@ APPDATA_SKILLS_DIR = get_user_data_dir() / "skills"
 class DynamicSkill:
     """Represents a loaded, runnable feature or synthetic skill in Brahma AI."""
 
-    def __init__(self, skill_path: Path, manifest: Dict[str, Any], module: Any):
+    def __init__(self, skill_path: Path, manifest: Dict[str, Any], module: Any = None):
         self.skill_path = skill_path
         self.skill_dir = skill_path if skill_path.is_dir() else skill_path.parent
         self.manifest = manifest
@@ -49,6 +50,19 @@ class DynamicSkill:
         self.invocations: int = manifest.get("invocations", 0)
         self.last_error: Optional[str] = manifest.get("last_error", None)
 
+    def _load_module(self) -> Any:
+        if self.module is None:
+            code_path = self.skill_path / "skill.py" if self.skill_path.is_dir() else self.skill_path
+            module_name = f"brahma_skill_{self.name}_{abs(hash(str(code_path.resolve())))}"
+            spec = importlib.util.spec_from_file_location(module_name, str(code_path))
+            if not spec or not spec.loader:
+                raise ImportError(f"Unable to load skill module: {code_path}")
+            module = importlib.util.module_from_spec(spec)
+            sys.modules[spec.name] = module
+            spec.loader.exec_module(module)
+            self.module = module
+        return self.module
+
     def to_tool_declaration(self) -> Dict[str, Any]:
         """Returns Gemini function declaration dict."""
         return {
@@ -59,9 +73,10 @@ class DynamicSkill:
 
     def execute_sync(self, **kwargs) -> Any:
         """Executes the skill synchronously (safe for worker threads)."""
-        if not hasattr(self.module, "execute"):
+        module = self._load_module()
+        if not hasattr(module, "execute"):
             raise AttributeError(f"Feature '{self.name}' has no 'execute' function.")
-        func = getattr(self.module, "execute")
+        func = getattr(module, "execute")
         self.invocations += 1
         if inspect.iscoroutinefunction(func):
             return asyncio.run(func(**kwargs))
@@ -69,19 +84,17 @@ class DynamicSkill:
 
     async def execute_async(self, **kwargs) -> Any:
         """Executes the skill asynchronously without thread-pool registration conflicts."""
-        if not hasattr(self.module, "execute"):
+        module = self._load_module()
+        if not hasattr(module, "execute"):
             raise AttributeError(f"Feature '{self.name}' has no 'execute' function.")
 
-        func = getattr(self.module, "execute")
+        func = getattr(module, "execute")
         self.invocations += 1
 
         if inspect.iscoroutinefunction(func):
             return await func(**kwargs)
         else:
-            try:
-                return await asyncio.to_thread(func, **kwargs)
-            except Exception:
-                return func(**kwargs)
+            return await asyncio.to_thread(func, **kwargs)
 
 
 class DynamicToolRegistry:
@@ -110,32 +123,38 @@ class DynamicToolRegistry:
             # Case A: Single Python module file (e.g. features/internet_speed_test.py)
             if item.is_file() and item.suffix == ".py":
                 try:
-                    mod_name = f"brahma_feat_{item.stem}"
-                    spec = importlib.util.spec_from_file_location(mod_name, str(item))
-                    if spec and spec.loader:
-                        mod = importlib.util.module_from_spec(spec)
-                        sys.modules[spec.name] = mod
-                        spec.loader.exec_module(mod)
+                    source = item.read_text(encoding="utf-8")
+                    tree = ast.parse(source, filename=str(item))
+                    meta: Dict[str, Any] = {}
+                    for node in tree.body:
+                        targets = node.targets if isinstance(node, ast.Assign) else [node.target] if isinstance(node, ast.AnnAssign) else []
+                        if any(isinstance(target, ast.Name) and target.id == "FEATURE_METADATA" for target in targets):
+                            value = node.value
+                            parsed = ast.literal_eval(value)
+                            if isinstance(parsed, dict):
+                                meta = parsed
+                            break
+                    if not meta:
+                        meta = {
+                            "name": item.stem,
+                            "description": ast.get_docstring(tree) or f"Native feature {item.stem}",
+                            "parameters": {"type": "OBJECT", "properties": {}},
+                        }
 
-                        # Extract metadata
-                        meta = getattr(mod, "FEATURE_METADATA", {})
-                        if not meta:
-                            doc = (mod.__doc__ or "").strip()
-                            meta = {
-                                "name": item.stem,
-                                "description": doc or f"Native feature {item.stem}",
-                                "parameters": {"type": "OBJECT", "properties": {}},
-                            }
+                    manifest_path = item.with_suffix("") / "manifest.json"
+                    if manifest_path.exists():
+                        with open(manifest_path, "r", encoding="utf-8") as f:
+                            package_manifest = json.load(f)
+                        meta = {**meta, **package_manifest}
 
-                        feat_name = meta.get("name", item.stem)
-                        meta.setdefault("created_at", item.stat().st_mtime)
-                        skill = DynamicSkill(item, meta, mod)
-                        cls._skills[feat_name] = skill
-                        # Also register aliases
-                        for alias in meta.get("aliases", []):
-                            if alias not in cls._skills:
-                                cls._skills[alias] = skill
-                        count += 1
+                    feat_name = meta.get("name", item.stem)
+                    meta.setdefault("created_at", item.stat().st_mtime)
+                    skill = DynamicSkill(item, meta)
+                    cls._skills[feat_name] = skill
+                    for alias in meta.get("aliases", []):
+                        if alias not in cls._skills:
+                            cls._skills[alias] = skill
+                    count += 1
                 except Exception as e:
                     logger.warning(f"[Registry] Failed to load codebase feature '{item.name}': {e}")
 
@@ -147,14 +166,9 @@ class DynamicToolRegistry:
                     try:
                         with open(manifest_file, "r", encoding="utf-8") as f:
                             manifest = json.load(f)
-                        spec = importlib.util.spec_from_file_location(f"brahma_feat_dir_{item.name}", str(code_file))
-                        if spec and spec.loader:
-                            mod = importlib.util.module_from_spec(spec)
-                            sys.modules[spec.name] = mod
-                            spec.loader.exec_module(mod)
-                            skill = DynamicSkill(item, manifest, mod)
-                            cls._skills[skill.name] = skill
-                            count += 1
+                        skill = DynamicSkill(item, manifest)
+                        cls._skills[skill.name] = skill
+                        count += 1
                     except Exception as e:
                         logger.warning(f"[Registry] Failed to load feature package '{item.name}': {e}")
 
@@ -168,14 +182,9 @@ class DynamicToolRegistry:
                         try:
                             with open(manifest_file, "r", encoding="utf-8") as f:
                                 manifest = json.load(f)
-                            spec = importlib.util.spec_from_file_location(f"brahma_legacy_{item.name}", str(code_file))
-                            if spec and spec.loader:
-                                mod = importlib.util.module_from_spec(spec)
-                                sys.modules[spec.name] = mod
-                                spec.loader.exec_module(mod)
-                                skill = DynamicSkill(item, manifest, mod)
-                                cls._skills[skill.name] = skill
-                                count += 1
+                            skill = DynamicSkill(item, manifest)
+                            cls._skills[skill.name] = skill
+                            count += 1
                         except Exception:
                             pass
 
@@ -380,7 +389,11 @@ class DynamicToolRegistry:
         if not cls._initialized:
             cls.initialize()
         results = []
+        seen = set()
         for s in cls._skills.values():
+            if id(s) in seen:
+                continue
+            seen.add(id(s))
             results.append({
                 "name": s.name,
                 "description": s.description,

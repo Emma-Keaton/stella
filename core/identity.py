@@ -23,8 +23,8 @@ class IdentityService:
             },
             "assistant": {
                 "name": "Brahma",
-                "application_name": "Brahma AI Evo",
-                "title": "Autonomous AI Co-Pilot"
+                "application_name": "Brahma Evo",
+                "title": "Personal AI Assistant"
             },
             "behavior": {
                 "mode": "professional",
@@ -71,14 +71,14 @@ class IdentityService:
         self.save()
 
     def get_application_name(self) -> str:
-        return self.data["assistant"].get("application_name", "Brahma AI Evo")
+        return self.data["assistant"].get("application_name", "Brahma Evo")
         
     def set_application_name(self, name: str):
         self.data["assistant"]["application_name"] = name
         self.save()
 
     def get_assistant_title(self) -> str:
-        return self.data["assistant"].get("title", "Autonomous AI Co-Pilot")
+        return self.data["assistant"].get("title", "Personal AI Assistant")
         
     def set_assistant_title(self, title: str):
         self.data["assistant"]["title"] = title

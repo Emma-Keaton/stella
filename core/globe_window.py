@@ -3,21 +3,31 @@ Brahma 3D HoloGlobe Window Controller.
 Hosts the WebGL 3D Earth, Great-Circle route visualizer, and live flight radar inside a modern PyQt6 window.
 """
 
+import os
 import json
 import threading
 from pathlib import Path
 from typing import Optional, Dict, Any, List
+
+# Hardware acceleration & WebGL flags for smooth 180fps+ rendering in Chromium
+os.environ.setdefault(
+    "QTWEBENGINE_CHROMIUM_FLAGS",
+    "--enable-gpu-rasterization --enable-zero-copy --ignore-gpu-blocklist --enable-accelerated-2d-canvas --enable-webgl --enable-webgl2-compute-context --disable-frame-rate-limit --disable-gpu-vsync --num-raster-threads=4 --use-angle=d3d11 --disable-gpu-driver-bug-workarounds"
+)
 
 from PyQt6.QtCore import Qt, QUrl, pyqtSlot, QObject, pyqtSignal, QTimer, QPoint, QCoreApplication
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QWidget, QHBoxLayout, QLabel,
     QPushButton, QGraphicsDropShadowEffect, QApplication
 )
-from PyQt6.QtGui import QColor, QIcon
+from PyQt6.QtGui import QColor, QIcon, QSurfaceFormat
 
-# Ensure OpenGL contexts sharing and WebEngine are pre-loaded
+# Ensure OpenGL contexts sharing and unthrottled swap interval (180Hz+)
 try:
     QCoreApplication.setAttribute(Qt.ApplicationAttribute.AA_ShareOpenGLContexts, True)
+    fmt = QSurfaceFormat.defaultFormat()
+    fmt.setSwapInterval(0)
+    QSurfaceFormat.setDefaultFormat(fmt)
     import PyQt6.QtWebEngineWidgets
 except Exception:
     pass
@@ -62,22 +72,9 @@ class GlobeWindow(QWidget):
     @classmethod
     def get_instance(cls, parent=None):
         if cls._instance is None:
-            if threading.current_thread() is threading.main_thread():
-                cls._instance = GlobeWindow(parent)
-            else:
-                app = QApplication.instance()
-                if app:
-                    import queue
-                    q = queue.Queue()
-                    def _init():
-                        if cls._instance is None:
-                            cls._instance = GlobeWindow(parent)
-                        q.put(cls._instance)
-                    QTimer.singleShot(0, _init)
-                    try:
-                        cls._instance = q.get(timeout=3.0)
-                    except Exception:
-                        pass
+            if threading.current_thread() is not threading.main_thread():
+                raise RuntimeError("GlobeWindow must be initialized on the GUI thread before use.")
+            cls._instance = GlobeWindow(parent)
         elif parent is not None and cls._instance.parent() != parent:
             try:
                 cls._instance.setParent(parent)
@@ -128,17 +125,10 @@ class GlobeWindow(QWidget):
         self._container.setStyleSheet("""
             QWidget#GlobeContainer {
                 background: #030712;
-                border: 1px solid rgba(56, 189, 248, 0.35);
+                border: 2px solid rgba(56, 189, 248, 0.45);
                 border-radius: 20px;
             }
         """)
-
-        # Drop Shadow
-        shadow = QGraphicsDropShadowEffect(self)
-        shadow.setBlurRadius(36)
-        shadow.setColor(QColor(0, 0, 0, 220))
-        shadow.setOffset(0, 8)
-        self._container.setGraphicsEffect(shadow)
 
         container_layout = QVBoxLayout(self._container)
         container_layout.setContentsMargins(0, 0, 0, 0)
@@ -231,6 +221,8 @@ class GlobeWindow(QWidget):
                 settings.setAttribute(settings.WebAttribute.JavascriptEnabled, True)
                 settings.setAttribute(settings.WebAttribute.LocalContentCanAccessFileUrls, True)
                 settings.setAttribute(settings.WebAttribute.LocalContentCanAccessRemoteUrls, True)
+                settings.setAttribute(settings.WebAttribute.Accelerated2dCanvasEnabled, True)
+                settings.setAttribute(settings.WebAttribute.ScrollAnimatorEnabled, False)
             except Exception:
                 pass
 
@@ -250,6 +242,11 @@ class GlobeWindow(QWidget):
 
     def _on_load_finished(self, ok: bool):
         self._is_page_loaded = ok
+        if ok and self._web_view:
+            if not self.isVisible():
+                self._web_view.page().runJavaScript("if (window.BrahmaGlobe && window.BrahmaGlobe.pause) window.BrahmaGlobe.pause();")
+            else:
+                self._web_view.page().runJavaScript("if (window.BrahmaGlobe && window.BrahmaGlobe.resume) window.BrahmaGlobe.resume();")
         if getattr(self, "_pending_mode", None) and self._web_view:
             pm = self._pending_mode
             self._pending_mode = None
@@ -403,6 +400,16 @@ class GlobeWindow(QWidget):
         else:
             super().keyPressEvent(event)
 
+    def showEvent(self, event):
+        super().showEvent(event)
+        if self._web_view and getattr(self, "_is_page_loaded", False):
+            self._web_view.page().runJavaScript("if (window.BrahmaGlobe && window.BrahmaGlobe.resume) window.BrahmaGlobe.resume();")
+
+    def hideEvent(self, event):
+        super().hideEvent(event)
+        if self._web_view and getattr(self, "_is_page_loaded", False):
+            self._web_view.page().runJavaScript("if (window.BrahmaGlobe && window.BrahmaGlobe.pause) window.BrahmaGlobe.pause();")
+
     def _handle_cmd(self, payload: dict):
         """Processes cross-thread requests safely on the main GUI thread."""
         action = payload.get("action")
@@ -434,6 +441,7 @@ class GlobeWindow(QWidget):
         self.show()
         self.raise_()
         if self._web_view and self._is_page_loaded:
+            self._web_view.page().runJavaScript("if (window.BrahmaGlobe && window.BrahmaGlobe.resume) window.BrahmaGlobe.resume();")
             carto_fix = 'if (window.BrahmaGlobe && window.BrahmaGlobe.updateCartoKey) { window.BrahmaGlobe.updateCartoKey("cb1_3xgr_1_35c1dc6a9a9b23cb25386cb6"); }'
             self._web_view.page().runJavaScript(carto_fix)
             if mode:

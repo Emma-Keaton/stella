@@ -240,10 +240,27 @@ def run_tests():
             else:
                 res = execute(**args)
                 
-            # Check that result is presentable
+            # Check that result is presentable and not an error dictionary
             if res is None:
                 res = "Operation completed with no output."
-            results.append({{"index": i, "success": True, "output": str(res)[:300]}})
+
+            is_err = False
+            err_msg = ""
+            if isinstance(res, dict):
+                if res.get("error"):
+                    is_err = True
+                    err_msg = str(res["error"])
+                elif res.get("success") is False:
+                    is_err = True
+                    err_msg = str(res.get("message") or res.get("error") or "Skill returned success=False")
+            elif isinstance(res, str) and (res.lower().startswith("error:") or res.lower().startswith("failed:")):
+                is_err = True
+                err_msg = res
+
+            if is_err:
+                results.append({{"index": i, "success": False, "error": err_msg, "output": str(res)[:300]}})
+            else:
+                results.append({{"index": i, "success": True, "output": str(res)[:300]}})
         except Exception as exc:
             tb = traceback.format_exc()
             results.append({{"index": i, "success": False, "error": str(exc), "traceback": tb}})

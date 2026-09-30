@@ -4,23 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Quantum Core Resonator</title>
-  <!-- Three.js + PostProcessing (UnrealBloomPass) + OrbitControls -->
+  <!-- Three.js + PostProcessing (UnrealBloomPass) + OrbitControls (Local Offline) -->
   <script src="three.min.js"></script>
-  <script>if (typeof THREE === 'undefined') document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');</script>
   <script src="OrbitControls.js"></script>
-  <script>if (typeof THREE.OrbitControls === 'undefined') document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"><\/script>');</script>
   <script src="EffectComposer.js"></script>
-  <script>if (typeof THREE.EffectComposer === 'undefined') document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"><\/script>');</script>
   <script src="RenderPass.js"></script>
-  <script>if (typeof THREE.RenderPass === 'undefined') document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"><\/script>');</script>
   <script src="ShaderPass.js"></script>
-  <script>if (typeof THREE.ShaderPass === 'undefined') document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"><\/script>');</script>
   <script src="CopyShader.js"></script>
-  <script>if (typeof THREE.CopyShader === 'undefined') document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"><\/script>');</script>
   <script src="LuminosityHighPassShader.js"></script>
-  <script>if (typeof THREE.LuminosityHighPassShader === 'undefined') document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"><\/script>');</script>
   <script src="UnrealBloomPass.js"></script>
-  <script>if (typeof THREE.UnrealBloomPass === 'undefined') document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"><\/script>');</script>
 
   <style>
     * {
@@ -45,6 +37,7 @@
       width: 100%;
       height: 100%;
     }
+
   </style>
 </head>
 <body>
@@ -68,18 +61,18 @@
     let moonBokehMesh, spaceDustGroup;
     let glowSprite, spiralMat, outerLine;
 
-    // ——— REACTIVE BRAHMA ECHO STATE CONTROLLER ———
+    // ——— REACTIVE BRAHMA EVO STATE CONTROLLER ———
     let currentState = "IDLE";
     const STATE_COLORS = {
       LISTENING:  { hot: 0x80ffff, mid: 0x00e5ff, dim: 0x0088aa }, // Luminous Cyan
-      SPEAKING:   { hot: 0xffffff, mid: 0xffea80, dim: 0xaa8010 }, // Brilliant Golden White
+      SPEAKING:   { hot: 0xffffff, mid: 0xdff8ff, dim: 0x00e5ff }, // Brilliant White & Ice Cyan
       THINKING:   { hot: 0xffc080, mid: 0xff9100, dim: 0xcc6600 }, // Sunset Amber
       EXECUTING:  { hot: 0xd4a0ff, mid: 0x7c4dff, dim: 0x4a148c }, // Cyber Violet
-      WORKING:    { hot: 0xd4a0ff, mid: 0x7c4dff, dim: 0x4a148c }, // Cyber Violet
+      WORKING:    { hot: 0x00f0ff, mid: 0x0090ff, dim: 0x0040aa }, // Cyber Blue
       MUTED:      { hot: 0xff9999, mid: 0xff3b30, dim: 0x881111 }, // Crimson Red
-      SCANNING:   { hot: 0xa0ffb0, mid: 0x37ff5f, dim: 0x1dcc43 }, // Emerald Matrix
-      ONLINE:     { hot: 0xffffff, mid: 0xebf5ff, dim: 0x90b5d8 }, // Quantum Core White
-      IDLE:       { hot: 0xffffff, mid: 0xebf5ff, dim: 0x90b5d8 }, // Quantum Core White
+      SCANNING:   { hot: 0xa0ffea, mid: 0x00f0ff, dim: 0x0088aa }, // Cyber Cyan Matrix
+      ONLINE:     { hot: 0xffffff, mid: 0xebf5ff, dim: 0x00f0ff }, // Brahma Evo Quantum White & Cyber Cyan
+      IDLE:       { hot: 0xffffff, mid: 0xebf5ff, dim: 0x00f0ff }, // Brahma Evo Quantum White & Cyber Cyan
     };
 
     let targetColorHot = new THREE.Color(0xffffff);
@@ -175,8 +168,8 @@
 
     function initScene() {
       const container = document.getElementById('webgl-canvas');
-      const w = window.innerWidth;
-      const h = window.innerHeight;
+      const w = Math.max(window.innerWidth || 0, container ? container.clientWidth : 0, 800);
+      const h = Math.max(window.innerHeight || 0, container ? container.clientHeight : 0, 600);
 
       scene = new THREE.Scene();
       scene.background = new THREE.Color(0x020306);
@@ -591,8 +584,7 @@
       currentColorDim.lerp(targetColorDim, 0.06);
 
       // 2. Smooth State Dynamics
-      targetPositionX = 0.0;
-      currentPositionX += (targetPositionX - currentPositionX) * 0.10;
+      currentPositionX += (targetPositionX - currentPositionX) * 0.08;
       mainGroup.position.x = currentPositionX;
 
       const baseScale = isCompactMode ? (currentState === "LISTENING" ? 0.95 : 0.85) : targetScale;
@@ -622,6 +614,14 @@
       simTime += dt * SPEED * speedMult;
 
       updateWaveManifold(simTime, effectiveAmp);
+
+
+
+      // Dynamic Bloom Surge with Voice
+      if (bloomPass) {
+        bloomPass.strength = BLOOM_STRENGTH + currentAudioLevel * 0.70;
+      }
+
 
       // 5. Apply Reactive State Colors to Shaders and Lines
       if (standingWaveParticles && standingWaveParticles.material.uniforms) {
@@ -705,23 +705,28 @@
     function renderLoop() {
       requestAnimationFrame(renderLoop);
       const dt = Math.min(clock.getDelta(), 0.05);
+      
       updateSimulation(dt);
+
       controls.update();
       composer.render();
     }
 
     function onWindowResize() {
-      const w = window.innerWidth;
-      const h = window.innerHeight;
+      const container = document.getElementById('webgl-canvas');
+      const w = Math.max(window.innerWidth || 0, container ? container.clientWidth : 0);
+      const h = Math.max(window.innerHeight || 0, container ? container.clientHeight : 0);
       if (w <= 0 || h <= 0) return;
 
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
+      if (camera && renderer && composer) {
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
 
-      renderer.setSize(w, h);
-      composer.setSize(w, h);
-      if (bloomPass && bloomPass.resolution) {
-        bloomPass.resolution.set(w, h);
+        renderer.setSize(w, h);
+        composer.setSize(w, h);
+        if (bloomPass && bloomPass.resolution) {
+          bloomPass.resolution.set(w, h);
+        }
       }
     }
 
@@ -729,7 +734,7 @@
     window.setBrahmaState = function(state) {
       if (!state) return;
       currentState = String(state).toUpperCase();
-      console.log("Brahma Echo State:", currentState);
+      console.log("Brahma Evo State:", currentState);
 
       const pal = STATE_COLORS[currentState] || STATE_COLORS.IDLE;
       targetColorHot.setHex(pal.hot);
@@ -834,10 +839,82 @@
       if (bloomPass) bloomPass.strength = BLOOM_STRENGTH;
     };
 
-    window.onload = function() {
+    window.setPointerNorm = function(nx, ny) {
+      mouseNormX = nx;
+      mouseNormY = ny;
+      targetTiltX = -mouseNormY * 0.22;
+      targetTiltY = mouseNormX * 0.30;
+    };
+
+    window.setPageCamera = function(pageIndex) {
+      switch (pageIndex) {
+        case 0: // Hero
+          targetScale = 1.0;
+          targetCameraZ = 46.0;
+          targetPositionX = 0.0;
+          window.setBrahmaState("ONLINE");
+          break;
+        case 1: // Features / About
+          targetScale = 1.12;
+          targetCameraZ = 39.0;
+          targetPositionX = 3.5;
+          window.setBrahmaState("SCANNING");
+          break;
+        case 2: // Sign In
+          targetScale = 1.05;
+          targetCameraZ = 41.0;
+          targetPositionX = -3.2;
+          window.setBrahmaState("THINKING");
+          break;
+        case 3: // Download
+          targetScale = 1.2;
+          targetCameraZ = 36.0;
+          targetPositionX = 4.0;
+          window.setBrahmaState("EXECUTING");
+          break;
+        case 4: // Mobile App
+          targetScale = 1.08;
+          targetCameraZ = 39.0;
+          targetPositionX = -3.8;
+          window.setBrahmaState("LISTENING");
+          break;
+        case 5: // Setup Wizard
+          targetScale = 1.04;
+          targetCameraZ = 42.0;
+          targetPositionX = 3.0;
+          window.setBrahmaState("WORKING");
+          break;
+        case 6: // Thanks
+          targetScale = 1.0;
+          targetCameraZ = 47.0;
+          targetPositionX = 0.0;
+          window.setBrahmaState("ONLINE");
+          break;
+        case 7: // Feedback
+          targetScale = 0.95;
+          targetCameraZ = 50.0;
+          targetPositionX = 0.0;
+          window.setBrahmaState("IDLE");
+          break;
+      }
+    };
+
+    function boot() {
+      if (window._hasBooted) return;
+      window._hasBooted = true;
       initScene();
       renderLoop();
-    };
+      // Ensure layout sync after DOM updates
+      setTimeout(onWindowResize, 30);
+      setTimeout(onWindowResize, 150);
+    }
+
+    if (document.readyState === "complete" || document.readyState === "interactive") {
+      boot();
+    } else {
+      document.addEventListener("DOMContentLoaded", boot);
+      window.addEventListener("load", boot);
+    }
   </script>
 </body>
 </html>

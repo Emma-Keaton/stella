@@ -137,6 +137,9 @@
 			}; // this method is exposed, but perhaps it would be better if we can make it private...
 
 
+			let lastUpdateTime = (typeof performance !== 'undefined') ? performance.now() : Date.now();
+			let currentDt = 0.01666;
+
 			this.update = function () {
 
 				const offset = new THREE.Vector3(); // so camera.up is the orbit axis
@@ -146,7 +149,19 @@
 				const lastPosition = new THREE.Vector3();
 				const lastQuaternion = new THREE.Quaternion();
 				const twoPI = 2 * Math.PI;
-				return function update() {
+				return function update(dt) {
+
+					if (dt === undefined) {
+						const now = (typeof performance !== 'undefined') ? performance.now() : Date.now();
+						currentDt = Math.min(Math.max((now - lastUpdateTime) / 1000, 0.0005), 0.05);
+						lastUpdateTime = now;
+					} else {
+						currentDt = Math.min(Math.max(dt, 0.0005), 0.05);
+					}
+
+					const dtScale = currentDt * 60;
+					const decay = Math.pow(Math.max(0.0001, 1 - scope.dampingFactor), dtScale);
+					const effectiveDamping = 1 - decay;
 
 					const position = scope.object.position;
 					offset.copy( position ).sub( scope.target ); // rotate offset to "y-axis-is-up" space
@@ -157,14 +172,14 @@
 
 					if ( scope.autoRotate && state === STATE.NONE ) {
 
-						rotateLeft( getAutoRotationAngle() );
+						rotateLeft( getAutoRotationAngle(currentDt) );
 
 					}
 
 					if ( scope.enableDamping ) {
 
-						spherical.theta += sphericalDelta.theta * scope.dampingFactor;
-						spherical.phi += sphericalDelta.phi * scope.dampingFactor;
+						spherical.theta += sphericalDelta.theta * effectiveDamping;
+						spherical.phi += sphericalDelta.phi * effectiveDamping;
 
 					} else {
 
@@ -203,7 +218,7 @@
 
 					if ( scope.enableDamping === true ) {
 
-						scope.target.addScaledVector( panOffset, scope.dampingFactor );
+						scope.target.addScaledVector( panOffset, effectiveDamping );
 
 					} else {
 
@@ -219,9 +234,9 @@
 
 					if ( scope.enableDamping === true ) {
 
-						sphericalDelta.theta *= 1 - scope.dampingFactor;
-						sphericalDelta.phi *= 1 - scope.dampingFactor;
-						panOffset.multiplyScalar( 1 - scope.dampingFactor );
+						sphericalDelta.theta *= decay;
+						sphericalDelta.phi *= decay;
+						panOffset.multiplyScalar( decay );
 
 					} else {
 
@@ -301,9 +316,9 @@
 			const dollyEnd = new THREE.Vector2();
 			const dollyDelta = new THREE.Vector2();
 
-			function getAutoRotationAngle() {
-
-				return 2 * Math.PI / 60 / 60 * scope.autoRotateSpeed;
+			function getAutoRotationAngle(dt) {
+				const delta = (dt !== undefined && dt > 0) ? dt : (1 / 60);
+				return 2 * Math.PI * delta / 60 * scope.autoRotateSpeed;
 
 			}
 

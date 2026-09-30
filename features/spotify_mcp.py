@@ -5,7 +5,7 @@ Triggers: play on spotify, play song on spotify, pause spotify, resume spotify, 
 """
 
 from typing import Any, Dict
-from actions.spotify_controller import spotify_controller, is_spotify_configured
+from actions.spotify_controller import spotify_mcp_controller, is_spotify_configured
 
 FEATURE_METADATA = {
     "name": "spotify_mcp",
@@ -76,7 +76,7 @@ def execute(**kwargs) -> Dict[str, Any]:
     if volume is not None:
         params["volume"] = volume
 
-    result_text = spotify_controller(parameters=params)
+    result_text = spotify_mcp_controller(parameters=params)
 
     return {
         "title": "Spotify MCP Controller",

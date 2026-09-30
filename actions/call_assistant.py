@@ -106,22 +106,10 @@ def _get_audio_loopback_device() -> dict:
 
 def _boost_system_audio_for_call() -> Optional[float]:
     """
-    Prevents Windows from ducking Brahma by 80% during active calls,
-    and boosts microphone and speaker volume to 100% for maximum audibility.
-    Returns original microphone volume scalar so it can be restored.
+    Temporarily raises microphone gain for the call and returns its original level.
     """
     orig_mic_level = None
 
-    # 1. Disable Windows Communication Ducking permanently
-    try:
-        import winreg
-        key = winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Multimedia\Audio", 0, winreg.KEY_SET_VALUE)
-        winreg.SetValueEx(key, "UserDuckingPreference", 0, winreg.REG_DWORD, 3)  # 3 = Do nothing
-        winreg.CloseKey(key)
-    except Exception as e:
-        logger.debug(f"[CallAssistant] Ducking reg notice: {e}")
-
-    # 2. Boost system microphone sensitivity to 1.0 (100%)
     try:
         from pycaw.pycaw import AudioUtilities, IAudioEndpointVolume
         mic_dev = AudioUtilities.GetMicrophone()
@@ -133,30 +121,6 @@ def _boost_system_audio_for_call() -> Optional[float]:
             mic_ep.SetMute(0, None)
     except Exception as e:
         logger.debug(f"[CallAssistant] Mic boost notice: {e}")
-
-    # 3. Boost all python.exe / pythonw.exe sessions to 1.0 (100%)
-    try:
-        from pycaw.pycaw import AudioUtilities, ISimpleAudioVolume
-        sessions = AudioUtilities.GetAllSessions()
-        for s in sessions:
-            if s.Process and s.Process.name() in ("python.exe", "pythonw.exe"):
-                vol = s._ctl.QueryInterface(ISimpleAudioVolume)
-                vol.SetMasterVolume(1.0, None)
-                vol.SetMute(0, None)
-    except Exception as e:
-        logger.debug(f"[CallAssistant] Session boost notice: {e}")
-
-    # 4. Ensure master speakers are unmuted and at high volume
-    try:
-        from pycaw.pycaw import AudioUtilities
-        spk = AudioUtilities.GetSpeakers()
-        if hasattr(spk, "EndpointVolume") and spk.EndpointVolume:
-            current_vol = spk.EndpointVolume.GetMasterVolumeLevelScalar()
-            if current_vol < 0.90:
-                spk.EndpointVolume.SetMasterVolumeLevelScalar(0.95, None)
-            spk.EndpointVolume.SetMute(0, None)
-    except Exception as e:
-        logger.debug(f"[CallAssistant] Speaker check notice: {e}")
 
     return orig_mic_level
 

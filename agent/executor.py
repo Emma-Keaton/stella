@@ -33,207 +33,135 @@ def _get_api_key() -> str:
     with open(API_CONFIG_PATH, "r", encoding="utf-8") as f:
         return json.load(f)["gemini_api_key"]
 
-def _run_generated_code(description: str, speak: Callable | None = None) -> str:
-    import google.generativeai as genai
+def _run_skill_forge(
+    goal: str,
+    skill_name: str | None = None,
+    parameters: dict | None = None,
+    player: Any = None,
+    speak: Callable | None = None,
+) -> str:
+    from core.skill_forge import SkillForge
+    from core.dynamic_registry import DynamicToolRegistry
+
+    if player and hasattr(player, "write_log"):
+        player.write_log(f"🧬 [Evolution] Synthesizing capability for: '{goal}'")
+    if speak:
+        speak("Synthesizing a new capability for this task, sir.")
+
+    result = SkillForge.forge_skill(goal, skill_name)
+    message = str(result.get("message") or result.get("error") or "Skill creation failed.")
+
+    if not result.get("success"):
+        if player and hasattr(player, "write_log"):
+            player.write_log(f"ERR: {message}")
+        if speak:
+            speak(message)
+        return message
+
+    name = str(result.get("name") or skill_name or "new_feature")
+    description = str(result.get("description") or "")
+    announcement = f"⚡ [Brahma Evo] Synthesized and activated feature '{name}'. {description}".strip()
+
+    if player and hasattr(player, "write_log"):
+        player.write_log(f"Brahma Evo: {announcement}")
+
+    # Immediately execute the newly forged skill to satisfy the user's initial goal
+    execution_output = ""
+    try:
+        if DynamicToolRegistry.has_tool(name):
+            exec_args = dict(parameters or {})
+            if "goal" not in exec_args and "query" not in exec_args and "input" not in exec_args:
+                exec_args["query"] = goal
+                exec_args["goal"] = goal
+            if player and hasattr(player, "write_log"):
+                player.write_log(f"▶️ [Evolution] Running newly registered skill '{name}'...")
+            run_result = DynamicToolRegistry.execute_sync(name, exec_args)
+            if run_result:
+                if isinstance(run_result, dict):
+                    execution_output = str(run_result.get("summary") or run_result.get("output") or run_result.get("text") or run_result).strip()
+                else:
+                    execution_output = str(run_result).strip()
+    except Exception as e_run:
+        execution_output = f"(Executed, but returned: {e_run})"
+
+    full_result = announcement
+    if execution_output:
+        full_result += f"\n\nResult:\n{execution_output}"
 
     if speak:
-        speak("Writing custom code for this task, sir.")
+        short_res = execution_output if len(execution_output) < 180 else f"{execution_output[:170]}..."
+        speak(f"Created and activated feature {name}. {short_res}")
 
-    home      = Path.home()
-    desktop   = home / "Desktop"
-    downloads = home / "Downloads"
-    documents = home / "Documents"
+    return full_result
 
-    if not desktop.exists():
-        try:
-            import winreg
-            key     = winreg.OpenKey(winreg.HKEY_CURRENT_USER,
-                r"Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders")
-            desktop = Path(winreg.QueryValueEx(key, "Desktop")[0])
-        except Exception:
-            pass
 
+def _inject_context(params: dict, tool: str, step_results: dict, goal: str = "") -> dict:
+    if not step_results:
+        return params
+
+    params = dict(params)
+    if goal:
+        params["goal"] = goal
+
+    if tool in ("pdf_document", "create_pdf", "pdf_tools", "word_document", "docx_tools"):
+        content = params.get("content", "")
+        all_results = [
+            v for v in step_results.values()
+            if v and len(v) > 80 and v not in ("Done.", "Completed.", "Task completed successfully.")
+        ]
+        if all_results and (not content or len(content) < 500):
+            combined = "\n\n---\n\n".join(all_results)
+            translated = _translate_to_goal_language(combined, goal)
+            params["content"] = translated
+            print(f"[Executor] 💉 Injected research results into {tool}")
+
+    elif tool == "file_controller" and params.get("action") in ("write", "create_file"):
+        content = params.get("content", "")
+        if not content or len(content) < 50:
+            all_results = [
+                v for v in step_results.values()
+                if v and len(v) > 100 and v not in ("Done.", "Completed.", "Task completed successfully.")
+            ]
+            if all_results:
+                combined = "\n\n---\n\n".join(all_results)
+                translated = _translate_to_goal_language(combined, goal)
+                params["content"] = translated
+                print(f"[Executor] 💉 Injected + translated content into {tool}")
+
+    return params
+
+
+def _detect_language(text: str) -> str:
+    import google.generativeai as genai
     genai.configure(api_key=_get_api_key())
-    model = genai.GenerativeModel(
-        model_name="gemini-3.1-flash-lite",
-        system_instruction=(
-            "You are an expert Python developer. "
-            "Write clean, complete, working Python code. "
-            "Use standard library + common packages. "
-            "Install missing packages with subprocess + pip if needed. "
-            "Return ONLY the Python code. No explanation, no markdown, no backticks.\n\n"
-            f"SYSTEM PATHS:\n"
-            f"  Desktop   = r'{desktop}'\n"
-            f"  Downloads = r'{downloads}'\n"
-            f"  Documents = r'{documents}'\n"
-            f"  Home      = r'{home}'\n"
-        )
-    )
-
+    model = genai.GenerativeModel("gemini-3.1-flash-lite")
     try:
         response = model.generate_content(
-            f"Write Python code to accomplish this task:\n\n{description}"
+            f"What language is this text written in? "
+            f"Reply with ONLY the language name in English (e.g. Turkish, English, French).\n\n"
+            f"Text: {text[:200]}"
         )
-        code = response.text.strip()
-        code = re.sub(r"```(?:python)?", "", code).strip().rstrip("`").strip()
-
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".py", delete=False, encoding="utf-8"
-        ) as f:
-            f.write(code)
-            tmp_path = f.name
-
-        print(f"[Executor] 🐍 Running generated code: {tmp_path}")
-
-        result = subprocess.run(
-            [sys.executable, tmp_path],
-            capture_output=True, text=True,
-            timeout=120, cwd=str(Path.home())
-        )
-
-        try:
-            os.unlink(tmp_path)
-        except Exception:
-            pass
-
-        output = result.stdout.strip()
-        error  = result.stderr.strip()
-
-        if result.returncode == 0 and output:
-            return output
-        elif result.returncode == 0:
-            return "Task completed successfully."
-        elif error:
-            raise RuntimeError(f"Code error: {error[:400]}")
-        return "Completed."
-
-    except subprocess.TimeoutExpired:
-        raise RuntimeError("Generated code timed out after 120 seconds.")
-    except RuntimeError:
-        raise
-    except Exception as e:
-        raise RuntimeError(f"Generated code failed: {e}")
-
-COMMON_LANGUAGES = {
-    "spanish": "Spanish",
-    "español": "Spanish",
-    "french": "French",
-    "français": "French",
-    "german": "German",
-    "deutsch": "German",
-    "hindi": "Hindi",
-    "हिंदी": "Hindi",
-    "italian": "Italian",
-    "italiano": "Italian",
-    "portuguese": "Portuguese",
-    "português": "Portuguese",
-    "russian": "Russian",
-    "русский": "Russian",
-    "chinese": "Chinese",
-    "mandarin": "Chinese",
-    "中文": "Chinese",
-    "japanese": "Japanese",
-    "日本語": "Japanese",
-    "korean": "Korean",
-    "한국어": "Korean",
-    "turkish": "Turkish",
-    "türkçe": "Turkish",
-    "arabic": "Arabic",
-    "العربية": "Arabic",
-}
-
-def _get_target_language(goal: str) -> str:
-    """
-    Determines the language to use for generated documents and research.
-    CRITICAL RULE: Always prioritize English unless the user explicitly requested another language.
-    """
-    if not goal:
+        return response.text.strip()
+    except Exception:
         return "English"
-
-    goal_lower = goal.lower()
-
-    # Check for explicit language requests in the user's goal
-    for lang_key, lang_name in COMMON_LANGUAGES.items():
-        patterns = [
-            rf"\bin\s+{lang_key}\b",
-            rf"\btranslate\s+(?:it\s+)?to\s+{lang_key}\b",
-            rf"\bwritten\s+in\s+{lang_key}\b",
-            rf"\bwrite\s+(?:it\s+)?in\s+{lang_key}\b",
-            rf"\bgenerate\s+(?:it\s+)?in\s+{lang_key}\b",
-            rf"\bcreate\s+(?:it\s+)?in\s+{lang_key}\b",
-            rf"\b{lang_key}\s+version\b",
-            rf"\b{lang_key}\s+language\b",
-        ]
-        if any(re.search(p, goal_lower) for p in patterns):
-            print(f"[Executor] 🌐 User explicitly requested language: {lang_name}")
-            return lang_name
-
-    # Check for non-Latin scripts only if the entire prompt was provided in that script
-    if re.search(r'[\u0900-\u097F]', goal):
-        return "Hindi"
-    if re.search(r'[\u4E00-\u9FFF\u3040-\u30FF]', goal):
-        return "Chinese"
-    if re.search(r'[\u0600-\u06FF]', goal):
-        return "Arabic"
-
-    # Default to English in all other cases
-    return "English"
-
-
-def _synthesize_research_report(raw_research: str, goal: str, target_lang: str = "English") -> str:
-    """
-    Synthesizes raw web search snippets into a comprehensive, professional executive report
-    in English (or the explicitly requested target language).
-    """
-    if not raw_research:
-        return ""
-    try:
-        import google.generativeai as genai
-        genai.configure(api_key=_get_api_key())
-        model = genai.GenerativeModel("gemini-3.1-flash-lite")
-
-        prompt = (
-            f"You are an executive research analyst for Brahma AI.\n"
-            f"User Goal: {goal}\n"
-            f"Target Language: {target_lang} (PRIORITIZE ENGLISH unless the user explicitly requested another language).\n\n"
-            f"Synthesize the following web search research findings into a comprehensive, structured, professional executive report.\n"
-            f"GUIDELINES:\n"
-            f"- Write clearly and professionally in {target_lang}\n"
-            f"- Organize with clear Markdown sections (# Title, ## Executive Summary, ## Key Findings, ## Detailed Analysis, ## Actionable Recommendations)\n"
-            f"- Do NOT just paste raw search engine results, URLs, or 'Search results for:' headers\n"
-            f"- Provide real substance, context, practical insights, and takeaways\n"
-            f"- Output ONLY the markdown content for the report\n\n"
-            f"Research findings:\n{raw_research[:5000]}"
-        )
-        response = model.generate_content(prompt)
-        text = response.text.strip()
-        if text and len(text) > 150:
-            return text
-    except Exception as e:
-        print(f"[Executor] ⚠️ Report synthesis failed: {e}")
-    return raw_research
 
 
 def _translate_to_goal_language(content: str, goal: str) -> str:
-    """Translates content ONLY if the user explicitly specified a non-English language."""
-    if not goal or not content:
+    if not goal:
         return content
-
-    target_lang = _get_target_language(goal)
-    if target_lang == "English":
-        # Always prioritize English — no translation needed!
-        return content
-
     try:
         import google.generativeai as genai
         genai.configure(api_key=_get_api_key())
         model = genai.GenerativeModel("gemini-3.1-flash-lite")
 
-        print(f"[Executor] 🌐 Translating to explicitly requested language: {target_lang}")
+        target_lang = _detect_language(goal)
+        print(f"[Executor] 🌐 Translating to: {target_lang}")
+
         prompt = (
             f"You are a professional translator. "
-            f"Translate the following text into {target_lang} as explicitly requested by the user.\n"
+            f"Translate the following text into {target_lang}.\n"
             f"IMPORTANT:\n"
+            f"- Translate EVERYTHING, leave nothing in English\n"
             f"- Keep all facts, numbers, and data intact\n"
             f"- Keep the structure and formatting\n"
             f"- Output ONLY the translated text, nothing else\n\n"
@@ -246,46 +174,6 @@ def _translate_to_goal_language(content: str, goal: str) -> str:
     except Exception as e:
         print(f"[Executor] ⚠️ Translation failed: {e}")
         return content
-
-
-def _inject_context(params: dict, tool: str, step_results: dict, goal: str = "") -> dict:
-    if not step_results:
-        return params
-
-    params = dict(params)
-    if goal:
-        params["goal"] = goal
-
-    target_lang = _get_target_language(goal)
-
-    if tool in ("pdf_document", "create_pdf", "pdf_tools", "word_document", "docx_tools"):
-        content = params.get("content", "")
-        all_results = [
-            v for v in step_results.values()
-            if v and len(v) > 80 and v not in ("Done.", "Completed.", "Task completed successfully.")
-        ]
-        if all_results and (not content or len(content) < 500):
-            combined = "\n\n---\n\n".join(all_results)
-            # Synthesize into a high-quality executive report in English (or explicitly requested language)
-            synthesized = _synthesize_research_report(combined, goal, target_lang)
-            params["content"] = synthesized
-            print(f"[Executor] 💉 Injected synthesized research report ({target_lang}) into {tool}")
-
-    elif tool == "file_controller" and params.get("action") in ("write", "create_file"):
-        content = params.get("content", "")
-        if not content or len(content) < 50:
-            all_results = [
-                v for v in step_results.values()
-                if v and len(v) > 100 and v not in ("Done.", "Completed.", "Task completed successfully.")
-            ]
-            if all_results:
-                combined = "\n\n---\n\n".join(all_results)
-                if target_lang != "English":
-                    combined = _translate_to_goal_language(combined, goal)
-                params["content"] = combined
-                print(f"[Executor] 💉 Injected research content ({target_lang}) into {tool}")
-
-    return params
 
 def _call_tool(tool: str, parameters: dict, speak: Callable | None, player: Any = None) -> str:
     # Live Thinking Out Loud Breadcrumb
@@ -477,7 +365,109 @@ def _call_tool(tool: str, parameters: dict, speak: Callable | None, player: Any 
             p.setdefault("action", "rollback")
         return auto_heal(parameters=p, player=None, speak=speak) or "Done."
 
+    elif tool == "circuit_assembler":
+        from actions.circuit_assembler import circuit_assembler
+        result = circuit_assembler(parameters=parameters or {}, player=player, speak=speak)
+        return result.get("summary", "Circuit schematic ready.") if isinstance(result, dict) else str(result or "Circuit schematic ready.")
+
+    elif tool == "geospatial_globe":
+        from core.globe_window import GlobeWindow
+        parent = getattr(player, "_win", None) if player else None
+        globe = GlobeWindow.get_instance(parent=parent)
+        action = str((parameters or {}).get("action", "open")).lower()
+        p = parameters or {}
+        location = p.get("location") or "current"
+        if action == "route":
+            result = globe.show_route(p.get("origin", ""), p.get("destination", ""))
+            return f"Flight route: {result.get('origin')} to {result.get('destination')}, {result.get('distance_km')} km."
+        if action == "drive":
+            result = globe.show_driving_route(p.get("origin", ""), p.get("destination", ""))
+            return f"Driving route: {result.get('origin')} to {result.get('destination')}, {result.get('distance_km')} km."
+        if action == "weather":
+            return str(globe.show_weather(location))
+        if action == "flights":
+            return f"Showing {len(globe.show_live_flights(p.get('location')))} live aircraft."
+        if action == "iss":
+            return str(globe.show_iss_tracker())
+        if action == "earthquakes":
+            return f"Showing {len(globe.show_earthquakes(float(p.get('min_magnitude', 2.5))))} earthquakes."
+        if action == "nearby":
+            return f"Found {len(globe.show_nearby(p.get('query') or 'hospitals', p.get('location')))} nearby places."
+        if action == "radar":
+            return f"Weather radar {'enabled' if globe.toggle_weather_radar(bool(p.get('enable', True))) else 'disabled'}."
+        if action == "location":
+            return str(globe.show_location(location))
+        if action == "fly_to":
+            return str(globe.fly_to(location))
+        globe.open_globe(p.get("location"))
+        return "Opened the interactive map."
+
+    elif tool == "call_screening":
+        p = parameters or {}
+        action = str(p.get("action", "start")).lower()
+        from actions.call_assistant import hang_up_active_call, start_call_proxy, take_over_active_call
+        if action == "take_over":
+            take_over_active_call()
+            return "Taking over the screened call."
+        if action == "hang_up":
+            hang_up_active_call()
+            return "Ended the screened call."
+        from core.confirm import request
+        event = {"title": p.get("caller") or "Incoming call", "app": p.get("app") or "Phone / Call"}
+        return request(
+            "start-call-screening",
+            "Answer this call as Brahma Evo",
+            f"Brahma will answer {event['title']} in {event['app']} and prepare a transcript and summary.",
+            lambda: (start_call_proxy(event, ui=player, speak_fn=speak) and "Call screening started."),
+        )
+
+    elif tool == "skill_forge":
+        p = parameters or {}
+        if str(p.get("action", "forge")).lower() == "list":
+            from core.dynamic_registry import DynamicToolRegistry
+            return "Installed skills: " + ", ".join(item["name"] for item in DynamicToolRegistry.list_skills())
+        goal = str(p.get("goal", "")).strip()
+        if not goal:
+            return "Describe the capability you want Brahma to learn."
+        return _run_skill_forge(
+            goal=goal,
+            skill_name=p.get("skill_name"),
+            parameters=p.get("arguments") or p,
+            player=player,
+            speak=speak,
+        )
+
+    elif tool == "dynamic_skill":
+        p = parameters or {}
+        from core.dynamic_registry import DynamicToolRegistry
+        if str(p.get("action", "list")).lower() == "list":
+            return "Installed skills: " + ", ".join(item["name"] for item in DynamicToolRegistry.list_skills())
+        name = str(p.get("skill_name", "")).strip()
+        if not DynamicToolRegistry.has_tool(name):
+            return f"No active skill named '{name}'."
+        run_res = DynamicToolRegistry.execute_sync(name, p.get("arguments") or p or {})
+        if isinstance(run_res, dict):
+            out_str = str(run_res.get("summary") or run_res.get("output") or run_res.get("text") or run_res).strip()
+        else:
+            out_str = str(run_res).strip()
+        if player and hasattr(player, "write_log"):
+            player.write_log(f"Brahma Evo [{name}]:\n{out_str}")
+        return out_str
+
     else:
+        try:
+            from core.dynamic_registry import DynamicToolRegistry
+            if DynamicToolRegistry.has_tool(tool):
+                run_res = DynamicToolRegistry.execute_sync(tool, parameters or {})
+                if isinstance(run_res, dict):
+                    out_str = str(run_res.get("summary") or run_res.get("output") or run_res.get("text") or run_res).strip()
+                else:
+                    out_str = str(run_res).strip()
+                if player and hasattr(player, "write_log"):
+                    player.write_log(f"Brahma Evo [{tool}]:\n{out_str}")
+                return out_str
+        except Exception as exc:
+            return f"Feature '{tool}' failed: {exc}"
         print(f"[Executor] ⚠️ Unknown tool '{tool}' — no developer fallback is configured")
         return f"Unknown action: {tool}"
 
@@ -497,8 +487,6 @@ class AgentExecutor:
         replan_attempts = 0
         completed_steps = []
         step_results    = {} 
-        total_start_time = time.time()
-        step_traces     = []
         plan            = create_plan(goal)
 
         while True:
@@ -549,22 +537,10 @@ class AgentExecutor:
                 while attempt <= 3:
                     if cancel_flag and cancel_flag.is_set():
                         break
-                    step_t0 = time.time()
                     try:
                         result = _call_tool(tool, params, speak, player=player)
-                        step_dur = max(60, int((time.time() - step_t0) * 1000))
                         step_results[step_num] = result 
                         completed_steps.append(step)
-                        step_traces.append({
-                            "step": step_num,
-                            "tool": tool,
-                            "description": desc or f"Execute {tool}",
-                            "status": "success",
-                            "duration_ms": step_dur,
-                            "parameters": params,
-                            "result": str(result)[:300],
-                            "result_synopsis": str(result)[:80]
-                        })
                         print(f"[Executor] ✅ Step {step_num} done: {str(result)[:100]}")
                         step_ok = True
 
@@ -655,18 +631,7 @@ class AgentExecutor:
                     break
 
             if success:
-                total_duration_ms = max(100, int((time.time() - total_start_time) * 1000))
                 summary = self._summarize(goal, completed_steps, speak)
-                if step_traces:
-                    try:
-                        import json
-                        trace_payload = {
-                            "duration_ms": total_duration_ms,
-                            "steps": step_traces
-                        }
-                        summary = f"<!--EXECUTION_TRACE:{json.dumps(trace_payload)}-->\n" + summary
-                    except Exception:
-                        pass
                 if player and hasattr(player, "show_hud_deliverable"):
                     import re
                     found_file = None
@@ -700,7 +665,7 @@ class AgentExecutor:
         try:
             import google.generativeai as genai
             genai.configure(api_key=_get_api_key())
-            model     = genai.GenerativeModel(model_name="gemini-3.1-flash-lite")
+            model = genai.GenerativeModel(model_name="gemini-2.5-flash")
             steps_str = "\n".join(f"- {s.get('description', '')}" for s in completed_steps)
             prompt    = (
                 f'User goal: "{goal}"\n'

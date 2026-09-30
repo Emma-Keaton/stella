@@ -7,6 +7,7 @@ between microcontroller and sensors, matching the user's reference diagram.
 from __future__ import annotations
 
 import json
+import html as html_lib
 import logging
 import os
 import sys
@@ -46,11 +47,11 @@ def generate_circuit_html(circuit: Dict[str, Any]) -> str:
     Generates a clean, compact, high-tech SVG circuit schematic HTML
     showing ONLY the title, component cards, neon wires, and legend.
     """
-    title = circuit.get("title", "Connecting DHT11 and Arduino Pro Mini")
+    title = html_lib.escape(str(circuit.get("title", "Connecting DHT11 and Arduino Pro Mini")))
     components = circuit.get("components", [])
     wires = circuit.get("wires", [])
 
-    circuit_json = json.dumps(circuit)
+    circuit_json = json.dumps(circuit).replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -292,31 +293,42 @@ def generate_circuit_html(circuit: Dict[str, Any]) -> str:
     const compRow = document.getElementById('components-row');
     const svgLayer = document.getElementById('wires-layer');
 
+    function escapeHtml(value) {{
+      return String(value ?? '').replace(/[&<>"']/g, char => ({{
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }})[char]);
+    }}
+
+    function safeColor(value) {{
+      const color = String(value || '');
+      return /^#[0-9a-fA-F]{{3,8}}$/.test(color) ? color : '#38bdf8';
+    }}
+
     function renderComponents() {{
       compRow.innerHTML = '';
       circuitData.components.forEach(comp => {{
         const card = document.createElement('div');
         card.className = 'hw-card' + (comp.highlight ? ' highlighted-card' : '');
-        card.id = `comp-${{comp.id}}`;
+        card.id = `comp-${{escapeHtml(comp.id)}}`;
 
         let leftHtml = (comp.left_pins || []).map(p => `
-          <div class="pin-node" id="pin-${{comp.id}}-left-${{p.name}}">
-            ${{p.badge ? `<div class="pin-badge" style="background: ${{p.color || '#38bdf8'}}; box-shadow: 0 0 8px ${{p.color || '#38bdf8'}};">${{p.badge}}</div>` : `<div class="pin-terminal" style="background: ${{p.color || '#38bdf8'}};"></div>`}}
-            <span>${{p.name}}</span>
+          <div class="pin-node" id="pin-${{escapeHtml(comp.id)}}-left-${{escapeHtml(p.name)}}">
+            ${{p.badge ? `<div class="pin-badge" style="background: ${{safeColor(p.color)}}; box-shadow: 0 0 8px ${{safeColor(p.color)}};">${{escapeHtml(p.badge)}}</div>` : `<div class="pin-terminal" style="background: ${{safeColor(p.color)}};"></div>`}}
+            <span>${{escapeHtml(p.name)}}</span>
           </div>
         `).join('');
 
         let rightHtml = (comp.right_pins || []).map(p => `
-          <div class="pin-node" id="pin-${{comp.id}}-right-${{p.name}}">
-            <span>${{p.name}}</span>
-            ${{p.badge ? `<div class="pin-badge" style="background: ${{p.color || '#38bdf8'}}; box-shadow: 0 0 8px ${{p.color || '#38bdf8'}};">${{p.badge}}</div>` : `<div class="pin-terminal" style="background: ${{p.color || '#38bdf8'}};"></div>`}}
+          <div class="pin-node" id="pin-${{escapeHtml(comp.id)}}-right-${{escapeHtml(p.name)}}">
+            <span>${{escapeHtml(p.name)}}</span>
+            ${{p.badge ? `<div class="pin-badge" style="background: ${{safeColor(p.color)}}; box-shadow: 0 0 8px ${{safeColor(p.color)}};">${{escapeHtml(p.badge)}}</div>` : `<div class="pin-terminal" style="background: ${{safeColor(p.color)}};"></div>`}}
           </div>
         `).join('');
 
         card.innerHTML = `
           <div class="hw-card-header">
-            <h3>${{comp.name}}</h3>
-            <span>${{comp.subtitle || ''}}</span>
+            <h3>${{escapeHtml(comp.name)}}</h3>
+            <span>${{escapeHtml(comp.subtitle || '')}}</span>
           </div>
           <div class="hw-card-body">
             <div class="pins-col left">${{leftHtml}}</div>
@@ -382,8 +394,8 @@ def generate_circuit_html(circuit: Dict[str, Any]) -> str:
           path.setAttribute('d', pathD);
           path.setAttribute('class', 'wire-path');
           path.setAttribute('id', `wire-${{idx}}`);
-          path.setAttribute('stroke', w.color || '#38bdf8');
-          path.style.color = w.color || '#38bdf8';
+          path.setAttribute('stroke', safeColor(w.color));
+          path.style.color = safeColor(w.color);
 
           // Flowing electron pulse dot
           const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
@@ -438,23 +450,14 @@ class CircuitPopupOverlay(QWidget):
         self._frame = QFrame(self)
         self._frame.setObjectName("CircuitPopupFrame")
         self._frame.setFixedSize(self.size())
+        # Neon accent border frame styling (pure hardware compositing without software blur readback)
         self._frame.setStyleSheet("""
             QFrame#CircuitPopupFrame {
                 background: rgba(7, 12, 24, 0.97);
-                border: 1.5px solid rgba(56, 189, 248, 0.45);
+                border: 2px solid rgba(56, 189, 248, 0.55);
                 border-radius: 16px;
             }
         """)
-
-        # Drop shadow
-        try:
-            shadow = QGraphicsDropShadowEffect(self)
-            shadow.setBlurRadius(40)
-            shadow.setColor(QColor(0, 0, 0, 220))
-            shadow.setOffset(0, 8)
-            self._frame.setGraphicsEffect(shadow)
-        except Exception:
-            pass
 
         frame_layout = QVBoxLayout(self._frame)
         frame_layout.setContentsMargins(0, 0, 0, 0)

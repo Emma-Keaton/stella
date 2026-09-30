@@ -1,34 +1,25 @@
 """
-Auto-Heal & Self-Patching Engine for Brahma AI (Pro Edition)
-Enables Brahma to detect its own bugs, tracebacks, missing dependencies, and API limits:
-1. Proactive auto-healing & self-recovery loop
-2. Missing package & pip dependency resolution
-3. API quota, 1011, and network failover healing
-4. Full AST scope & enclosing function context extraction
-5. Behavioral sandbox verification before disk write
-6. Dual-layer atomic backup (timestamped backup + Git checkpoint)
-7. Visual HUD diff & patch telemetry card in UI
-8. Instant atomic rollback guarantees
+Auto-Heal & Self-Patching Engine for Brahma AI
+Enables Brahma to detect its own bugs, tracebacks, and tool exceptions,
+synthesize minimal surgical hotfixes, verify syntax in an isolated sandbox,
+safely apply patches with atomic rollback guarantees, and record changelogs.
 """
 
 from __future__ import annotations
 from core.user_paths import get_user_data_dir
 
 import ast
-import difflib
-import importlib
 import json
 import logging
 import os
 import py_compile
 import re
 import shutil
-import subprocess
 import sys
 import time
 import uuid
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 logger = logging.getLogger("AutoHealEngine")
 
@@ -37,30 +28,20 @@ CONFIG_DIR = get_user_data_dir() / "config"
 PATCH_HISTORY_FILE = CONFIG_DIR / "patch_history.json"
 BACKUPS_DIR = CONFIG_DIR / "patch_backups"
 API_CONFIG_PATH = CONFIG_DIR / "api_keys.json"
-WORKSPACE_CONFIG_PATH = BASE_DIR / "config" / "api_keys.json"
 
-# Common Python module-to-PyPI package name mapping
-COMMON_PIP_MAPPING = {
-    "yaml": "pyyaml",
-    "cv2": "opencv-python",
-    "PIL": "pillow",
-    "bs4": "beautifulsoup4",
-    "dotenv": "python-dotenv",
-    "sklearn": "scikit-learn",
-    "dateutil": "python-dateutil",
-    "mutagen": "mutagen",
-    "psutil": "psutil",
-    "playwright": "playwright",
-    "pydantic": "pydantic",
-    "requests": "requests",
-    "httpx": "httpx",
-    "aiohttp": "aiohttp",
-    "sounddevice": "sounddevice",
-    "numpy": "numpy",
-    "scipy": "scipy",
-    "torch": "torch",
-    "transformers": "transformers",
-}
+
+def _get_gemini_api_key() -> str:
+    """Retrieves the Gemini API key from api_keys.json or environment variables."""
+    if API_CONFIG_PATH.exists():
+        try:
+            with open(API_CONFIG_PATH, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                key = data.get("gemini_api_key", "").strip()
+                if key:
+                    return key
+        except Exception:
+            pass
+    return (os.environ.get("GEMINI_API_KEY", "") or os.environ.get("GOOGLE_API_KEY", "")).strip()
 
 # Core files strictly protected from modification to prevent self-destruction
 PROTECTED_CORE_FILES = {
@@ -73,25 +54,10 @@ PROTECTED_CORE_FILES = {
 }
 
 
-def _get_gemini_api_key() -> str:
-    """Retrieves the active Gemini API key from AppData, workspace config, or environment."""
-    for p in (API_CONFIG_PATH, WORKSPACE_CONFIG_PATH):
-        if p.exists():
-            try:
-                with open(p, "r", encoding="utf-8") as f:
-                    data = json.load(f)
-                    key = data.get("gemini_api_key", "").strip()
-                    if key:
-                        return key
-            except Exception:
-                pass
-    return (os.environ.get("GEMINI_API_KEY", "") or os.environ.get("GOOGLE_API_KEY", "")).strip()
-
-
 # ── 1. Traceback Analyzer ───────────────────────────────────────────────────
 
 class TracebackAnalyzer:
-    """Parses tracebacks, pinpoints responsible first-party files, and extracts AST scope."""
+    """Parses tracebacks and pinpoints the responsible first-party codebase file and line."""
 
     @staticmethod
     def parse(tb_text: str) -> Dict[str, Any]:
@@ -102,9 +68,6 @@ class TracebackAnalyzer:
             "function_name": None,
             "exception_type": None,
             "exception_message": None,
-            "is_missing_dependency": False,
-            "missing_module": None,
-            "is_quota_or_network": False,
             "raw_traceback": tb_text,
         }
 
@@ -123,20 +86,6 @@ class TracebackAnalyzer:
                 result["exception_type"] = last_line
                 result["exception_message"] = ""
 
-        # Check for missing dependency
-        exc_type = result.get("exception_type", "")
-        exc_msg = result.get("exception_message", "")
-        if exc_type in ("ModuleNotFoundError", "ImportError") or "No module named" in exc_msg:
-            result["is_missing_dependency"] = True
-            mod_match = re.search(r"No module named\s+['\"]?([a-zA-Z0-9_\.]+)['\"]?", exc_msg)
-            if mod_match:
-                result["missing_module"] = mod_match.group(1).split(".")[0]
-
-        # Check for API Quota or Connection limit
-        low_tb = tb_text.lower()
-        if any(token in low_tb for token in ("429", "1011", "resource_exhausted", "quota", "rate limit", "exceeded your current quota")):
-            result["is_quota_or_network"] = True
-
         # Match all File "path", line X, in func entries
         file_pattern = re.compile(r'File\s+["\']([^"\']+\.py)["\'],\s+line\s+(\d+)(?:,\s+in\s+([^\n\r]+))?', re.IGNORECASE)
         matches = file_pattern.findall(tb_text)
@@ -148,6 +97,7 @@ class TracebackAnalyzer:
             if "site-packages" in raw_path.lower() or ".venv" in raw_path.lower() or "lib\\python" in raw_path.lower():
                 continue
 
+            # Check if file exists in our codebase
             resolved = None
             if (BASE_DIR / p).exists():
                 resolved = (BASE_DIR / p).resolve()
@@ -158,6 +108,7 @@ class TracebackAnalyzer:
                 if candidate.exists():
                     resolved = candidate
                 else:
+                    # Search inside subdirectories
                     for sub in ("actions", "core", "agent", "services"):
                         c2 = BASE_DIR / sub / p.name
                         if c2.exists():
@@ -165,6 +116,7 @@ class TracebackAnalyzer:
                             break
 
             if resolved and resolved.exists():
+                # Check immunity
                 if resolved.name in PROTECTED_CORE_FILES:
                     logger.warning(f"[AutoHeal] File '{resolved.name}' is core-protected and cannot be patched.")
                     continue
@@ -177,155 +129,11 @@ class TracebackAnalyzer:
 
         return result
 
-    @staticmethod
-    def extract_ast_scope(full_source: str, line_num: int) -> str:
-        """
-        Uses Python AST parsing to extract the exact enclosing function, async function,
-        or class definition along with all file imports for full LLM reasoning context.
-        """
-        imports_collected: List[str] = []
-        source_lines = full_source.splitlines(keepends=True)
 
-        try:
-            tree = ast.parse(full_source)
-            for node in ast.iter_child_nodes(tree):
-                if isinstance(node, (ast.Import, ast.ImportFrom)):
-                    start = node.lineno - 1
-                    end = getattr(node, "end_lineno", node.lineno)
-                    imports_collected.append("".join(source_lines[start:end]).strip())
-        except Exception:
-            pass
-
-        imports_block = "\n".join(imports_collected) if imports_collected else ""
-
-        # Find enclosing function or class
-        enclosing_block: Optional[str] = None
-        try:
-            tree = ast.parse(full_source)
-            candidate_node = None
-            for node in ast.walk(tree):
-                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
-                    start_line = getattr(node, "lineno", 0)
-                    end_line = getattr(node, "end_lineno", sys.maxsize)
-                    if start_line <= line_num <= end_line:
-                        # Select the narrowest enclosing block
-                        if candidate_node is None or (end_line - start_line) < (candidate_node.end_lineno - candidate_node.lineno):
-                            candidate_node = node
-
-            if candidate_node and hasattr(candidate_node, "lineno") and hasattr(candidate_node, "end_lineno"):
-                s_idx = max(0, candidate_node.lineno - 1)
-                e_idx = min(len(source_lines), candidate_node.end_lineno)
-                # Cap to 120 lines to maintain concise prompt context
-                if (e_idx - s_idx) <= 120:
-                    enclosing_block = "".join(source_lines[s_idx:e_idx])
-        except Exception:
-            pass
-
-        # Fallback to smart sliding window
-        if not enclosing_block:
-            s_idx = max(0, line_num - 25)
-            e_idx = min(len(source_lines), line_num + 25)
-            enclosing_block = "".join(source_lines[s_idx:e_idx])
-
-        if imports_block:
-            return f"# --- File Level Imports ---\n{imports_block}\n\n# --- Enclosing Target Scope (Crash at line {line_num}) ---\n{enclosing_block}"
-        return enclosing_block
-
-
-# ── 2. Dependency & Pip Package Resolver ────────────────────────────────────
-
-class DependencyHealer:
-    """Detects missing Python dependencies and autonomously installs them via pip."""
-
-    @staticmethod
-    def heal(missing_module: str) -> Dict[str, Any]:
-        if not missing_module:
-            return {"success": False, "message": "No module specified."}
-
-        package_name = COMMON_PIP_MAPPING.get(missing_module.lower(), missing_module)
-        logger.info(f"[AutoHeal] Attempting autonomous pip installation of '{package_name}'...")
-
-        try:
-            cmd = [sys.executable, "-m", "pip", "install", package_name, "--quiet"]
-            res = subprocess.run(cmd, capture_output=True, text=True, timeout=90)
-            if res.returncode == 0:
-                importlib.invalidate_caches()
-                patch_id = str(uuid.uuid4())[:8]
-                entry = {
-                    "patch_id": patch_id,
-                    "timestamp": time.time(),
-                    "type": "dependency_installed",
-                    "package": package_name,
-                    "module": missing_module,
-                    "explanation": f"Autonomously installed missing dependency '{package_name}'.",
-                    "status": "applied",
-                }
-                history = SafetySandbox._load_history()
-                history.append(entry)
-                SafetySandbox._save_history(history)
-                return {
-                    "success": True,
-                    "patch_id": patch_id,
-                    "package": package_name,
-                    "message": f"Successfully installed missing package '{package_name}'.",
-                }
-            else:
-                err_msg = res.stderr.strip() or res.stdout.strip()
-                return {"success": False, "message": f"pip install {package_name} failed: {err_msg}"}
-        except Exception as e:
-            return {"success": False, "message": f"Pip auto-resolver encountered an error: {e}"}
-
-
-# ── 3. API Quota & Network Failover Healer ──────────────────────────────────
-
-class NetworkAndQuotaHealer:
-    """Autonomously recovers from 429 / 1011 rate limits and connection exhaustion."""
-
-    @staticmethod
-    def heal() -> Dict[str, Any]:
-        """Inspects alternative keys and sets failover state."""
-        # Check workspace config key
-        ws_key = None
-        if WORKSPACE_CONFIG_PATH.exists():
-            try:
-                with open(WORKSPACE_CONFIG_PATH, "r", encoding="utf-8") as f:
-                    ws_key = json.load(f).get("gemini_api_key", "").strip()
-            except Exception:
-                pass
-
-        app_key = None
-        if API_CONFIG_PATH.exists():
-            try:
-                with open(API_CONFIG_PATH, "r", encoding="utf-8") as f:
-                    app_key = json.load(f).get("gemini_api_key", "").strip()
-            except Exception:
-                pass
-
-        # If keys differ, synchronize the active one
-        if ws_key and ws_key != app_key:
-            try:
-                API_CONFIG_PATH.parent.mkdir(parents=True, exist_ok=True)
-                with open(API_CONFIG_PATH, "w", encoding="utf-8") as f:
-                    json.dump({"gemini_api_key": ws_key}, f, indent=4)
-                return {
-                    "success": True,
-                    "action": "key_rotated",
-                    "message": "Rotated to secondary verified Gemini API key from workspace configuration.",
-                }
-            except Exception:
-                pass
-
-        return {
-            "success": True,
-            "action": "failover_provider",
-            "message": "Switched primary model pipeline to secondary fallback provider.",
-        }
-
-
-# ── 4. Safety Sandbox & Rollback Manager ────────────────────────────────────
+# ── 2. Safety Sandbox & Rollback Manager ────────────────────────────────────
 
 class SafetySandbox:
-    """Manages atomic backups, AST parsing, behavioral sandbox testing, git checkpoints, and rollback."""
+    """Manages atomic backups, AST parsing, compilation tests, and instant rollback."""
 
     @staticmethod
     def create_backup(file_path: Path) -> Path:
@@ -337,74 +145,19 @@ class SafetySandbox:
         return backup_path
 
     @staticmethod
-    def git_checkpoint(file_path: Path, patch_id: str) -> Optional[str]:
-        """Creates a lightweight Git checkpoint commit if git is initialized."""
+    def validate_code(code_str: str, file_name: str = "<staging>") -> Tuple[bool, Optional[str]]:
+        """Validates that candidate code parses into a valid Python AST without syntax errors."""
         try:
-            status_res = subprocess.run(
-                ["git", "status", "--porcelain"],
-                cwd=str(BASE_DIR),
-                capture_output=True,
-                text=True,
-                timeout=3
-            )
-            if status_res.returncode == 0:
-                rel_path = str(file_path.relative_to(BASE_DIR))
-                subprocess.run(["git", "add", rel_path], cwd=str(BASE_DIR), capture_output=True, timeout=3)
-                commit_msg = f"AutoHeal Checkpoint before patch {patch_id} on {file_path.name}"
-                subprocess.run(
-                    ["git", "commit", "-m", commit_msg, "--no-verify"],
-                    cwd=str(BASE_DIR),
-                    capture_output=True,
-                    timeout=5
-                )
-                rev_res = subprocess.run(
-                    ["git", "rev-parse", "--short", "HEAD"],
-                    cwd=str(BASE_DIR),
-                    capture_output=True,
-                    text=True,
-                    timeout=2
-                )
-                return rev_res.stdout.strip() if rev_res.returncode == 0 else None
-        except Exception:
-            pass
-        return None
-
-    @staticmethod
-    def generate_diff(original_text: str, staged_text: str, file_name: str) -> str:
-        """Generates a clean unified diff string."""
-        orig_lines = original_text.splitlines(keepends=True)
-        staged_lines = staged_text.splitlines(keepends=True)
-        diff = difflib.unified_diff(
-            orig_lines,
-            staged_lines,
-            fromfile=f"a/{file_name}",
-            tofile=f"b/{file_name}",
-            n=3
-        )
-        return "".join(diff)
-
-    @staticmethod
-    def test_in_sandbox(staged_code: str, file_name: str) -> Tuple[bool, Optional[str]]:
-        """
-        Validates both AST syntax parsing and byte-code compilation in memory.
-        """
-        try:
-            ast.parse(staged_code, filename=file_name)
+            ast.parse(code_str, filename=file_name)
+            return True, None
         except SyntaxError as e:
-            return False, f"AST Syntax Error at line {e.lineno}: {e.msg}"
+            return False, f"Syntax Error on line {e.lineno}: {e.msg}"
         except Exception as e:
-            return False, f"AST Parse Error: {e}"
-
-        try:
-            compile(staged_code, file_name, "exec")
-        except Exception as e:
-            return False, f"Bytecode Compilation Error: {e}"
-
-        return True, None
+            return False, f"Validation Error: {e}"
 
     @staticmethod
     def rollback_patch(patch_id: str) -> Dict[str, Any]:
-        """Rolls back an applied patch by its ID or 'latest'."""
+        """Rolls back an applied patch by its ID."""
         history = SafetySandbox._load_history()
         for entry in reversed(history):
             if entry.get("patch_id") == patch_id or patch_id == "latest":
@@ -450,7 +203,7 @@ class SafetySandbox:
             logger.error(f"[AutoHeal] Failed to save patch history: {e}")
 
 
-# ── 5. Patch Synthesizer & Auto-Heal Controller ─────────────────────────────
+# ── 3. Patch Synthesizer & Auto-Heal Controller ─────────────────────────────
 
 class AutoHealEngine:
     """Orchestrates error analysis, hotfix synthesis, verification, and application."""
@@ -459,14 +212,17 @@ class AutoHealEngine:
 
     @classmethod
     def record_last_error(cls, tb_str: str) -> None:
+        """Stores the most recent error traceback captured during runtime."""
         cls._last_error = tb_str
 
     @classmethod
     def get_last_error(cls) -> Optional[str]:
+        """Returns the most recent error traceback if any."""
         return cls._last_error
 
     @classmethod
     def get_patch_history(cls, limit: int = 5) -> List[Dict[str, Any]]:
+        """Returns recent patch history."""
         history = SafetySandbox._load_history()
         return list(reversed(history))[:limit]
 
@@ -478,25 +234,11 @@ class AutoHealEngine:
         dry_run: bool = False,
     ) -> Dict[str, Any]:
         """
-        Analyzes a traceback, synthesizes an AST-informed hotfix, verifies syntax
-        and bytecode in memory, creates an atomic backup & git checkpoint, and patches.
+        Analyzes a traceback, pinpoints the root cause, synthesizes a patch,
+        verifies AST syntax in memory, and safely applies it with backup.
         """
         parsed = TracebackAnalyzer.parse(traceback_text)
-
-        # 1. Missing dependency auto-resolution
-        if parsed.get("is_missing_dependency") and parsed.get("missing_module"):
-            dep_res = DependencyHealer.heal(parsed["missing_module"])
-            if dep_res.get("success"):
-                return dep_res
-
-        # 2. API Quota or connection failover
-        if parsed.get("is_quota_or_network"):
-            quota_res = NetworkAndQuotaHealer.heal()
-            if quota_res.get("success"):
-                return quota_res
-
-        # 3. Source code patching
-        if not parsed.get("success") or not parsed.get("target_file"):
+        if not parsed.get("success"):
             return {
                 "success": False,
                 "message": "Could not identify a modifiable first-party source file from the traceback.",
@@ -513,9 +255,13 @@ class AutoHealEngine:
         except Exception as e:
             return {"success": False, "message": f"Unable to read target file '{target_path.name}': {e}"}
 
-        # Extract full enclosing AST scope
-        code_context = TracebackAnalyzer.extract_ast_scope(full_source, line_num)
+        # Extract code context around the failing line
+        source_lines = full_source.splitlines(keepends=True)
+        start_idx = max(0, line_num - 25)
+        end_idx = min(len(source_lines), line_num + 25)
+        code_context = "".join(source_lines[start_idx:end_idx])
 
+        # Generate patch via LLM
         patch_spec = cls._synthesize_patch_code(
             file_name=target_path.name,
             line_num=line_num,
@@ -537,32 +283,24 @@ class AutoHealEngine:
         explanation = patch_spec.get("explanation", "Bug hotfix.")
 
         if target_chunk not in full_source:
-            # Fallback: attempt stripped match
-            if target_chunk.strip() in full_source:
-                for line in full_source.splitlines():
-                    if target_chunk.strip() in line:
-                        target_chunk = line
-                        break
-            else:
-                return {
-                    "success": False,
-                    "message": "Target code chunk could not be matched precisely in source file.",
-                    "parsed": parsed,
-                }
-
-        staged_source = full_source.replace(target_chunk, replacement_chunk, 1)
-
-        # Behavioral sandbox test (AST + Bytecode)
-        valid, sandbox_err = SafetySandbox.test_in_sandbox(staged_source, file_name=target_path.name)
-        if not valid:
-            logger.error(f"[AutoHeal] Patch rejected by sandbox: {sandbox_err}")
             return {
                 "success": False,
-                "message": f"Safety Guard: Patch rejected: {sandbox_err}",
+                "message": "Target code chunk could not be matched precisely in source file.",
                 "parsed": parsed,
             }
 
-        diff_text = SafetySandbox.generate_diff(full_source, staged_source, target_path.name)
+        # Apply candidate patch in staging memory
+        staged_source = full_source.replace(target_chunk, replacement_chunk, 1)
+
+        # Pre-flight AST Syntax validation
+        valid, syntax_err = SafetySandbox.validate_code(staged_source, file_name=target_path.name)
+        if not valid:
+            logger.error(f"[AutoHeal] Patch rejected by SafetySandbox: {syntax_err}")
+            return {
+                "success": False,
+                "message": f"Safety Guard: Patch rejected due to syntax error: {syntax_err}",
+                "parsed": parsed,
+            }
 
         if dry_run:
             return {
@@ -570,14 +308,12 @@ class AutoHealEngine:
                 "dry_run": True,
                 "target_file": str(target_path),
                 "explanation": explanation,
-                "diff": diff_text,
-                "message": f"Dry-run passed sandbox verification for {target_path.name}.",
+                "target_chunk": target_chunk,
+                "replacement_chunk": replacement_chunk,
+                "message": f"Dry-run passed syntax validation for {target_path.name}.",
             }
 
-        patch_id = str(uuid.uuid4())[:8]
-
-        # Dual-layer safety: Git checkpoint + Atomic file backup
-        git_sha = SafetySandbox.git_checkpoint(target_path, patch_id)
+        # Create atomic backup
         backup_path = SafetySandbox.create_backup(target_path)
 
         # Write patch to disk
@@ -585,6 +321,7 @@ class AutoHealEngine:
             with open(target_path, "w", encoding="utf-8") as f:
                 f.write(staged_source)
         except Exception as e:
+            # Immediate rollback if write failed
             shutil.copy2(backup_path, target_path)
             return {"success": False, "message": f"File write failed, restored backup: {e}"}
 
@@ -592,20 +329,19 @@ class AutoHealEngine:
         try:
             py_compile.compile(str(target_path), doraise=True)
         except Exception as pyc_err:
-            logger.error(f"[AutoHeal] Post-write py_compile failed, rolling back: {pyc_err}")
+            logger.error(f"[AutoHeal] py_compile failed after write, rolling back: {pyc_err}")
             shutil.copy2(backup_path, target_path)
             return {"success": False, "message": f"Post-write compilation failed, rolled back: {pyc_err}"}
 
+        patch_id = str(uuid.uuid4())[:8]
         entry = {
             "patch_id": patch_id,
             "timestamp": time.time(),
             "target_file": str(target_path),
             "backup_path": str(backup_path),
-            "git_commit": git_sha,
             "line_number": line_num,
             "exception_fixed": f"{parsed.get('exception_type')}: {parsed.get('exception_message')}",
             "explanation": explanation,
-            "diff_snippet": diff_text[:500],
             "status": "applied",
         }
 
@@ -618,9 +354,7 @@ class AutoHealEngine:
             "patch_id": patch_id,
             "target_file": str(target_path),
             "backup_path": str(backup_path),
-            "git_commit": git_sha,
             "explanation": explanation,
-            "diff": diff_text,
             "message": f"Successfully auto-patched '{target_path.name}' at line {line_num} (Patch ID: {patch_id}). Backup preserved.",
         }
 
@@ -640,7 +374,7 @@ A Python bug occurred in file '{file_name}' around line {line_num}.
 Exception: {exception_type}: {exception_msg}
 Additional context: {context_notes}
 
-Relevant source code context (including enclosing scope & imports):
+Relevant source code context:
 ```python
 {code_context}
 ```
@@ -654,6 +388,7 @@ Output ONLY a strict JSON object with these exact keys:
 }}
 Do NOT include markdown fences outside the JSON. Return only the valid JSON object.
 """
+        # 1. Primary: Google Gemini (Native directly via google.genai)
         gemini_key = _get_gemini_api_key()
         if gemini_key:
             try:
@@ -682,7 +417,7 @@ Do NOT include markdown fences outside the JSON. Return only the valid JSON obje
             except Exception as g_err:
                 logger.warning(f"[AutoHeal] Gemini synthesis failed: {g_err}")
 
-        # Fallback: Unified AI Client
+        # 2. Fallback: Unified AI Client (llm_client.py)
         try:
             from llm_client import client as unified_client
             resp_text = unified_client.chat(prompt, temperature=0.1)
@@ -697,7 +432,7 @@ Do NOT include markdown fences outside the JSON. Return only the valid JSON obje
         except Exception as u_err:
             logger.warning(f"[AutoHeal] Unified AI client fallback failed: {u_err}")
 
-        # Fallback: OpenRouter client
+        # 3. Fallback: OpenRouter client
         try:
             import or_client
             resp_text = or_client.chat(prompt, system="You are an expert Python auto-patching engineer. Return strict JSON.")
@@ -716,23 +451,7 @@ Do NOT include markdown fences outside the JSON. Return only the valid JSON obje
         }
 
 
-# ── 6. Unified Entrypoint & HUD Formatter ───────────────────────────────────
-
-def format_hud_card(res: Dict[str, Any]) -> str:
-    """Formats a visual HUD patch card for UI display."""
-    patch_id = res.get("patch_id", "N/A")
-    target = Path(res.get("target_file", "Codebase")).name
-    exp = res.get("explanation", "Hotfix applied")
-    lines = [
-        "🛡️ ── [BRAHMA AUTO-HEAL: HOTFIX APPLIED] ──",
-        f"• Target File: {target}",
-        f"• Patch ID: #{patch_id}",
-        f"• Resolution: {exp}",
-        "• Sandbox Status: AST Verified ✅ | Compilation Passed ✅ | Live Active",
-        "────────────────────────────────────────────",
-    ]
-    return "\n".join(lines)
-
+# ── 4. Unified MCP Tool Dispatcher ──────────────────────────────────────────
 
 def auto_heal(
     parameters: Optional[Union[Dict[str, Any], str]] = None,
@@ -758,13 +477,13 @@ def auto_heal(
 
         lines = ["🛡️ AUTONOMOUS PATCH HISTORY:"]
         for p in patches:
-            fn = Path(p.get("target_file", "")).name if p.get("target_file") else p.get("package", "system")
+            fn = Path(p.get("target_file", "")).name
             status = p.get("status", "unknown")
-            lines.append(f"• [{p.get('patch_id')}] {fn}: {p.get('explanation')} — Status: {status}")
+            lines.append(f"• [{p.get('patch_id')}] {fn} (line {p.get('line_number')}): {p.get('explanation')} — Status: {status}")
 
         result = "\n".join(lines)
         if speak:
-            speak(f"You have {len(patches)} recent patches logged.")
+            speak(f"You have {len(patches)} recent patches logged. Last patch was on {Path(patches[0].get('target_file', '')).name}.")
         return result
 
     elif action in ("rollback", "undo", "revert"):
@@ -781,6 +500,7 @@ def auto_heal(
         if not tb:
             tb = AutoHealEngine.get_last_error() or ""
         if not tb:
+            # Check FATAL_CRASH.log if no traceback explicitly provided
             crash_log = BASE_DIR / "FATAL_CRASH.log"
             if crash_log.exists():
                 try:
@@ -788,20 +508,13 @@ def auto_heal(
                 except Exception:
                     pass
         if not tb:
-            msg = "No recent error or traceback captured to heal."
+            msg = "No recent error or traceback captured to heal. If an error just occurred, you can paste the traceback."
             if speak:
                 speak(msg)
             return msg
 
         res = AutoHealEngine.heal_traceback(tb, context_notes=notes)
-        if res.get("success"):
-            card_text = format_hud_card(res)
-            if player and hasattr(player, "write_log"):
-                player.write_log(card_text)
-            msg = res.get("message", "Done.")
-        else:
-            msg = res.get("message", "Auto-heal attempt failed.")
-
+        msg = res.get("message", "Done.")
         if speak:
             speak(msg)
         return msg
@@ -809,12 +522,12 @@ def auto_heal(
     elif action in ("learn_rule", "add_rule", "remember_rule"):
         rule = params.get("rule") or params.get("directive") or params.get("text") or ""
         if not rule:
-            return "Please specify a rule to learn."
+            return "Please specify a rule to learn (e.g. rule='Always use Chrome browser')."
         from core.learned_rules import LearnedRulesEngine
         res = LearnedRulesEngine.add_rule(rule)
         msg = res.get("message", "Rule saved.")
         if speak:
-            speak("Understood, sir. I have committed that rule to my memory.")
+            speak(f"Understood, sir. I have committed that rule to my memory.")
         return msg
 
     elif action in ("list_rules", "rules"):
@@ -835,15 +548,12 @@ def auto_heal(
         rule_count = len(LearnedRulesEngine.list_rules(active_only=True))
 
         lines = [
-            "🛡️ AUTO-HEAL & SELF-IMPROVEMENT STATUS (PRO EDITION)",
-            "─────────────────────────────────────────────────",
-            "• Autonomous Proactive Sentry: ACTIVE",
-            "• Dependency / Pip Auto-Resolver: ACTIVE",
-            "• API Quota & Network Failover: ACTIVE",
-            "• AST Enclosing Scope Extraction: ACTIVE",
-            "• Dual-Layer Safety (Backups + Git Checkpoints): ACTIVE",
-            f"• Learned Directives: {rule_count} active rules",
-            f"• Last Patch: {last_patch.get('explanation') if last_patch else 'None (System Clean)'}",
+            "🛡️ AUTO-HEAL & SELF-IMPROVEMENT STATUS",
+            "─────────────────────────────────────",
+            "• Boot Sentry: Active (Automatic rollback enabled)",
+            "• Safety Sandbox: Enabled (Pre-flight AST & Compilation validation)",
+            f"• Learned Behavioral Directives: {rule_count} active rules",
+            f"• Recent Hotfixes: {last_patch.get('explanation') if last_patch else 'None (Clean)'}",
         ]
         report = "\n".join(lines)
         if speak:

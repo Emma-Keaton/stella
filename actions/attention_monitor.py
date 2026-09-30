@@ -77,10 +77,7 @@ _CALL_HINTS = (
 )
 
 _ACCEPT_HINTS = ("accept", "answer", "pick up", "join", "allow")
-_DECLINE_HINTS = (
-    "decline", "reject", "ignore", "hang up", "end call", "end",
-    "cut", "dismiss", "leave call", "leave", "disconnect", "finish"
-)
+_DECLINE_HINTS = ("decline", "reject", "ignore", "hang up", "end", "cut", "dismiss")
 _WINDOW_CALL_HINTS = (
     "call",
     "incoming",
@@ -452,7 +449,7 @@ def _click_best_button(app: str, action: str) -> bool:
         for win in desktop.windows():
             title = _norm(win.window_text())
             proc = _proc_name(getattr(win, "process_id", lambda: None)())
-            if _match_app(title, proc) != app and app not in title and app not in proc:
+            if _match_app(title, proc) != app and app not in title:
                 continue
             try:
                 for ctrl in win.descendants():
@@ -494,11 +491,6 @@ def handle_call_action(event: dict, action: str) -> str:
             return f"Declined the call on {event.get('app', 'the app')}."
         if _focus_window_by_app(app):
             try:
-                if "whatsapp" in app:
-                    try:
-                        pyautogui.hotkey("ctrl", "shift", "e")
-                    except Exception:
-                        pass
                 pyautogui.press("esc")
                 return f"Tried to decline the call on {event.get('app', 'the app')}."
             except Exception:

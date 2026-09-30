@@ -4,23 +4,15 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Quantum Core Resonator</title>
-  <!-- Three.js + PostProcessing (UnrealBloomPass) + OrbitControls -->
+  <!-- Three.js + PostProcessing (UnrealBloomPass) + OrbitControls (Local Offline) -->
   <script src="three.min.js"></script>
-  <script>if (typeof THREE === 'undefined') document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"><\/script>');</script>
   <script src="OrbitControls.js"></script>
-  <script>if (typeof THREE.OrbitControls === 'undefined') document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"><\/script>');</script>
   <script src="EffectComposer.js"></script>
-  <script>if (typeof THREE.EffectComposer === 'undefined') document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/EffectComposer.js"><\/script>');</script>
   <script src="RenderPass.js"></script>
-  <script>if (typeof THREE.RenderPass === 'undefined') document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/RenderPass.js"><\/script>');</script>
   <script src="ShaderPass.js"></script>
-  <script>if (typeof THREE.ShaderPass === 'undefined') document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/ShaderPass.js"><\/script>');</script>
   <script src="CopyShader.js"></script>
-  <script>if (typeof THREE.CopyShader === 'undefined') document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/CopyShader.js"><\/script>');</script>
   <script src="LuminosityHighPassShader.js"></script>
-  <script>if (typeof THREE.LuminosityHighPassShader === 'undefined') document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/shaders/LuminosityHighPassShader.js"><\/script>');</script>
   <script src="UnrealBloomPass.js"></script>
-  <script>if (typeof THREE.UnrealBloomPass === 'undefined') document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/postprocessing/UnrealBloomPass.js"><\/script>');</script>
 
   <style>
     * {
@@ -45,6 +37,7 @@
       width: 100%;
       height: 100%;
     }
+
   </style>
 </head>
 <body>
@@ -56,29 +49,30 @@
     const LOBES = 4;
     const AMPLITUDE = 0.75;
     const SPEED = 0.7;
-    const BLOOM_STRENGTH = 1.20;
-    const BLOOM_RADIUS = 0.45;
-    const BLOOM_THRESHOLD = 0.28;
+    const BLOOM_STRENGTH = 0.75;
+    const BLOOM_RADIUS = 0.35;
+    const BLOOM_THRESHOLD = 0.75;
 
     let scene, camera, renderer, composer, bloomPass, controls;
     let mainGroup;
     let standingWaveLines = [], standingWaveParticles;
     let coreSingularity, vortexTendrilsGroup;
     let orbitalRingsGroup = [], starburstNodesGroup;
-    let glowSprite, coronaSprite, spiralMat, outerLine;
+    let moonBokehMesh, spaceDustGroup;
+    let glowSprite, spiralMat, outerLine;
 
-    // ——— REACTIVE BRAHMA ECHO STATE CONTROLLER ———
+    // ——— REACTIVE BRAHMA EVO STATE CONTROLLER ———
     let currentState = "IDLE";
     const STATE_COLORS = {
-      LISTENING:  { hot: 0xd0ffff, mid: 0x00f0ff, dim: 0x0077aa }, // Electric Cyan
-      SPEAKING:   { hot: 0xffffff, mid: 0xffdd55, dim: 0xd97706 }, // Brilliant Solar Gold
-      THINKING:   { hot: 0xffe4b5, mid: 0xff8c00, dim: 0xb34700 }, // Quantum Amber
-      EXECUTING:  { hot: 0xf3e8ff, mid: 0xa855f7, dim: 0x581c87 }, // Cyber Violet
-      WORKING:    { hot: 0xf3e8ff, mid: 0xa855f7, dim: 0x581c87 }, // Cyber Violet
-      MUTED:      { hot: 0xffc0cb, mid: 0xf43f5e, dim: 0x881337 }, // Luminous Ruby Neon
-      SCANNING:   { hot: 0xbbffcc, mid: 0x22c55e, dim: 0x14532d }, // Matrix Emerald
-      ONLINE:     { hot: 0xffffff, mid: 0x38bdf8, dim: 0x0369a1 }, // Quantum Cyan
-      IDLE:       { hot: 0xffffff, mid: 0x38bdf8, dim: 0x0369a1 }, // Quantum Cyan
+      LISTENING:  { hot: 0x80ffff, mid: 0x00e5ff, dim: 0x0088aa }, // Luminous Cyan
+      SPEAKING:   { hot: 0xffffff, mid: 0xdff8ff, dim: 0x00e5ff }, // Brilliant White & Ice Cyan
+      THINKING:   { hot: 0xffc080, mid: 0xff9100, dim: 0xcc6600 }, // Sunset Amber
+      EXECUTING:  { hot: 0xd4a0ff, mid: 0x7c4dff, dim: 0x4a148c }, // Cyber Violet
+      WORKING:    { hot: 0x00f0ff, mid: 0x0090ff, dim: 0x0040aa }, // Cyber Blue
+      MUTED:      { hot: 0xff9999, mid: 0xff3b30, dim: 0x881111 }, // Crimson Red
+      SCANNING:   { hot: 0xa0ffea, mid: 0x00f0ff, dim: 0x0088aa }, // Cyber Cyan Matrix
+      ONLINE:     { hot: 0xffffff, mid: 0xebf5ff, dim: 0x00f0ff }, // Brahma Evo Quantum White & Cyber Cyan
+      IDLE:       { hot: 0xffffff, mid: 0xebf5ff, dim: 0x00f0ff }, // Brahma Evo Quantum White & Cyber Cyan
     };
 
     let targetColorHot = new THREE.Color(0xffffff);
@@ -123,32 +117,16 @@
 
     function createGlowSpriteTexture() {
       const canvas = document.createElement('canvas');
-      canvas.width = 256;
-      canvas.height = 256;
+      canvas.width = 128;
+      canvas.height = 128;
       const ctx = canvas.getContext('2d');
-      const grad = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+      const grad = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
       grad.addColorStop(0.0, 'rgba(255, 255, 255, 1.0)');
-      grad.addColorStop(0.12, 'rgba(240, 250, 255, 0.95)');
-      grad.addColorStop(0.35, 'rgba(180, 230, 255, 0.45)');
-      grad.addColorStop(0.70, 'rgba(120, 190, 255, 0.12)');
+      grad.addColorStop(0.18, 'rgba(230, 245, 255, 0.85)');
+      grad.addColorStop(0.5, 'rgba(180, 220, 255, 0.25)');
       grad.addColorStop(1.0, 'rgba(0, 0, 0, 0.0)');
       ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, 256, 256);
-      return new THREE.CanvasTexture(canvas);
-    }
-
-    function createCoronaTexture() {
-      const canvas = document.createElement('canvas');
-      canvas.width = 256;
-      canvas.height = 256;
-      const ctx = canvas.getContext('2d');
-      const grad = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
-      grad.addColorStop(0.0, 'rgba(255, 255, 255, 0.65)');
-      grad.addColorStop(0.20, 'rgba(200, 235, 255, 0.35)');
-      grad.addColorStop(0.55, 'rgba(140, 200, 255, 0.10)');
-      grad.addColorStop(1.0, 'rgba(0, 0, 0, 0.0)');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, 256, 256);
+      ctx.fillRect(0, 0, 128, 128);
       return new THREE.CanvasTexture(canvas);
     }
 
@@ -190,8 +168,8 @@
 
     function initScene() {
       const container = document.getElementById('webgl-canvas');
-      const w = window.innerWidth;
-      const h = window.innerHeight;
+      const w = Math.max(window.innerWidth || 0, container ? container.clientWidth : 0, 800);
+      const h = Math.max(window.innerHeight || 0, container ? container.clientHeight : 0, 600);
 
       scene = new THREE.Scene();
       scene.background = new THREE.Color(0x020306);
@@ -236,6 +214,8 @@
       buildCentralVortexSingularity();
       buildGyroscopicOrbitalRings();
       buildStarburstNodes();
+      buildReferenceMoonBokeh();
+      buildAmbientDust();
 
       window.addEventListener('resize', onWindowResize);
     }
@@ -354,31 +334,20 @@
       vortexTendrilsGroup = new THREE.Group();
       mainGroup.add(vortexTendrilsGroup);
 
-      const coreGeo = new THREE.SphereGeometry(0.42, 32, 32);
+      const coreGeo = new THREE.SphereGeometry(0.38, 32, 32);
       const coreMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
       coreSingularity = new THREE.Mesh(coreGeo, coreMat);
       vortexTendrilsGroup.add(coreSingularity);
-
-      const coronaMat = new THREE.SpriteMaterial({
-        map: createCoronaTexture(),
-        color: 0x38bdf8,
-        transparent: true,
-        opacity: 0.65,
-        blending: THREE.AdditiveBlending
-      });
-      coronaSprite = new THREE.Sprite(coronaMat);
-      coronaSprite.scale.set(8.5, 8.5, 1.0);
-      vortexTendrilsGroup.add(coronaSprite);
 
       const glowMat = new THREE.SpriteMaterial({
         map: createGlowSpriteTexture(),
         color: 0xeff8ff,
         transparent: true,
-        opacity: 0.90,
+        opacity: 0.85,
         blending: THREE.AdditiveBlending
       });
       glowSprite = new THREE.Sprite(glowMat);
-      glowSprite.scale.set(4.2, 4.2, 1.0);
+      glowSprite.scale.set(3.2, 3.2, 1.0);
       vortexTendrilsGroup.add(glowSprite);
 
       const tendrilCount = 36;
@@ -514,6 +483,67 @@
       }
     }
 
+    function buildReferenceMoonBokeh() {
+      const moonGeo = new THREE.CircleGeometry(0.72, 32);
+      const moonMat = new THREE.ShaderMaterial({
+        vertexShader: `
+          varying vec2 vUv;
+          void main() {
+            vUv = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          varying vec2 vUv;
+          void main() {
+            float dist = length(vUv - vec2(0.5));
+            if (dist > 0.5) discard;
+            float alpha = smoothstep(0.5, 0.1, dist) * 0.38;
+            gl_FragColor = vec4(0.78, 0.88, 1.0, alpha);
+          }
+        `,
+        transparent: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      });
+
+      moonBokehMesh = new THREE.Mesh(moonGeo, moonMat);
+      moonBokehMesh.position.set(-11.5, -3.2, -2.0);
+      mainGroup.add(moonBokehMesh);
+    }
+
+    function buildAmbientDust() {
+      spaceDustGroup = new THREE.Group();
+      mainGroup.add(spaceDustGroup);
+
+      const count = 1200;
+      const geo = new THREE.BufferGeometry();
+      const pos = new Float32Array(count * 3);
+      const sizes = new Float32Array(count);
+
+      for (let i = 0; i < count; i++) {
+        pos[i * 3 + 0] = (Math.random() - 0.5) * 35;
+        pos[i * 3 + 1] = (Math.random() - 0.5) * 35;
+        pos[i * 3 + 2] = (Math.random() - 0.5) * 25;
+        sizes[i] = Math.random() * 2.5 + 0.8;
+      }
+
+      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      geo.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+
+      const mat = new THREE.PointsMaterial({
+        color: 0xcfe5ff,
+        size: 0.18,
+        transparent: true,
+        opacity: 0.35,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      });
+
+      const dust = new THREE.Points(geo, mat);
+      spaceDustGroup.add(dust);
+    }
+
     function updateWaveManifold(time, effectiveAmp) {
       const samples = 140;
 
@@ -554,8 +584,7 @@
       currentColorDim.lerp(targetColorDim, 0.06);
 
       // 2. Smooth State Dynamics
-      targetPositionX = 0.0;
-      currentPositionX += (targetPositionX - currentPositionX) * 0.10;
+      currentPositionX += (targetPositionX - currentPositionX) * 0.08;
       mainGroup.position.x = currentPositionX;
 
       const baseScale = isCompactMode ? (currentState === "LISTENING" ? 0.95 : 0.85) : targetScale;
@@ -586,6 +615,14 @@
 
       updateWaveManifold(simTime, effectiveAmp);
 
+
+
+      // Dynamic Bloom Surge with Voice
+      if (bloomPass) {
+        bloomPass.strength = BLOOM_STRENGTH + currentAudioLevel * 0.70;
+      }
+
+
       // 5. Apply Reactive State Colors to Shaders and Lines
       if (standingWaveParticles && standingWaveParticles.material.uniforms) {
         if (standingWaveParticles.material.uniforms.uColorHot) {
@@ -602,19 +639,13 @@
 
       if (coreSingularity) {
         coreSingularity.material.color.copy(currentColorHot);
-        const pulse = 1.0 + Math.sin(simTime * 3.5 * currentPulseMod) * 0.12 + currentAudioLevel * 0.35;
+        const pulse = 1.0 + Math.sin(simTime * 3.5 * currentPulseMod) * 0.12 + currentAudioLevel * 0.32;
         coreSingularity.scale.set(pulse, pulse, pulse);
-      }
-
-      if (coronaSprite) {
-        coronaSprite.material.color.copy(currentColorMid);
-        const cPulse = (8.5 + currentAudioLevel * 3.2) * (1.0 + Math.sin(simTime * 1.8) * 0.08);
-        coronaSprite.scale.set(cPulse, cPulse, 1.0);
       }
 
       if (glowSprite) {
         glowSprite.material.color.copy(currentColorHot);
-        const glowPulse = (4.2 + currentAudioLevel * 2.2) * (1.0 + Math.sin(simTime * 2.6) * 0.10);
+        const glowPulse = 1.0 + currentAudioLevel * 0.35;
         glowSprite.scale.set(glowPulse, glowPulse, 1.0);
       }
 
@@ -650,33 +681,52 @@
             sprite.position.copy(pos);
 
             const glint = 0.8 + Math.sin(simTime * uData.pulseSpeed * currentPulseMod + uData.angle * 3.0) * 0.35;
-            const sc = uData.baseScale * glint * (1.0 + currentAudioLevel * 0.08);
+            const sc = uData.baseScale * glint * (1.0 + currentAudioLevel * 0.06);
             sprite.scale.set(sc, sc, 1.0);
           }
         });
+      }
+
+      // 6. Surrounding dynamic background animation
+      if (spaceDustGroup) {
+        spaceDustGroup.rotation.y += dt * 0.015 * currentSpeedMult;
+        spaceDustGroup.rotation.x = Math.sin(simTime * 0.08) * 0.04;
+        if (spaceDustGroup.children[0] && spaceDustGroup.children[0].material) {
+          spaceDustGroup.children[0].material.color.copy(currentColorDim);
+        }
+      }
+
+      if (moonBokehMesh) {
+        moonBokehMesh.position.y = -3.2 + Math.sin(simTime * 0.45) * 0.35;
+        moonBokehMesh.position.x = -11.5 + Math.cos(simTime * 0.25) * 0.25;
       }
     }
 
     function renderLoop() {
       requestAnimationFrame(renderLoop);
       const dt = Math.min(clock.getDelta(), 0.05);
+      
       updateSimulation(dt);
+
       controls.update();
       composer.render();
     }
 
     function onWindowResize() {
-      const w = window.innerWidth;
-      const h = window.innerHeight;
+      const container = document.getElementById('webgl-canvas');
+      const w = Math.max(window.innerWidth || 0, container ? container.clientWidth : 0);
+      const h = Math.max(window.innerHeight || 0, container ? container.clientHeight : 0);
       if (w <= 0 || h <= 0) return;
 
-      camera.aspect = w / h;
-      camera.updateProjectionMatrix();
+      if (camera && renderer && composer) {
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
 
-      renderer.setSize(w, h);
-      composer.setSize(w, h);
-      if (bloomPass && bloomPass.resolution) {
-        bloomPass.resolution.set(w, h);
+        renderer.setSize(w, h);
+        composer.setSize(w, h);
+        if (bloomPass && bloomPass.resolution) {
+          bloomPass.resolution.set(w, h);
+        }
       }
     }
 
@@ -684,7 +734,7 @@
     window.setBrahmaState = function(state) {
       if (!state) return;
       currentState = String(state).toUpperCase();
-      console.log("Brahma Echo State:", currentState);
+      console.log("Brahma Evo State:", currentState);
 
       const pal = STATE_COLORS[currentState] || STATE_COLORS.IDLE;
       targetColorHot.setHex(pal.hot);
@@ -789,10 +839,82 @@
       if (bloomPass) bloomPass.strength = BLOOM_STRENGTH;
     };
 
-    window.onload = function() {
+    window.setPointerNorm = function(nx, ny) {
+      mouseNormX = nx;
+      mouseNormY = ny;
+      targetTiltX = -mouseNormY * 0.22;
+      targetTiltY = mouseNormX * 0.30;
+    };
+
+    window.setPageCamera = function(pageIndex) {
+      switch (pageIndex) {
+        case 0: // Hero
+          targetScale = 1.0;
+          targetCameraZ = 46.0;
+          targetPositionX = 0.0;
+          window.setBrahmaState("ONLINE");
+          break;
+        case 1: // Features / About
+          targetScale = 1.12;
+          targetCameraZ = 39.0;
+          targetPositionX = 3.5;
+          window.setBrahmaState("SCANNING");
+          break;
+        case 2: // Sign In
+          targetScale = 1.05;
+          targetCameraZ = 41.0;
+          targetPositionX = -3.2;
+          window.setBrahmaState("THINKING");
+          break;
+        case 3: // Download
+          targetScale = 1.2;
+          targetCameraZ = 36.0;
+          targetPositionX = 4.0;
+          window.setBrahmaState("EXECUTING");
+          break;
+        case 4: // Mobile App
+          targetScale = 1.08;
+          targetCameraZ = 39.0;
+          targetPositionX = -3.8;
+          window.setBrahmaState("LISTENING");
+          break;
+        case 5: // Setup Wizard
+          targetScale = 1.04;
+          targetCameraZ = 42.0;
+          targetPositionX = 3.0;
+          window.setBrahmaState("WORKING");
+          break;
+        case 6: // Thanks
+          targetScale = 1.0;
+          targetCameraZ = 47.0;
+          targetPositionX = 0.0;
+          window.setBrahmaState("ONLINE");
+          break;
+        case 7: // Feedback
+          targetScale = 0.95;
+          targetCameraZ = 50.0;
+          targetPositionX = 0.0;
+          window.setBrahmaState("IDLE");
+          break;
+      }
+    };
+
+    function boot() {
+      if (window._hasBooted) return;
+      window._hasBooted = true;
       initScene();
       renderLoop();
-    };
+      // Ensure layout sync after DOM updates
+      setTimeout(onWindowResize, 30);
+      setTimeout(onWindowResize, 150);
+    }
+
+    if (document.readyState === "complete" || document.readyState === "interactive") {
+      boot();
+    } else {
+      document.addEventListener("DOMContentLoaded", boot);
+      window.addEventListener("load", boot);
+    }
   </script>
 </body>
 </html>

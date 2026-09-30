@@ -21,13 +21,13 @@ BASE_DIR        = get_base_dir()
 API_CONFIG_PATH = get_user_data_dir() / "config" / "api_keys.json"
 
 
-PLANNER_PROMPT = """You are the planning module of Brahma AI - Lite, a personal AI assistant.
+PLANNER_PROMPT = """You are the planning module of Brahma Evo, an autonomous, self-evolving AI assistant.
 Your job: break any user goal into a sequence of steps using ONLY the tools listed below.
 
 ABSOLUTE RULES:
-- LANGUAGE PRIORITY: ALWAYS generate all step descriptions, tool parameters, search queries, document titles, and text in ENGLISH unless the user explicitly requested a specific foreign language (e.g., "in Spanish", "translate to German").
-- NEVER use generated_code or write Python scripts. It does not exist.
+- NEVER use generated_code or write Python scripts directly.
 - NEVER reference previous step results in parameters. Every step is independent.
+- AUTONOMOUS SELF-EVOLUTION: When the user asks to create, build, or add a skill/feature, OR when the user asks for a capability, specialized query, calculation, or automation not covered by any available tool, use skill_forge with action="forge", goal="<the required capability>", and skill_name="<descriptive_name>". Brahma Evo will autonomously synthesize, sandbox-test in Crucible, and hot-load the new capability on the fly.
 - Use web_search for ANY information retrieval, research, or current data.
 - Use pdf_document to create, compile, or generate PDF files (NEVER use file_controller for .pdf files).
 - Use word_document to create or generate Word (.docx) documents.
@@ -144,8 +144,10 @@ flight_finder
   date: string (required)
 
 spotify_controller
-  action: "play" | "pause" | "toggle" | "next" | "previous" | "volume_up" | "volume_down" | "search_play" | "open_spotify" (required)
+  action: "play" | "pause" | "toggle" | "next" | "previous" | "volume_up" | "volume_down" | "set_volume" | "search_play" | "open_spotify" | "get_now_playing" | "get_playlists" | "get_queue" | "get_devices" | "auth" (required)
   query: string (for search_play, song or artist name)
+  volume: number (for set_volume)
+  device_id: string (optional Spotify Connect target)
 
 calendar_scheduler
   action: "add_event" | "list_events" | "check_day" | "delete_event" | "get_upcoming" | "export_ics" (required)
@@ -205,6 +207,37 @@ auto_heal
   category: string (optional, for learn_rule: general, formatting, workflow, habit)
   patch_id: string (optional, for rollback)
   Use whenever user asks to fix an error/bug, heal/patch Brahma, undo/rollback a patch, view patch history, or remember a permanent rule/behavioral preference.
+
+circuit_assembler
+  action: "assemble_components" | "analyze_screen" | "show_schematic" (required)
+  components: string (optional)
+  query: string (optional)
+  Use to design safe wiring instructions and an interactive circuit schematic.
+
+geospatial_globe
+  action: "open" | "route" | "drive" | "location" | "fly_to" | "weather" | "flights" | "iss" | "earthquakes" | "nearby" | "radar" (required)
+  origin, destination: strings (for routes)
+  location: string (optional)
+  query: string (for nearby places)
+  Use for interactive globe maps, flight tracking, road routes, weather, earthquakes, nearby places, or ISS tracking.
+
+call_screening
+  action: "start" | "take_over" | "hang_up" (required)
+  caller: string (optional)
+  app: string (optional)
+  Answering a call always requires the user to confirm on the Brahma Evo HUD.
+
+skill_forge
+  action: "forge" | "list" (required)
+  goal: string (for forge)
+  skill_name: string (optional)
+  Use whenever user asks to create a new skill or feature, OR whenever a task cannot be solved by any existing tool. Brahma Evo will autonomously synthesize, sandbox-verify in Crucible, and hot-load the feature.
+
+dynamic_skill
+  action: "list" | "run" (required)
+  skill_name: string (for run)
+  arguments: object (optional)
+  Running a generated skill requires user confirmation.
 
 mobile_autopilot
   instruction: string (required) — what to do on the phone
@@ -296,6 +329,40 @@ OUTPUT — return ONLY valid JSON, no markdown, no explanation, no code blocks:
 """
 
 
+def _planner_system_prompt() -> str:
+    prompt = PLANNER_PROMPT
+
+    # 1. Inject learned behavioral directives from user
+    try:
+        from core.learned_rules import LearnedRulesEngine
+        rules_text = LearnedRulesEngine.get_prompt_injections()
+        if rules_text:
+            prompt += f"\n\n{rules_text}"
+    except Exception as exc:
+        print(f"[Planner] Learned rules injection unavailable: {exc}")
+
+    # 2. Inject dynamically registered feature tools
+    try:
+        from core.dynamic_registry import DynamicToolRegistry
+        declarations = DynamicToolRegistry.get_tool_declarations()
+        reserved = {"spotify", "spotify_controller", "music", "flight_finder"}
+        seen = set(reserved)
+        lines = []
+        for tool in declarations:
+            name = tool.get("name", "")
+            if not name or name in seen:
+                continue
+            seen.add(name)
+            params = json.dumps(tool.get("parameters", {}), ensure_ascii=True)
+            lines.append(f"{name}: {tool.get('description', '')} Parameters: {params}")
+        if lines:
+            prompt += "\n\nADDITIONAL REGISTERED FEATURE TOOLS:\n" + "\n".join(lines)
+    except Exception as exc:
+        print(f"[Planner] Dynamic feature listing unavailable: {exc}")
+
+    return prompt
+
+
 def _get_api_key() -> str:
     with open(API_CONFIG_PATH, "r", encoding="utf-8") as f:
         return json.load(f)["gemini_api_key"]
@@ -340,7 +407,8 @@ def create_plan(goal: str, context: str = "") -> dict:
     import google.generativeai as genai
 
     genai.configure(api_key=_get_api_key())
-    candidates = ["gemini-3.1-flash-lite", "gemini-3.5-flash", "gemini-flash-latest"]
+    system_prompt = _planner_system_prompt()
+    candidates = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-3.1-flash-lite", "gemini-flash-latest"]
     
     user_input = f"Goal: {goal}"
     if context:
@@ -351,7 +419,7 @@ def create_plan(goal: str, context: str = "") -> dict:
         try:
             model = genai.GenerativeModel(
                 model_name=model_name,
-                system_instruction=PLANNER_PROMPT
+                system_instruction=system_prompt
             )
             response = model.generate_content(user_input)
             if response.text:
@@ -421,7 +489,8 @@ def replan(goal: str, completed_steps: list, failed_step: dict, error: str) -> d
     import google.generativeai as genai
 
     genai.configure(api_key=_get_api_key())
-    candidates = ["gemini-3.1-flash-lite", "gemini-3.5-flash", "gemini-flash-latest"]
+    system_prompt = _planner_system_prompt()
+    candidates = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-3.1-flash-lite", "gemini-flash-latest"]
 
     completed_summary = "\n".join(
         f"  - Step {s['step']} ({s['tool']}): DONE" for s in completed_steps
@@ -442,7 +511,7 @@ Create a REVISED plan for the remaining work only. Do not repeat completed steps
         try:
             model = genai.GenerativeModel(
                 model_name=model_name,
-                system_instruction=PLANNER_PROMPT
+                system_instruction=system_prompt
             )
             response = model.generate_content(prompt)
             if response.text:

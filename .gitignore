@@ -48,3 +48,18 @@ config/*.key
 config/.*key
 config/*.sqlite3
 *.sqlite3
+
+# Personal Data
+config/identity.json
+config/device_location_cache.json
+config/learned_rules.json
+config/organizer_history.json
+config/patch_history.json
+config/brahma_connect.json
+config/brahma_connect/devices.json
+memory/calendar_events.json
+memory/long_term.json
+memory/nutrition_log.json
+ig_session.json
+api_keys.json
+email_credentials.json

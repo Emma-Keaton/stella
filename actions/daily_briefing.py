@@ -18,13 +18,17 @@ Outputs:
 import datetime
 import json
 import os
+import queue
 import re
+import threading
+import time
 import urllib.request
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from typing import Dict, Any, List, Tuple, Optional
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+BRIEFING_FETCH_TIMEOUT_SECONDS = 8.0
 
 PLUGIN = {
     "name": "daily_briefing",
@@ -205,6 +209,64 @@ def _get_top_headlines(category: str = "all", limit: int = 2) -> List[str]:
     return headlines
 
 
+def _collect_briefing_intel(category: str, city: Optional[str]) -> Dict[str, Any]:
+    collectors = {
+        "weather": lambda: _get_weather_intel(city),
+        "calendar": _get_calendar_intel,
+        "gmail": _get_gmail_intel,
+        "instagram": _get_instagram_intel,
+        "headlines": lambda: _get_top_headlines(category=category, limit=2),
+    }
+    fallbacks = {
+        "weather": {
+            "status": "unavailable", "city": city or "Local Area", "temp_c": 26,
+            "condition": "Unavailable", "humidity": "--", "wind": "--",
+            "summary": "Weather telemetry unavailable",
+        },
+        "calendar": {"count": 0, "events": [], "summary": "Schedule unavailable"},
+        "gmail": {"configured": False, "count": 0, "senders": [], "summary": "Gmail unavailable"},
+        "instagram": {"configured": False, "count": 0, "senders": [], "summary": "Instagram unavailable"},
+        "headlines": [],
+    }
+    results_queue: queue.Queue = queue.Queue()
+
+    def collect(name: str, collector) -> None:
+        try:
+            results_queue.put((name, collector()))
+        except Exception as exc:
+            results_queue.put((name, exc))
+
+    for name, collector in collectors.items():
+        threading.Thread(
+            target=collect,
+            args=(name, collector),
+            daemon=True,
+            name=f"briefing-{name}",
+        ).start()
+
+    results = {}
+    pending = set(collectors)
+    deadline = time.monotonic() + BRIEFING_FETCH_TIMEOUT_SECONDS
+    while pending:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            break
+        try:
+            name, value = results_queue.get(timeout=remaining)
+        except queue.Empty:
+            break
+        pending.discard(name)
+        if isinstance(value, Exception):
+            print(f"[DailyBriefing] {name.title()} collection failed: {value}")
+        else:
+            results[name] = value
+
+    for name in pending:
+        print(f"[DailyBriefing] {name.title()} collection timed out.")
+
+    return {name: results.get(name, fallbacks[name]) for name in collectors}
+
+
 def compile_unified_briefing(category: str = "all", city: Optional[str] = None) -> Tuple[Dict[str, Any], str]:
     """
     Compiles the full Unified Morning Briefing.
@@ -221,12 +283,12 @@ def compile_unified_briefing(category: str = "all", city: Optional[str] = None) 
     elif now.hour >= 17:
         greeting = "Good evening"
 
-    # Parallel intelligence collection
-    weather = _get_weather_intel(city)
-    calendar = _get_calendar_intel()
-    gmail = _get_gmail_intel()
-    instagram = _get_instagram_intel()
-    headlines = _get_top_headlines(category=category, limit=2)
+    intelligence = _collect_briefing_intel(category, city)
+    weather = intelligence["weather"]
+    calendar = intelligence["calendar"]
+    gmail = intelligence["gmail"]
+    instagram = intelligence["instagram"]
+    headlines = intelligence["headlines"]
 
     # Compile cinematic, conversational spoken narrative
     narrative_parts = [f"{greeting}, sir. Today is {date_str}, and the time is {time_str}."]
@@ -310,7 +372,7 @@ def daily_briefing(
     if player:
         try:
             player.show_daily_briefing(data)
-            player.write_log(f"Brahma AI Evo: {narrative}")
+            player.write_log(f"Brahma Evo: {narrative}")
         except Exception as e:
             print(f"[DailyBriefing] UI render notice: {e}")
 
