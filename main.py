@@ -2805,7 +2805,11 @@ class BrahmaLive:
 
             threading.Thread(target=_run_screen_process, daemon=True).start()
             return
-        if self._use_openrouter_first or not self._loop or not self.session:
+        # Route directly to Local Brain if preferred by user in settings
+        app_settings = config_manager.load_settings()
+        is_local_preferred = app_settings.get("default_ai_provider") == "Local"
+
+        if is_local_preferred or self._use_openrouter_first or not self._loop or not self.session:
             threading.Thread(target=self._fallback_reply, args=(text, memory_ctx), daemon=True).start()
             return
         self.ui.set_state("THINKING")
@@ -3647,7 +3651,32 @@ class BrahmaLive:
             gemini_first = not self._use_openrouter_first
             request_text = f"{memory_ctx}\n\nCurrent User Request:\n{text}" if memory_ctx else text
 
-            if gemini_first:
+            app_settings = config_manager.load_settings()
+            configured_provider = app_settings.get("default_ai_provider", "Gemini")
+            local_model_target = app_settings.get("local_ai_model", "qwen2.5:3b")
+
+            # 1. If user explicitly configured Local AI in settings, run Local Brain directly
+            if configured_provider == "Local" and local_brain.is_available():
+                try:
+                    self.ui.update_task_workspace(
+                        status="Thinking (Local AI)",
+                        output=f"Processing on local model ({local_model_target})...",
+                        percent=50,
+                    )
+                    res = local_brain.chat_complete([
+                        {
+                            "role": "system",
+                            "content": "You are Brahma Evo, a concise, helpful desktop assistant running 100% offline locally. Reply naturally, concisely, and helpfully."
+                        },
+                        {"role": "user", "content": request_text}
+                    ], model=local_model_target)
+                    reply = res["choices"][0]["message"]["content"]
+                    print(f"[BRAHMA EVO] 🔒 Local Brain ({local_model_target}) answered successfully!")
+                except Exception as e_loc:
+                    print(f"[BRAHMA EVO] ⚠️ Local Brain failed: {e_loc}")
+
+            # 2. Otherwise try Gemini
+            if not reply and gemini_first and configured_provider != "Local":
                 try:
                     reply = _gemini_text_reply(request_text)
                 except Exception as e:
@@ -3655,7 +3684,8 @@ class BrahmaLive:
                     if _is_gemini_limit_error(e):
                         self._use_openrouter_first = True
 
-            if not reply:
+            # 3. Try OpenRouter if configured
+            if not reply and configured_provider != "Local":
                 try:
                     reply = openrouter_client.chat(
                         request_text,
@@ -3668,6 +3698,18 @@ class BrahmaLive:
                     print(f"[BRAHMA EVO] ⚠️ OpenRouter fallback failed: {e}")
                     if gemini_first and not self._use_openrouter_first and _is_gemini_limit_error(e):
                         self._use_openrouter_first = True
+
+            # 4. Ultimate offline safety net: Local Brain fallback
+            if not reply and local_brain.is_available():
+                try:
+                    res = local_brain.chat_complete([
+                        {"role": "system", "content": "You are Brahma Evo, a concise desktop assistant."},
+                        {"role": "user", "content": request_text}
+                    ], model=local_model_target)
+                    reply = res["choices"][0]["message"]["content"]
+                    print(f"[BRAHMA EVO] 🔒 Local Brain offline safety net answered ({local_model_target})!")
+                except Exception as e_net:
+                    print(f"[BRAHMA EVO] ⚠️ Offline Local Brain fallback failed: {e_net}")
             reply = (reply or "").strip()
             if not reply:
                 reply = "I’m ready, sir."
