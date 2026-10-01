@@ -12522,15 +12522,34 @@ class SystemConnectivityPage(QWidget):
             self._ctrl()._win._refresh_startup_animation_button()
 
     def _set_default_provider(self, text: str):
-        if (text or "").strip().lower().startswith("google"):
+        raw = (text or "").strip().lower()
+        if raw.startswith("google") or raw == "gemini":
             provider = "Gemini"
-        elif (text or "").strip().lower() == "local":
+            self._set_setting("offline_mode_enabled", False)
+            if hasattr(self, "_offline_mode_btn"):
+                self._offline_mode_btn.setChecked(False)
+            if hasattr(self, "_local_ai_widget"):
+                self._local_ai_widget.setVisible(False)
+            msg = "SYS: Default AI provider set to Google Gemini. Cloud connectivity active."
+        elif raw == "local":
             provider = "Local"
+            self._set_setting("offline_mode_enabled", True)
+            if hasattr(self, "_offline_mode_btn"):
+                self._offline_mode_btn.setChecked(True)
+            if hasattr(self, "_local_ai_widget"):
+                self._local_ai_widget.setVisible(True)
+            msg = "SYS: Default AI provider set to Local AI (Ollama). Offline Mode active."
         else:
             provider = "OpenRouter"
+            self._set_setting("offline_mode_enabled", False)
+            if hasattr(self, "_offline_mode_btn"):
+                self._offline_mode_btn.setChecked(False)
+            if hasattr(self, "_local_ai_widget"):
+                self._local_ai_widget.setVisible(False)
+            msg = "SYS: Default AI provider set to OpenRouter. Cloud connectivity active."
         self._set_setting("default_ai_provider", provider)
         if self._ctrl() and hasattr(self._ctrl(), "write_log"):
-            self._ctrl().write_log(f"SYS: Default AI provider set to {provider}.")
+            self._ctrl().write_log(msg)
 
     def _toggle_auto_provider_switch(self, checked: bool):
         self._set_setting("auto_provider_switch", bool(checked))
@@ -12542,12 +12561,20 @@ class SystemConnectivityPage(QWidget):
         if checked:
             self._set_setting("default_ai_provider", "Local")
             if hasattr(self, "_default_provider"):
+                self._default_provider.blockSignals(True)
                 self._default_provider.setCurrentText("Local")
+                self._default_provider.blockSignals(False)
+            if hasattr(self, "_local_ai_widget"):
+                self._local_ai_widget.setVisible(True)
             msg = "🔒 SYSTEM: Air-Gapped Offline Mode ENGAGED. All operations running 100% locally."
         else:
-            self._set_setting("default_ai_provider", "Google Gemini")
+            self._set_setting("default_ai_provider", "Gemini")
             if hasattr(self, "_default_provider"):
+                self._default_provider.blockSignals(True)
                 self._default_provider.setCurrentText("Google Gemini")
+                self._default_provider.blockSignals(False)
+            if hasattr(self, "_local_ai_widget"):
+                self._local_ai_widget.setVisible(False)
             msg = "🌐 SYSTEM: Offline Mode DISENGAGED. Cloud connectivity restored."
         if self._ctrl() and hasattr(self._ctrl(), "write_log"):
             self._ctrl().write_log(msg)

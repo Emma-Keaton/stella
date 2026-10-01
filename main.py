@@ -2824,8 +2824,14 @@ class BrahmaLive:
             return
         # Route directly to Local Brain if preferred by user in settings or in air-gapped offline mode
         app_settings = config_manager.load_settings()
-        is_local_preferred = app_settings.get("default_ai_provider") == "Local" or app_settings.get("offline_mode_enabled", False)
+        configured_provider = app_settings.get("default_ai_provider", "Gemini")
+        is_offline_mode = bool(app_settings.get("offline_mode_enabled", False))
 
+        # Explicit cloud provider selection strictly takes precedence
+        if configured_provider in ("Gemini", "Google Gemini", "OpenRouter"):
+            is_local_preferred = False
+        else:
+            is_local_preferred = (configured_provider == "Local") or is_offline_mode
 
         if is_local_preferred or self._use_openrouter_first or not self._loop or not self.session:
             threading.Thread(target=self._fallback_reply, args=(text, memory_ctx), daemon=True).start()
@@ -3699,8 +3705,45 @@ class BrahmaLive:
             local_model_target = app_settings.get("local_ai_model", "qwen2.5:3b")
             is_offline_mode = app_settings.get("offline_mode_enabled", False)
 
-            # 1. If user explicitly configured Local AI or Offline Mode, run Local Brain directly with full OS tools
-            if (configured_provider == "Local" or is_offline_mode) and local_brain.is_available():
+            is_cloud_gemini = configured_provider in ("Gemini", "Google Gemini")
+            is_cloud_openrouter = configured_provider == "OpenRouter"
+
+            # 1. If user explicitly selected Google Gemini, run Gemini FIRST
+            if is_cloud_gemini and not is_offline_mode:
+                try:
+                    self.ui.update_task_workspace(
+                        status="Thinking (Gemini)",
+                        output="Processing on Google Gemini...",
+                        percent=50,
+                    )
+                    reply = _gemini_text_reply(request_text)
+                    print("[BRAHMA EVO] 🌐 Google Gemini answered successfully!")
+                except Exception as e_gem:
+                    print(f"[BRAHMA EVO] ⚠️ Gemini failed: {e_gem}")
+                    if _is_gemini_limit_error(e_gem):
+                        self._use_openrouter_first = True
+
+            # 2. If user explicitly selected OpenRouter, run OpenRouter FIRST
+            elif is_cloud_openrouter and not is_offline_mode:
+                try:
+                    self.ui.update_task_workspace(
+                        status="Thinking (OpenRouter)",
+                        output="Processing on OpenRouter...",
+                        percent=50,
+                    )
+                    reply = openrouter_client.chat(
+                        request_text,
+                        system=(
+                            "You are Brahma Evo, a concise, helpful desktop assistant. "
+                            "Reply naturally and briefly. Do not mention internal implementation details."
+                        ),
+                    )
+                    print("[BRAHMA EVO] 🌐 OpenRouter answered successfully!")
+                except Exception as e_or:
+                    print(f"[BRAHMA EVO] ⚠️ OpenRouter failed: {e_or}")
+
+            # 3. If user explicitly configured Local AI, is in Offline Mode, or cloud provider failed: run Local Brain
+            if not reply and (configured_provider == "Local" or is_offline_mode or not (is_cloud_gemini or is_cloud_openrouter)) and local_brain.is_available():
                 try:
                     self.ui.update_task_workspace(
                         status="Thinking (Local AI)",
@@ -3785,29 +3828,18 @@ class BrahmaLive:
                 except Exception as e_loc:
                     print(f"[BRAHMA EVO] ⚠️ Local Brain failed: {e_loc}")
 
-            # 2. Otherwise try Gemini (only when not in air-gapped offline mode)
-            if not reply and gemini_first and configured_provider != "Local" and not is_offline_mode:
-                try:
-                    reply = _gemini_text_reply(request_text)
-                except Exception as e:
-                    print(f"[BRAHMA EVO] ⚠️ Gemini fallback failed: {e}")
-                    if _is_gemini_limit_error(e):
-                        self._use_openrouter_first = True
-
-            # 3. Try OpenRouter if configured (only when not in air-gapped offline mode)
-            if not reply and configured_provider != "Local" and not is_offline_mode:
-                try:
-                    reply = openrouter_client.chat(
-                        request_text,
-                        system=(
-                            "You are Brahma Evo, a concise, helpful desktop assistant. "
-                            "Reply naturally and briefly. Do not mention internal implementation details."
-                        ),
-                    )
-                except Exception as e:
-                    print(f"[BRAHMA EVO] ⚠️ OpenRouter fallback failed: {e}")
-                    if gemini_first and not self._use_openrouter_first and _is_gemini_limit_error(e):
-                        self._use_openrouter_first = True
+            # 4. Fallback cascading: if primary cloud choice failed, try secondary cloud choice
+            if not reply and not is_offline_mode:
+                if is_cloud_gemini and self._use_openrouter_first:
+                    try:
+                        reply = openrouter_client.chat(request_text)
+                    except Exception:
+                        pass
+                elif is_cloud_openrouter:
+                    try:
+                        reply = _gemini_text_reply(request_text)
+                    except Exception:
+                        pass
 
             # 4. Ultimate offline safety net: Local Brain fallback
             if not reply and local_brain.is_available():
