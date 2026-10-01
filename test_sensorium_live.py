@@ -14,31 +14,29 @@ except Exception:
 
 from core.sensorium import sensorium
 
-print("=" * 65)
-print("  BRAHMA EVO v2: PASSIVE SENSORIUM LIVE TEST")
-print("=" * 65)
-print("Instructions:")
-print("1. Switch between different windows (Browser, Explorer, Terminal, etc.)")
-print("2. Leave your mouse and keyboard alone for 10 seconds to test 'Away' detection.")
-print("3. Notice how it tracks your focus without you asking anything.")
-print("Press Ctrl+C to stop.\n")
-
-last_window = ""
-idle_alerted = False
-
-def speak_proactive(text):
-    try:
-        import win32com.client
-        import threading
-        def _speak():
+def speak_proactive(text: str):
+    text = (text or "").strip()
+    if not text:
+        return
+    import threading
+    def _speak():
+        try:
+            import pythoncom
+            import win32com.client
+            pythoncom.CoInitialize()
+            voice = win32com.client.Dispatch("SAPI.SpVoice")
+            # Set volume to 100
+            voice.Volume = 100
+            voice.Speak(text)
+        except Exception as err:
+            print(f"[Speech Error]: {err}")
+        finally:
             try:
-                voice = win32com.client.Dispatch("SAPI.SpVoice")
-                voice.Speak(text)
+                pythoncom.CoUninitialize()
             except Exception:
                 pass
-        threading.Thread(target=_speak, daemon=True).start()
-    except Exception:
-        pass
+
+    threading.Thread(target=_speak, daemon=True).start()
 
 def on_interjection(alert_type, meta):
     msg = meta.get("message", "")
@@ -47,54 +45,64 @@ def on_interjection(alert_type, meta):
     print(f"🔊 [BRAHMA SPEAKING]: \"{speech}\"\n")
     speak_proactive(speech)
 
-sensorium.register_interjection_handler(on_interjection)
-sensorium.start()
+if __name__ == "__main__":
+    print("=" * 65)
+    print("  BRAHMA EVO v2: PASSIVE SENSORIUM LIVE TEST")
+    print("=" * 65)
+    print("Instructions:")
+    print("1. Switch between different windows (Browser, Explorer, Terminal, etc.)")
+    print("2. Leave your mouse and keyboard alone for 7 seconds to test 'Away' detection.")
+    print("3. Notice how it tracks your focus without you asking anything.")
+    print("Press Ctrl+C to stop.\n")
 
-try:
-    user_is_away = False
-    streak_alerted = False
+    sensorium.register_interjection_handler(on_interjection)
+    sensorium.start()
 
-    while True:
-        snap = sensorium.get_snapshot()
-        current_win = snap["window_title"] or "Desktop / Background"
-        proc = snap["process_name"]
-        dwell = snap["dwell_seconds"]
-        idle = snap["user_idle_seconds"]
+    try:
+        user_is_away = False
+        streak_alerted = False
 
-        # Check for window switch
-        if current_win != last_window:
-            print(f"\n👁️  [FOCUS SWITCH] App: {proc} | Window: {current_win[:45]}...")
-            last_window = current_win
-            streak_alerted = False
+        while True:
+            snap = sensorium.get_snapshot()
+            current_win = snap["window_title"] or "Desktop / Background"
+            proc = snap["process_name"]
+            dwell = snap["dwell_seconds"]
+            idle = snap["user_idle_seconds"]
 
-        # Live status ticker on same line
-        status = "💤 AWAY" if user_is_away else "⚡ ACTIVE"
-        sys.stdout.write(f"\r[{status}] App: {proc[:15]} | Idle: {idle:.1f}s / 7.0s | Dwell: {dwell:.0f}s   ")
-        sys.stdout.flush()
+            # Check for window switch
+            if current_win != last_window:
+                print(f"\n👁️  [FOCUS SWITCH] App: {proc} | Window: {current_win[:45]}...")
+                last_window = current_win
+                streak_alerted = False
 
-        # Step 1: Detect user leaving controls for >= 7 seconds
-        if idle >= 7.0 and not user_is_away:
-            user_is_away = True
-            print(f"\n\n💤 [SENSORIUM EVENT]: Idle reached {idle:.1f}s! User marked as AWAY.")
-            print("👉 Move your mouse or press any key to test Welcome Back speech!\n")
+            # Live status ticker on same line
+            status = "💤 AWAY" if user_is_away else "⚡ ACTIVE"
+            sys.stdout.write(f"\r[{status}] App: {proc[:15]} | Idle: {idle:.1f}s / 7.0s | Dwell: {dwell:.0f}s   ")
+            sys.stdout.flush()
 
-        # Step 2: Detect user returning (idle drops back under 2 seconds)
-        elif idle < 2.0 and user_is_away:
-            user_is_away = False
-            msg = f"Welcome back, sir. Your workspace on {proc} is ready."
-            print(f"\n\n✨ [PROACTIVE SPEECH TRIGGERED]: {msg}")
-            print(f"🔊 [BRAHMA SPEAKING OUT LOUD NOW...]\n")
-            speak_proactive(msg)
+            # Step 1: Detect user leaving controls for >= 7 seconds
+            if idle >= 7.0 and not user_is_away:
+                user_is_away = True
+                print(f"\n\n💤 [SENSORIUM EVENT]: Idle reached {idle:.1f}s! User marked as AWAY.")
+                print("👉 Move your mouse or press any key to test Welcome Back speech!\n")
 
-        # Step 3: Focus streak demo (15s continuous in window)
-        if dwell >= 15.0 and not streak_alerted and not user_is_away:
-            streak_alerted = True
-            msg = f"Focus streak on {proc} detected. Running smoothly."
-            print(f"\n\n🎯 [PROACTIVE FOCUS TRIGGER]: {msg}")
-            speak_proactive(msg)
+            # Step 2: Detect user returning (idle drops back under 2 seconds)
+            elif idle < 2.0 and user_is_away:
+                user_is_away = False
+                msg = f"Welcome back, sir. Your workspace on {proc} is ready."
+                print(f"\n\n✨ [PROACTIVE SPEECH TRIGGERED]: {msg}")
+                print(f"🔊 [BRAHMA SPEAKING OUT LOUD NOW...]\n")
+                speak_proactive(msg)
 
-        time.sleep(0.5)
+            # Step 3: Focus streak demo (15s continuous in window)
+            if dwell >= 15.0 and not streak_alerted and not user_is_away:
+                streak_alerted = True
+                msg = f"Focus streak on {proc} detected. Running smoothly."
+                print(f"\n\n🎯 [PROACTIVE FOCUS TRIGGER]: {msg}")
+                speak_proactive(msg)
 
-except KeyboardInterrupt:
-    sensorium.stop()
-    print("\nSensorium stopped.")
+            time.sleep(0.5)
+
+    except KeyboardInterrupt:
+        sensorium.stop()
+        print("\nSensorium stopped.")
