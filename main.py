@@ -25,6 +25,8 @@ from memory import config_manager
 from memory.memory_manager import search_memory
 
 import core.boot_sentry
+from core.sensorium import sensorium
+from core.protocols import protocols
 import asyncio
 import threading
 import json
@@ -680,6 +682,38 @@ TOOL_DECLARATIONS = [
                 },
             },
             "required": ["query"],
+        },
+    },
+    {
+        "name": "execute_protocol",
+        "description": (
+            "Engage high-level macro system directives (protocols) across the PC and connected mobile devices. "
+            "Supported protocols: "
+            "'deep_work' (minimizes distractions, sets persona to minimal), "
+            "'redline' (maximizes power and compacts RAM for gaming/rendering), "
+            "'lockdown' (locks the workstation and mutes audio immediately), "
+            "'nightfall' (wraps up the day, preps standby)."
+        ),
+        "parameters": {
+            "type": "OBJECT",
+            "properties": {
+                "protocol": {
+                    "type": "STRING",
+                    "description": "Name of the protocol: 'deep_work', 'redline', 'lockdown', 'nightfall'",
+                },
+            },
+            "required": ["protocol"],
+        },
+    },
+    {
+        "name": "get_sensorium_telemetry",
+        "description": (
+            "Read real-time situational awareness telemetry: current active application, "
+            "window title, task dwell time in seconds, user idle time, CPU/RAM load, and battery health."
+        ),
+        "parameters": {
+            "type": "OBJECT",
+            "properties": {},
         },
     },
     {
@@ -3905,6 +3939,19 @@ class BrahmaLive:
             self.ui.set_state("LISTENING")
             return types.FunctionResponse(name=name, id=fc.id, response={"result": result})
 
+        elif name == "execute_protocol":
+            protocol_name = args.get("protocol", "")
+            res = protocols.execute(protocol_name)
+            msg = res.get("result", res.get("error", "Protocol completed."))
+            self.speak(msg)
+            self.ui.set_state("LISTENING")
+            return types.FunctionResponse(name=name, id=fc.id, response={"result": res})
+
+        elif name == "get_sensorium_telemetry":
+            snapshot = sensorium.get_snapshot()
+            self.ui.set_state("LISTENING")
+            return types.FunctionResponse(name=name, id=fc.id, response={"result": snapshot})
+
         if name == "save_memory":
             category = args.get("category", "notes")
             key      = args.get("key", "")
@@ -4923,6 +4970,20 @@ def main():
 
     ui.show_main()
     _startup_log("ui shown")
+
+    # Start Brahma Passive Sensorium Engine (v2)
+    try:
+        def _on_sensorium_alert(alert_type: str, meta: dict):
+            msg = meta.get("message", "System state change detected.")
+            try:
+                ui.write_log(f"🧠 SENSORIUM: {msg}")
+            except Exception:
+                pass
+        sensorium.register_interjection_handler(_on_sensorium_alert)
+        sensorium.start()
+        _startup_log("passive sensorium daemon started")
+    except Exception as exc:
+        _startup_log(f"sensorium start failed: {exc}")
 
     try:
         from core.globe_window import GlobeWindow
