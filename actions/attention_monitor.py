@@ -15,6 +15,8 @@ from typing import Callable
 import xml.etree.ElementTree as ET
 import ctypes
 from ctypes import wintypes
+import subprocess
+
 
 import pyautogui
 
@@ -317,8 +319,18 @@ def set_speech_sink(sink: Callable[[str], None] | None) -> None:
     global _speech_sink
     _speech_sink = sink
 
+_current_speech_proc: Optional[subprocess.Popen] = None
+
+
 def _cleanup_current_audio() -> None:
-    global _current_player_alias, _current_audio_path
+    global _current_player_alias, _current_audio_path, _current_speech_proc
+    if _current_speech_proc is not None:
+        try:
+            _current_speech_proc.terminate()
+        except Exception:
+            pass
+        _current_speech_proc = None
+
     if _current_player_alias is not None:
         try:
             ctypes.windll.winmm.mciSendStringW(f"stop {_current_player_alias}", None, 0, None)
@@ -380,68 +392,65 @@ def _speak_sapi_male(text: str) -> None:
         print(f"[AttentionMonitor] Offline male speech failed: {exc}")
 
 
-def _speak_edge_native(text: str) -> None:
+_speak_lock = threading.Lock()
+
+
+def _speak_edge_native(text: str, force_edge: bool = False) -> None:
     global _current_player_alias, _current_audio_path
     text = (text or "").strip()
     if not text:
         return
 
-    # When entered fully local mode from settings, use the offline native male voice
-    try:
-        from memory import config_manager
-        cfg = config_manager.load_settings()
-        if cfg.get("offline_mode_enabled", False):
+    # When entered fully local mode from settings, use the offline native male voice unless force_edge requested
+    if not force_edge:
+        try:
+            from memory import config_manager
+            cfg = config_manager.load_settings()
+            if cfg.get("offline_mode_enabled", False):
+                _speak_sapi_male(text)
+                return
+        except Exception:
+            pass
+
+    with _speak_lock:
+        try:
+            import edge_tts
+        except Exception as exc:
+            print(f"[AttentionMonitor] Edge TTS import failed: {exc}. Falling back to offline male voice.")
             _speak_sapi_male(text)
             return
-    except Exception:
-        pass
 
-    try:
-        import edge_tts
-    except Exception as exc:  # pragma: no cover
-        print(f"[AttentionMonitor] Edge TTS import failed: {exc}. Falling back to offline male voice.")
-        _speak_sapi_male(text)
-        return
+        try:
+            _cleanup_current_audio()
+        except Exception:
+            pass
 
-    try:
-        _cleanup_current_audio()
-    except Exception:
-        pass
+        audio_path = os.path.join(tempfile.gettempdir(), f"brahma_edge_tts_{uuid.uuid4().hex}.mp3")
+        try:
+            communicator = edge_tts.Communicate(text, voice="en-US-GuyNeural")
+            communicator.save_sync(audio_path)
+        except Exception as exc:
+            print(f"[AttentionMonitor] Edge TTS generation failed: {exc}. Falling back to offline male voice.")
+            _cleanup_current_audio()
+            _speak_sapi_male(text)
+            return
 
-    audio_path = os.path.join(tempfile.gettempdir(), f"brahma_edge_tts_{uuid.uuid4().hex}.mp3")
-    try:
-        # Regular Edge TTS neural voice
-        communicator = edge_tts.Communicate(text, voice="en-US-GuyNeural")
-        communicator.save_sync(audio_path)
-    except Exception as exc:  # pragma: no cover
-        print(f"[AttentionMonitor] Edge TTS generation failed: {exc}. Falling back to offline male voice.")
-        _cleanup_current_audio()
-        _speak_sapi_male(text)
-        return
-
-    # Play Edge TTS audio via Windows Media Player COM (works natively across all Windows 10/11)
-    try:
-        import pythoncom
-        import win32com.client
-        pythoncom.CoInitialize()
-        wmp = win32com.client.Dispatch("WMPlayer.OCX")
-        wmp.settings.volume = 100
-        wmp.URL = audio_path
-        wmp.controls.play()
-
-        # Wait while media is playing
-        while wmp.playState in (1, 2, 3, 9, 10):  # Playing, transitioning or buffing
-            time.sleep(0.1)
-            # If playing or ended
-            if wmp.playState == 1:  # Stopped / Finished
-                break
-
+        # Play Edge TTS audio via Windows PresentationCore MediaPlayer (native across Windows 10 & 11)
         _current_audio_path = audio_path
-    except Exception as exc:
-        print(f"[AttentionMonitor] WMP playback failed: {exc}. Falling back to offline male voice.")
-        _speak_sapi_male(text)
-        _cleanup_current_audio()
-        return
+        try:
+            cmd = [
+                "powershell", "-NoProfile", "-NonInteractive", "-Command",
+                f"Add-Type -AssemblyName presentationCore; $p = New-Object System.Windows.Media.MediaPlayer; $p.Open([System.Uri]'{audio_path}'); $p.Play(); Start-Sleep -Milliseconds 400; while($p.NaturalDuration.HasTimeSpan -and $p.Position -lt $p.NaturalDuration.TimeSpan){{Start-Sleep -Milliseconds 80}}"
+            ]
+            flags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
+            _current_speech_proc = subprocess.Popen(cmd, creationflags=flags)
+            _current_speech_proc.wait()
+            _current_speech_proc = None
+        except Exception as exc:
+            print(f"[AttentionMonitor] MediaPlayer playback failed: {exc}. Falling back to offline male voice.")
+            _speak_sapi_male(text)
+        finally:
+            _cleanup_current_audio()
 
 
 
@@ -453,14 +462,17 @@ def set_speech_sink(sink_fn) -> None:
     _speech_sink = sink_fn
 
 
-def speak_native(text: str) -> None:
+def speak_native(text: str, force_edge: bool = False) -> None:
     text = (text or "").strip()
     if not text:
         return
     if _speech_sink is not None:
-        _speech_sink(text)
+        try:
+            _speech_sink(text)
+        except Exception:
+            _speak_edge_native(text, force_edge=force_edge)
     else:
-        _speak_edge_native(text)
+        _speak_edge_native(text, force_edge=force_edge)
 
 
 def stop_native_speech() -> None:

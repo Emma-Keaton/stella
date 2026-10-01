@@ -10,7 +10,8 @@ def _get_settings() -> dict:
         settings_file = APP_SETTINGS_FILE
     except ImportError:
         # Fallback if import fails
-        settings_file = Path(__file__).resolve().parent.parent / "config" / "app_settings.json"
+        from core.user_paths import get_user_data_dir
+        settings_file = get_user_data_dir() / "config" / "app_settings.json"
         
     if settings_file.exists():
         try:

@@ -9,9 +9,12 @@ import json
 from pathlib import Path
 from typing import Any, Dict
 
+from core.user_paths import get_user_data_dir
+
 BSE_DIR = Path(__file__).resolve().parent.parent
-CONFIG_DIR = BSE_DIR / "config"
+CONFIG_DIR = get_user_data_dir() / "config"
 SETTINGS_FILE = CONFIG_DIR / "app_settings.json"
+
 
 
 def _ensure_config() -> None:

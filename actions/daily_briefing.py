@@ -210,13 +210,33 @@ def _get_top_headlines(category: str = "all", limit: int = 2) -> List[str]:
 
 
 def _collect_briefing_intel(category: str, city: Optional[str]) -> Dict[str, Any]:
-    collectors = {
-        "weather": lambda: _get_weather_intel(city),
-        "calendar": _get_calendar_intel,
-        "gmail": _get_gmail_intel,
-        "instagram": _get_instagram_intel,
-        "headlines": lambda: _get_top_headlines(category=category, limit=2),
-    }
+    try:
+        from memory import config_manager
+        is_offline = bool(config_manager.get_setting("offline_mode_enabled", False))
+    except Exception:
+        is_offline = False
+
+    if is_offline:
+        collectors = {
+            "weather": lambda: {
+                "status": "offline", "city": city or "Local Workstation", "temp_c": 24,
+                "condition": "Offline Mode", "humidity": "--", "wind": "--",
+                "summary": "Offline air-gapped environment",
+            },
+            "calendar": _get_calendar_intel,
+            "gmail": lambda: {"configured": False, "count": 0, "senders": [], "summary": "Offline"},
+            "instagram": lambda: {"configured": False, "count": 0, "senders": [], "summary": "Offline"},
+            "headlines": lambda: [],
+        }
+    else:
+        collectors = {
+            "weather": lambda: _get_weather_intel(city),
+            "calendar": _get_calendar_intel,
+            "gmail": _get_gmail_intel,
+            "instagram": _get_instagram_intel,
+            "headlines": lambda: _get_top_headlines(category=category, limit=2),
+        }
+
     fallbacks = {
         "weather": {
             "status": "unavailable", "city": city or "Local Area", "temp_c": 26,
@@ -376,11 +396,21 @@ def daily_briefing(
         except Exception as e:
             print(f"[DailyBriefing] UI render notice: {e}")
 
+    # Speak daily briefing via provided speech callback (Gemini Live Charon voice) or fallback
+    spoken = False
     if speak:
         try:
             speak(narrative)
+            spoken = True
         except Exception as e:
             print(f"[DailyBriefing] Speech synthesis notice: {e}")
+
+    if not spoken:
+        try:
+            from actions.attention_monitor import _speak_edge_native
+            _speak_edge_native(narrative)
+        except Exception as e:
+            print(f"[DailyBriefing] Direct speech notice: {e}")
 
     return narrative
 

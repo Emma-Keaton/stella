@@ -2827,11 +2827,11 @@ class BrahmaLive:
         configured_provider = app_settings.get("default_ai_provider", "Gemini")
         is_offline_mode = bool(app_settings.get("offline_mode_enabled", False))
 
-        # Explicit cloud provider selection strictly takes precedence
-        if configured_provider in ("Gemini", "Google Gemini", "OpenRouter"):
-            is_local_preferred = False
+        # If offline mode or Local provider selected, route directly to Local Brain
+        if is_offline_mode or configured_provider == "Local":
+            is_local_preferred = True
         else:
-            is_local_preferred = (configured_provider == "Local") or is_offline_mode
+            is_local_preferred = False
 
         if is_local_preferred or self._use_openrouter_first or not self._loop or not self.session:
             threading.Thread(target=self._fallback_reply, args=(text, memory_ctx), daemon=True).start()
@@ -3930,21 +3930,43 @@ class BrahmaLive:
         if hasattr(self, "ui") and self.ui and not self.ui.muted:
             self.ui.set_state("LISTENING")
 
-    def speak(self, text: str, proactive: bool = True):
+    def speak(self, text: str, proactive: bool = False):
         text = (text or "").strip()
         if not text:
             return
 
-        def _speak_thread():
-            try:
-                self.set_speaking(True)
-                from actions.attention_monitor import _speak_edge_native
-                _speak_edge_native(text)
-            except Exception as exc:
-                print(f"[Brahma Speak] Unified TTS failed: {exc}")
-            finally:
-                self.set_speaking(False)
-        threading.Thread(target=_speak_thread, daemon=True).start()
+        if self.session and self._loop:
+            # Route text through Gemini Live API for the unified native Charon voice
+            import asyncio
+            async def _send():
+                try:
+                    prompt = f"System Alert / Context: {text}\n\nPlease relay this information to me naturally now."
+                    await self.session.send(input=prompt, end_of_turn=True)
+                except Exception as e:
+                    print(f"[BRAHMA EVO] Unified Speak (Charon) err: {e}")
+                    def _fallback():
+                        try:
+                            self.set_speaking(True)
+                            from actions.attention_monitor import _speak_edge_native
+                            _speak_edge_native(text)
+                        except Exception as exc:
+                            print(f"[Brahma Speak] Fallback TTS failed: {exc}")
+                        finally:
+                            self.set_speaking(False)
+                    threading.Thread(target=_fallback, daemon=True).start()
+            asyncio.run_coroutine_threadsafe(_send(), self._loop)
+        else:
+            # Fallback when Gemini Live is disconnected or in offline mode
+            def _speak_thread():
+                try:
+                    self.set_speaking(True)
+                    from actions.attention_monitor import _speak_edge_native
+                    _speak_edge_native(text)
+                except Exception as exc:
+                    print(f"[Brahma Speak] Unified TTS failed: {exc}")
+                finally:
+                    self.set_speaking(False)
+            threading.Thread(target=_speak_thread, daemon=True).start()
 
     def speak_error(self, tool_name: str, error: str):
         short = str(error)[:120]
