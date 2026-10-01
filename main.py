@@ -688,12 +688,10 @@ TOOL_DECLARATIONS = [
     {
         "name": "execute_protocol",
         "description": (
-            "Engage high-level macro system directives (protocols) across the PC and connected mobile devices. "
-            "Supported protocols: "
-            "'deep_work' (minimizes distractions, sets persona to minimal), "
-            "'redline' (maximizes power and compacts RAM for gaming/rendering), "
-            "'lockdown' (locks the workstation and mutes audio immediately), "
-            "'nightfall' (wraps up the day, preps standby)."
+            "Activates or switches high-level macro system directives (protocols) across the PC. "
+            "Call this whenever the user asks to activate, engage, start, run, or switch to a protocol: "
+            "'deep_work' (deep focus mode), 'redline' (gaming / max power performance), "
+            "'lockdown' (instant lock and security mute), or 'nightfall' (evening standby wrap-up)."
         ),
         "parameters": {
             "type": "OBJECT",
@@ -988,7 +986,10 @@ TOOL_DECLARATIONS = [
     },
     {
         "name": "weather_report",
-        "description": "Gives the weather report to user",
+        "description": (
+            "Fetches live real-time weather, forecast, and temperature for any city or location. "
+            "Call this whenever the user asks about the weather, temperature, rain, or forecast for any city or location."
+        ),
         "parameters": {
             "type": "OBJECT",
             "properties": {
@@ -2821,9 +2822,10 @@ class BrahmaLive:
 
             threading.Thread(target=_run_screen_process, daemon=True).start()
             return
-        # Route directly to Local Brain if preferred by user in settings
+        # Route directly to Local Brain if preferred by user in settings or in air-gapped offline mode
         app_settings = config_manager.load_settings()
-        is_local_preferred = app_settings.get("default_ai_provider") == "Local"
+        is_local_preferred = app_settings.get("default_ai_provider") == "Local" or app_settings.get("offline_mode_enabled", False)
+
 
         if is_local_preferred or self._use_openrouter_first or not self._loop or not self.session:
             threading.Thread(target=self._fallback_reply, args=(text, memory_ctx), daemon=True).start()
@@ -3652,6 +3654,31 @@ class BrahmaLive:
                 self._pending_attention = None
 
 
+    def _execute_tool_sync(self, name: str, args: dict, call_id: str = "call_local") -> str:
+        class LocalFC:
+            def __init__(self, n, a, cid):
+                self.name = n
+                self.args = a
+                self.id = cid
+                self.silent_completion = True
+
+        fc = LocalFC(name, args, call_id)
+        if self._loop and self._loop.is_running():
+            try:
+                future = asyncio.run_coroutine_threadsafe(self._execute_tool(fc), self._loop)
+                fr = future.result(timeout=60)
+                res_obj = getattr(fr, "response", {})
+                return res_obj.get("result", str(res_obj))
+            except Exception as e:
+                return f"Tool execution failed: {e}"
+        else:
+            try:
+                fr = asyncio.run(self._execute_tool(fc))
+                res_obj = getattr(fr, "response", {})
+                return res_obj.get("result", str(res_obj))
+            except Exception as e:
+                return f"Tool execution failed: {e}"
+
     def _fallback_reply(self, text: str, memory_ctx: str = ""):
         try:
             self.ui.set_state("THINKING")
@@ -3670,29 +3697,96 @@ class BrahmaLive:
             app_settings = config_manager.load_settings()
             configured_provider = app_settings.get("default_ai_provider", "Gemini")
             local_model_target = app_settings.get("local_ai_model", "qwen2.5:3b")
+            is_offline_mode = app_settings.get("offline_mode_enabled", False)
 
-            # 1. If user explicitly configured Local AI in settings, run Local Brain directly
-            if configured_provider == "Local" and local_brain.is_available():
+            # 1. If user explicitly configured Local AI or Offline Mode, run Local Brain directly with full OS tools
+            if (configured_provider == "Local" or is_offline_mode) and local_brain.is_available():
                 try:
                     self.ui.update_task_workspace(
                         status="Thinking (Local AI)",
                         output=f"Processing on local model ({local_model_target})...",
                         percent=50,
                     )
-                    res = local_brain.chat_complete([
-                        {
-                            "role": "system",
-                            "content": "You are Brahma Evo, a concise, helpful desktop assistant running 100% offline locally. Reply naturally, concisely, and helpfully."
-                        },
+                    prompt_txt = ""
+                    try:
+                        if PROMPT_PATH.exists():
+                            prompt_txt = PROMPT_PATH.read_text(encoding="utf-8").strip()
+                    except Exception:
+                        pass
+                    if not prompt_txt:
+                        prompt_txt = "You are Brahma Evo, the autonomous desktop operating system."
+
+                    system_prompt = (
+                        f"{prompt_txt}\n\n"
+                        "CRITICAL OPERATING SYSTEM DIRECTIVE:\n"
+                        "- You have FULL DIRECT ACCESS and authority over this Windows PC via your tools.\n"
+                        "- NEVER state that you are a text-based AI, that you cannot perform automations, or that you lack real-time access.\n"
+                        "- Whenever the user requests an action (opening an app, changing volume, setting a reminder, running a protocol, organizing files, searching, etc.), ALWAYS call the corresponding tool.\n"
+                        "- Keep responses concise, direct, and conversational."
+                    )
+
+                    messages = [
+                        {"role": "system", "content": system_prompt},
                         {"role": "user", "content": request_text}
-                    ], model=local_model_target)
-                    reply = res["choices"][0]["message"]["content"]
+                    ]
+
+                    res = local_brain.chat_complete(
+                        messages,
+                        model=local_model_target,
+                        tools=TOOL_DECLARATIONS,
+                        focus_core=True
+                    )
+                    msg = res.get("choices", [{}])[0].get("message", {})
+                    tool_calls = msg.get("tool_calls")
+                    if tool_calls:
+                        for tc in tool_calls:
+                            call_id = tc.get("id", "call_local")
+                            fn_info = tc.get("function", {})
+                            fn_name = fn_info.get("name")
+                            fn_args_raw = fn_info.get("arguments", {})
+                            if isinstance(fn_args_raw, str):
+                                try:
+                                    fn_args = json.loads(fn_args_raw)
+                                except Exception:
+                                    fn_args = {}
+                            else:
+                                fn_args = fn_args_raw or {}
+
+                            print(f"[BRAHMA EVO] 🔒 Local Brain executing tool: {fn_name}({fn_args})")
+                            self.ui.update_task_workspace(
+                                status=f"Executing {fn_name}",
+                                output=f"Running action: {fn_name} on local machine...",
+                                percent=75,
+                            )
+                            tool_result = self._execute_tool_sync(fn_name, fn_args, call_id)
+
+                            messages.append(msg)
+                            messages.append({
+                                "role": "tool",
+                                "tool_call_id": call_id,
+                                "name": fn_name,
+                                "content": str(tool_result)
+                            })
+                            try:
+                                followup_res = local_brain.chat_complete(
+                                    messages,
+                                    model=local_model_target,
+                                    temperature=0.3
+                                )
+                                followup_reply = followup_res.get("choices", [{}])[0].get("message", {}).get("content", "").strip()
+                                if followup_reply:
+                                    reply = followup_reply
+                            except Exception as e_fu:
+                                print(f"[BRAHMA EVO] ⚠️ Local Brain follow-up failed: {e_fu}")
+                                reply = str(tool_result) if tool_result else f"{fn_name.replace('_', ' ').capitalize()} completed."
+                    else:
+                        reply = msg.get("content", "").strip()
                     print(f"[BRAHMA EVO] 🔒 Local Brain ({local_model_target}) answered successfully!")
                 except Exception as e_loc:
                     print(f"[BRAHMA EVO] ⚠️ Local Brain failed: {e_loc}")
 
-            # 2. Otherwise try Gemini
-            if not reply and gemini_first and configured_provider != "Local":
+            # 2. Otherwise try Gemini (only when not in air-gapped offline mode)
+            if not reply and gemini_first and configured_provider != "Local" and not is_offline_mode:
                 try:
                     reply = _gemini_text_reply(request_text)
                 except Exception as e:
@@ -3700,8 +3794,8 @@ class BrahmaLive:
                     if _is_gemini_limit_error(e):
                         self._use_openrouter_first = True
 
-            # 3. Try OpenRouter if configured
-            if not reply and configured_provider != "Local":
+            # 3. Try OpenRouter if configured (only when not in air-gapped offline mode)
+            if not reply and configured_provider != "Local" and not is_offline_mode:
                 try:
                     reply = openrouter_client.chat(
                         request_text,
@@ -3719,10 +3813,25 @@ class BrahmaLive:
             if not reply and local_brain.is_available():
                 try:
                     res = local_brain.chat_complete([
-                        {"role": "system", "content": "You are Brahma Evo, a concise desktop assistant."},
+                        {"role": "system", "content": "You are Brahma Evo, the autonomous desktop operating system. You control this PC. Never claim you cannot do automations."},
                         {"role": "user", "content": request_text}
-                    ], model=local_model_target)
-                    reply = res["choices"][0]["message"]["content"]
+                    ], model=local_model_target, tools=TOOL_DECLARATIONS, focus_core=True)
+                    msg_net = res.get("choices", [{}])[0].get("message", {})
+                    tc_net = msg_net.get("tool_calls")
+                    if tc_net:
+                        call_id = tc_net[0].get("id", "call_local")
+                        fn_name = tc_net[0].get("function", {}).get("name")
+                        fn_args_raw = tc_net[0].get("function", {}).get("arguments", {})
+                        if isinstance(fn_args_raw, str):
+                            try:
+                                fn_args = json.loads(fn_args_raw)
+                            except Exception:
+                                fn_args = {}
+                        else:
+                            fn_args = fn_args_raw or {}
+                        reply = self._execute_tool_sync(fn_name, fn_args, call_id)
+                    else:
+                        reply = msg_net.get("content", "").strip()
                     print(f"[BRAHMA EVO] 🔒 Local Brain offline safety net answered ({local_model_target})!")
                 except Exception as e_net:
                     print(f"[BRAHMA EVO] ⚠️ Offline Local Brain fallback failed: {e_net}")
@@ -4614,7 +4723,8 @@ class BrahmaLive:
             self.speak_error(name, e)
 
         try:
-            self.speak(f"{name.replace('_', ' ')} completed.")
+            if not getattr(fc, "silent_completion", False):
+                self.speak(f"{name.replace('_', ' ')} completed.")
             self.ui.finish_task_workspace(result, "Task completed.", 100)
         except Exception:
             pass
