@@ -27,6 +27,7 @@ from memory.memory_manager import search_memory
 import core.boot_sentry
 from core.sensorium import sensorium
 from core.protocols import protocols
+from core.local_brain import local_brain
 import asyncio
 import threading
 import json
@@ -714,6 +715,29 @@ TOOL_DECLARATIONS = [
         "parameters": {
             "type": "OBJECT",
             "properties": {},
+        },
+    },
+    {
+        "name": "manage_local_model",
+        "description": (
+            "Inspect, download, or switch offline local LLM models on the machine. "
+            "action='status' returns available models and server health. "
+            "action='pull' downloads a new model (e.g., 'qwen2.5:3b', 'llama3.2:3b'). "
+            "action='toggle_offline' switches between local offline inference and cloud."
+        ),
+        "parameters": {
+            "type": "OBJECT",
+            "properties": {
+                "action": {
+                    "type": "STRING",
+                    "description": "One of: 'status', 'pull', 'toggle_offline', 'set_active'",
+                },
+                "model_name": {
+                    "type": "STRING",
+                    "description": "Model name when pulling or setting active (e.g. 'qwen2.5:3b', 'llama3.2:3b')",
+                },
+            },
+            "required": ["action"],
         },
     },
     {
@@ -3953,6 +3977,39 @@ class BrahmaLive:
             snapshot = sensorium.get_snapshot()
             self.ui.set_state("LISTENING")
             return types.FunctionResponse(name=name, id=fc.id, response={"result": snapshot})
+
+        elif name == "manage_local_model":
+            action = args.get("action", "status")
+            model_target = args.get("model_name", "")
+            if action == "status":
+                avail = local_brain.is_available()
+                models = local_brain.list_installed_models()
+                res = {
+                    "server_online": avail,
+                    "active_model": local_brain.default_model,
+                    "local_mode_enabled": local_brain.enabled,
+                    "installed_models": models,
+                }
+                msg = f"Local brain is {'online' if avail else 'offline'}. Installed models: {', '.join(models) if models else 'none'}."
+            elif action == "pull" and model_target:
+                local_brain.pull_model_async(model_target)
+                msg = f"Initiated background download of local model: {model_target}."
+                res = {"status": "downloading", "model": model_target}
+            elif action == "toggle_offline":
+                local_brain.enabled = not local_brain.enabled
+                msg = f"Offline local inference mode {'engaged' if local_brain.enabled else 'disengaged'}."
+                res = {"local_mode_enabled": local_brain.enabled}
+            elif action == "set_active" and model_target:
+                local_brain.default_model = model_target
+                msg = f"Active local model set to {model_target}."
+                res = {"active_model": local_brain.default_model}
+            else:
+                msg = "Invalid action."
+                res = {"error": msg}
+
+            self.speak(msg)
+            self.ui.set_state("LISTENING")
+            return types.FunctionResponse(name=name, id=fc.id, response={"result": res})
 
         if name == "save_memory":
             category = args.get("category", "notes")
