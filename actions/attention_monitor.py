@@ -367,10 +367,15 @@ def _speak_edge_native(text: str) -> None:
         _cleanup_current_audio()
         return
 
+    # Resolve 8.3 short path to guarantee 100% MCI compatibility on Windows 10/11
+    short_path_buf = ctypes.create_unicode_buffer(500)
+    ctypes.windll.kernel32.GetShortPathNameW(audio_path, short_path_buf, 500)
+    mci_path = short_path_buf.value or audio_path
+
     player_alias = f"brahma_tts_{uuid.uuid4().hex}"
     try:
         result = ctypes.windll.winmm.mciSendStringW(
-            f'open "{audio_path}" type mpegvideo alias {player_alias}',
+            f'open "{mci_path}" type mpegvideo alias {player_alias}',
             None,
             0,
             None,

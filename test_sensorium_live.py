@@ -21,11 +21,19 @@ def speak_proactive(text: str):
     import threading
     def _speak():
         try:
+            # 1. Official Brahma Unified Neural Voice (Edge TTS GuyNeural)
+            from actions.attention_monitor import _speak_edge_native
+            _speak_edge_native(text)
+            return
+        except Exception:
+            pass
+
+        try:
+            # 2. Offline fallback
             import pythoncom
             import win32com.client
             pythoncom.CoInitialize()
             voice = win32com.client.Dispatch("SAPI.SpVoice")
-            # Set volume to 100
             voice.Volume = 100
             voice.Speak(text)
         except Exception as err:
