@@ -367,35 +367,34 @@ def _speak_edge_native(text: str) -> None:
         _cleanup_current_audio()
         return
 
-    # Resolve 8.3 short path to guarantee 100% MCI compatibility on Windows 10/11
-    short_path_buf = ctypes.create_unicode_buffer(500)
-    ctypes.windll.kernel32.GetShortPathNameW(audio_path, short_path_buf, 500)
-    mci_path = short_path_buf.value or audio_path
-
-    player_alias = f"brahma_tts_{uuid.uuid4().hex}"
+    # Play Edge TTS audio via Windows Media Player COM (works natively across all Windows 10/11)
     try:
-        result = ctypes.windll.winmm.mciSendStringW(
-            f'open "{mci_path}" type mpegvideo alias {player_alias}',
-            None,
-            0,
-            None,
-        )
-        if result != 0:
-            raise RuntimeError(f"MCI open failed: {result}")
+        import pythoncom
+        import win32com.client
+        pythoncom.CoInitialize()
+        wmp = win32com.client.Dispatch("WMPlayer.OCX")
+        wmp.settings.volume = 100
+        wmp.URL = audio_path
+        wmp.controls.play()
 
-        result = ctypes.windll.winmm.mciSendStringW(
-            f"play {player_alias} wait",
-            None,
-            0,
-            None,
-        )
-        if result != 0:
-            raise RuntimeError(f"MCI play failed: {result}")
+        # Wait while media is playing
+        while wmp.playState in (1, 2, 3, 9, 10):  # Playing, transitioning or buffing
+            time.sleep(0.1)
+            # If playing or ended
+            if wmp.playState == 1:  # Stopped / Finished
+                break
 
-        _current_player_alias = player_alias
         _current_audio_path = audio_path
-    except Exception as exc:  # pragma: no cover
-        print(f"[AttentionMonitor] Edge TTS playback failed: {exc}")
+    except Exception as exc:
+        print(f"[AttentionMonitor] WMP playback failed: {exc}")
+        # Secondary fallback: SAPI
+        try:
+            import win32com.client
+            v = win32com.client.Dispatch("SAPI.SpVoice")
+            v.Volume = 100
+            v.Speak(text)
+        except Exception:
+            pass
         _cleanup_current_audio()
         return
 

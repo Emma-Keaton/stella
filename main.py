@@ -3705,13 +3705,25 @@ class BrahmaLive:
         if hasattr(self, "ui") and self.ui and not self.ui.muted:
             self.ui.set_state("LISTENING")
 
-    def speak(self, text: str):
+    def speak(self, text: str, proactive: bool = False):
         text = (text or "").strip()
         if not text:
             return
-        
-        if self.session and self._loop:
-            # Route text through Gemini Live API for a unified native voice
+
+        # Proactive alerts, sensorium events, and system triggers speak instantly via unified neural TTS
+        if proactive or not (self.session and self._loop):
+            def _speak_thread():
+                try:
+                    self.set_speaking(True)
+                    from actions.attention_monitor import _speak_edge_native
+                    _speak_edge_native(text)
+                except Exception as exc:
+                    print(f"[Brahma Speak] Neural TTS failed: {exc}")
+                finally:
+                    self.set_speaking(False)
+            threading.Thread(target=_speak_thread, daemon=True).start()
+        else:
+            # Route conversational text through Gemini Live API
             import asyncio
             async def _send():
                 try:
@@ -3720,16 +3732,6 @@ class BrahmaLive:
                 except Exception as e:
                     print(f"[BRAHMA EVO] Unified Speak err: {e}")
             asyncio.run_coroutine_threadsafe(_send(), self._loop)
-        else:
-            # Fallback to Edge TTS if Gemini Live is disconnected
-            def _speak_thread():
-                try:
-                    self.set_speaking(True)
-                    from actions.attention_monitor import _speak_edge_native
-                    _speak_edge_native(text)
-                finally:
-                    self.set_speaking(False)
-            threading.Thread(target=_speak_thread, daemon=True).start()
 
     def speak_error(self, tool_name: str, error: str):
         short = str(error)[:120]
@@ -5019,9 +5021,9 @@ def main():
             spoken_text = meta.get("speech")
             if spoken_text and not getattr(ui, "muted", False):
                 try:
-                    brahma_evo.speak(spoken_text)
-                except Exception:
-                    pass
+                    brahma_evo.speak(spoken_text, proactive=True)
+                except Exception as exc:
+                    print(f"[Sensorium Speak Error]: {exc}")
 
         sensorium.register_interjection_handler(_proactive_sensorium_voice)
         try:
