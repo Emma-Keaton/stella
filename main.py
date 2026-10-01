@@ -2224,6 +2224,22 @@ class BrahmaLive:
             if self._handle_email_flow(text):
                 return
 
+        # Direct verbal toggle for Air-Gapped Offline Mode
+        lower = text.lower().strip()
+        if any(p in lower for p in ("switch to offline mode", "go offline", "turn on offline mode", "enable offline mode", "air gap mode")):
+            config_manager.set_setting("offline_mode_enabled", True)
+            config_manager.set_setting("default_ai_provider", "Local")
+            self.ui.write_log("🔒 SYSTEM: Air-Gapped Offline Mode ENGAGED. All operations running 100% locally.")
+            self.speak("Offline mode engaged, sir. Running 100 percent locally on your machine.", proactive=True)
+            return
+
+        if any(p in lower for p in ("switch to online mode", "go online", "turn off offline mode", "disable offline mode")):
+            config_manager.set_setting("offline_mode_enabled", False)
+            config_manager.set_setting("default_ai_provider", "Google Gemini")
+            self.ui.write_log("🌐 SYSTEM: Offline Mode DISENGAGED. Cloud connectivity restored.")
+            self.speak("Online mode restored, sir. Cloud connectivity is active.", proactive=True)
+            return
+
         # Check for email command initiation
         lower = text.lower()
         skill_goal = _extract_skill_creation_goal(text)

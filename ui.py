@@ -11166,6 +11166,15 @@ class SystemConnectivityPage(QWidget):
         
         self._auto_switch_btn = self._mk_toggle("Automatically switch if a provider fails", bool(self._load_app_settings().get("auto_provider_switch", True)), self._toggle_auto_provider_switch)
         lay1.addWidget(self._auto_switch_btn)
+
+        # Dedicated Offline Mode Toggle
+        is_offline_mode = bool(self._load_app_settings().get("offline_mode_enabled", False))
+        self._offline_mode_btn = self._mk_toggle(
+            "🔒 Offline Mode (Air-Gapped: 100% Local Inference & Speech)",
+            is_offline_mode,
+            self._toggle_offline_mode
+        )
+        lay1.addWidget(self._offline_mode_btn)
         lay.addWidget(card)
 
         # Mobile connect
@@ -12527,6 +12536,21 @@ class SystemConnectivityPage(QWidget):
         self._set_setting("auto_provider_switch", bool(checked))
         if self._ctrl() and hasattr(self._ctrl(), "write_log"):
             self._ctrl().write_log(f"SYS: Auto provider switch {'enabled' if checked else 'disabled'}.")
+
+    def _toggle_offline_mode(self, checked: bool):
+        self._set_setting("offline_mode_enabled", bool(checked))
+        if checked:
+            self._set_setting("default_ai_provider", "Local")
+            if hasattr(self, "_default_provider"):
+                self._default_provider.setCurrentText("Local")
+            msg = "🔒 SYSTEM: Air-Gapped Offline Mode ENGAGED. All operations running 100% locally."
+        else:
+            self._set_setting("default_ai_provider", "Google Gemini")
+            if hasattr(self, "_default_provider"):
+                self._default_provider.setCurrentText("Google Gemini")
+            msg = "🌐 SYSTEM: Offline Mode DISENGAGED. Cloud connectivity restored."
+        if self._ctrl() and hasattr(self._ctrl(), "write_log"):
+            self._ctrl().write_log(msg)
 
     def _toggle_attention_message_prompts(self, checked: bool):
         self._set_setting("attention_message_prompts", bool(checked))
