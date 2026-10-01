@@ -152,6 +152,7 @@ class PassiveSensorium:
                     "ram_critical",
                     {
                         "message": f"System memory threshold at {self.ram_percent}% capacity.",
+                        "speech": f"Warning: system memory has reached {int(self.ram_percent)} percent capacity.",
                         "ram_percent": self.ram_percent,
                     },
                 )
@@ -164,6 +165,7 @@ class PassiveSensorium:
                     "battery_critical",
                     {
                         "message": f"Battery critically low at {self.battery_percent}%.",
+                        "speech": f"Sir, your battery is down to {int(self.battery_percent)} percent. Please connect a power source.",
                         "battery_percent": self.battery_percent,
                     },
                 )
@@ -176,10 +178,27 @@ class PassiveSensorium:
                     "flow_strain",
                     {
                         "message": f"You've been focused on {self.current_process_name} for over 90 minutes.",
+                        "speech": f"Sir, you have been continuously working on {self.current_process_name} for over 90 minutes. I recommend saving your session and taking a short break.",
                         "task": self.current_process_name,
                         "dwell_seconds": self.current_dwell_seconds,
                     },
                 )
+
+        # Proactive: User Return after extended absence (> 5 mins away)
+        if hasattr(self, "_was_away") and self._was_away and self.user_idle_seconds < 2.0:
+            self._was_away = False
+            if now - self._last_alert_time.get("welcome_back", 0) > 600:
+                self._last_alert_time["welcome_back"] = now
+                self._emit_alert(
+                    "welcome_back",
+                    {
+                        "message": f"User returned to workspace ({self.current_process_name}).",
+                        "speech": "Welcome back, sir. Your workspace is active and standing by.",
+                        "task": self.current_process_name,
+                    },
+                )
+        elif self.user_idle_seconds > 300:
+            self._was_away = True
 
     def _emit_alert(self, alert_type: str, metadata: Dict[str, Any]):
         for cb in self._interjection_callbacks:

@@ -5013,6 +5013,17 @@ def main():
             dashboard_started=dashboard is not None,
             enable_dashboard=dashboard_enabled,
         )
+
+        # Wire proactive voice to Sensorium
+        def _proactive_sensorium_voice(alert_type: str, meta: dict):
+            spoken_text = meta.get("speech")
+            if spoken_text and not getattr(ui, "muted", False):
+                try:
+                    brahma_evo.speak(spoken_text)
+                except Exception:
+                    pass
+
+        sensorium.register_interjection_handler(_proactive_sensorium_voice)
         try:
             if plugin_manager is not None:
                 brahma_evo.plugin_manager = plugin_manager
