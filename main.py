@@ -3730,6 +3730,8 @@ class BrahmaLive:
             if not reply:
                 reply = "I’m ready, sir."
             self.ui.write_log(f"Brahma Evo: {reply}")
+            if not getattr(self.ui, "muted", False):
+                self.speak(reply, proactive=True)
             try:
                 self.ui.finish_task_workspace(reply, "Reply delivered.", 100)
             except Exception:
@@ -4729,7 +4731,11 @@ class BrahmaLive:
             while True:
                 await asyncio.sleep(60)
 
+        speech_buffer = bytearray()
+        silence_chunks = 0
+
         def callback(indata, frames, time_info, status):
+            nonlocal silence_chunks
             with self._speaking_lock:
                 brahma_speaking = self._is_speaking
             if self._phone_active:
@@ -4746,6 +4752,34 @@ class BrahmaLive:
             if not self.ui.muted or getattr(self.ui, "_wakeword_listening", False):
                 lvl = float(np.sqrt(np.mean(np.square(indata, dtype=np.float32))))
                 
+                # Handle Local AI voice input when in Local or Offline mode
+                app_cfg = config_manager.load_settings()
+                if app_cfg.get("default_ai_provider") == "Local" or app_cfg.get("offline_mode_enabled", False):
+                    if not brahma_speaking and not self.ui.muted:
+                        if lvl > 22.0:
+                            speech_buffer.extend(indata.tobytes())
+                            silence_chunks = 0
+                        elif len(speech_buffer) > 0:
+                            silence_chunks += 1
+                            # ~0.7s of silence (each chunk is ~30ms -> 20 chunks)
+                            if silence_chunks > 18:
+                                captured = bytes(speech_buffer)
+                                speech_buffer.clear()
+                                silence_chunks = 0
+                                if len(captured) > (SEND_SAMPLE_RATE * 2 * 0.5):
+                                    def _process_local_speech(pcm_bytes):
+                                        try:
+                                            import speech_recognition as sr
+                                            r = sr.Recognizer()
+                                            audio_data = sr.AudioData(pcm_bytes, SEND_SAMPLE_RATE, 2)
+                                            text_cmd = r.recognize_google(audio_data)
+                                            if text_cmd and len(text_cmd.strip()) > 1:
+                                                print(f"[Local AI Voice] 🎙️ Heard: {text_cmd}")
+                                                self._on_text_command(text_cmd, source="mic")
+                                        except Exception:
+                                            pass
+                                    threading.Thread(target=_process_local_speech, args=(captured,), daemon=True).start()
+
                 if brahma_speaking:
                     if self._echo.is_user_speech(indata, SEND_SAMPLE_RATE, lvl) and lvl > 28.0:
                         loop.call_soon_threadsafe(self.trigger_barge_in)
