@@ -339,16 +339,45 @@ def _cleanup_current_audio() -> None:
         _current_audio_path = None
 
 
-def _speak_sapi(text: str) -> None:
+def _speak_sapi_male(text: str) -> None:
+    """Speaks using an offline native Windows male voice (Microsoft George / David)."""
     try:
         import win32com.client
         import pythoncom
         pythoncom.CoInitialize()
         v = win32com.client.Dispatch("SAPI.SpVoice")
         v.Volume = 100
+
+        # Prioritize Windows Speech OneCore male voices (e.g. George, David, Mark)
+        selected = False
+        try:
+            category = win32com.client.Dispatch("SAPI.SpObjectTokenCategory")
+            category.SetId(r"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech_OneCore\Voices")
+            tokens = category.EnumerateTokens()
+            for i in range(tokens.Count):
+                token = tokens.Item(i)
+                desc = token.GetDescription().lower()
+                if any(m in desc for m in ("george", "david", "mark", "male", "guy")):
+                    v.Voice = token
+                    selected = True
+                    break
+        except Exception:
+            pass
+
+        # Fallback to standard SAPI voices if OneCore not available
+        if not selected:
+            voices = v.GetVoices()
+            for i in range(voices.Count):
+                token = voices.Item(i)
+                desc = token.GetDescription().lower()
+                if any(m in desc for m in ("david", "george", "mark", "male")):
+                    v.Voice = token
+                    selected = True
+                    break
+
         v.Speak(text)
     except Exception as exc:
-        print(f"[AttentionMonitor] SAPI speech failed: {exc}")
+        print(f"[AttentionMonitor] Offline male speech failed: {exc}")
 
 
 def _speak_edge_native(text: str) -> None:
@@ -357,12 +386,12 @@ def _speak_edge_native(text: str) -> None:
     if not text:
         return
 
-    # In Air-Gapped Offline Mode, immediately use Windows native offline SAPI speech
+    # When entered fully local mode from settings, use the offline native male voice
     try:
         from memory import config_manager
         cfg = config_manager.load_settings()
         if cfg.get("offline_mode_enabled", False):
-            _speak_sapi(text)
+            _speak_sapi_male(text)
             return
     except Exception:
         pass
@@ -370,8 +399,8 @@ def _speak_edge_native(text: str) -> None:
     try:
         import edge_tts
     except Exception as exc:  # pragma: no cover
-        print(f"[AttentionMonitor] Edge TTS import failed: {exc}. Falling back to SAPI.")
-        _speak_sapi(text)
+        print(f"[AttentionMonitor] Edge TTS import failed: {exc}. Falling back to offline male voice.")
+        _speak_sapi_male(text)
         return
 
     try:
@@ -381,14 +410,13 @@ def _speak_edge_native(text: str) -> None:
 
     audio_path = os.path.join(tempfile.gettempdir(), f"brahma_edge_tts_{uuid.uuid4().hex}.mp3")
     try:
-        # Use a male neural voice for app speech so daily briefing and alerts sound
-        # closer to Brahma's normal male audio output.
+        # Regular Edge TTS neural voice
         communicator = edge_tts.Communicate(text, voice="en-US-GuyNeural")
         communicator.save_sync(audio_path)
     except Exception as exc:  # pragma: no cover
-        print(f"[AttentionMonitor] Edge TTS generation failed: {exc}. Falling back to SAPI.")
+        print(f"[AttentionMonitor] Edge TTS generation failed: {exc}. Falling back to offline male voice.")
         _cleanup_current_audio()
-        _speak_sapi(text)
+        _speak_sapi_male(text)
         return
 
     # Play Edge TTS audio via Windows Media Player COM (works natively across all Windows 10/11)
@@ -410,8 +438,8 @@ def _speak_edge_native(text: str) -> None:
 
         _current_audio_path = audio_path
     except Exception as exc:
-        print(f"[AttentionMonitor] WMP playback failed: {exc}. Falling back to SAPI.")
-        _speak_sapi(text)
+        print(f"[AttentionMonitor] WMP playback failed: {exc}. Falling back to offline male voice.")
+        _speak_sapi_male(text)
         _cleanup_current_audio()
         return
 
