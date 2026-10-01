@@ -63,3 +63,10 @@ memory/nutrition_log.json
 ig_session.json
 api_keys.json
 email_credentials.json
+
+build/
+dist/
+gradle-8.7-bin.zip
+setup_android_sdk.ps1
+build_apk.ps1
+process_logo.py
