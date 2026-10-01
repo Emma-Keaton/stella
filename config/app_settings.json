@@ -20,5 +20,6 @@
     "local_ai_model": "qwen2.5:3b",
     "sound_effects_enabled": true,
     "sound_effects_volume": 75,
-    "push_to_talk_enabled": false
+    "push_to_talk_enabled": false,
+    "offline_mode_enabled": true
 }

@@ -339,16 +339,39 @@ def _cleanup_current_audio() -> None:
         _current_audio_path = None
 
 
+def _speak_sapi(text: str) -> None:
+    try:
+        import win32com.client
+        import pythoncom
+        pythoncom.CoInitialize()
+        v = win32com.client.Dispatch("SAPI.SpVoice")
+        v.Volume = 100
+        v.Speak(text)
+    except Exception as exc:
+        print(f"[AttentionMonitor] SAPI speech failed: {exc}")
+
+
 def _speak_edge_native(text: str) -> None:
     global _current_player_alias, _current_audio_path
     text = (text or "").strip()
     if not text:
         return
 
+    # In Air-Gapped Offline Mode, immediately use Windows native offline SAPI speech
+    try:
+        from memory import config_manager
+        cfg = config_manager.load_settings()
+        if cfg.get("offline_mode_enabled", False):
+            _speak_sapi(text)
+            return
+    except Exception:
+        pass
+
     try:
         import edge_tts
     except Exception as exc:  # pragma: no cover
-        print(f"[AttentionMonitor] Edge TTS import failed: {exc}")
+        print(f"[AttentionMonitor] Edge TTS import failed: {exc}. Falling back to SAPI.")
+        _speak_sapi(text)
         return
 
     try:
@@ -363,8 +386,9 @@ def _speak_edge_native(text: str) -> None:
         communicator = edge_tts.Communicate(text, voice="en-US-GuyNeural")
         communicator.save_sync(audio_path)
     except Exception as exc:  # pragma: no cover
-        print(f"[AttentionMonitor] Edge TTS generation failed: {exc}")
+        print(f"[AttentionMonitor] Edge TTS generation failed: {exc}. Falling back to SAPI.")
         _cleanup_current_audio()
+        _speak_sapi(text)
         return
 
     # Play Edge TTS audio via Windows Media Player COM (works natively across all Windows 10/11)
@@ -386,17 +410,11 @@ def _speak_edge_native(text: str) -> None:
 
         _current_audio_path = audio_path
     except Exception as exc:
-        print(f"[AttentionMonitor] WMP playback failed: {exc}")
-        # Secondary fallback: SAPI
-        try:
-            import win32com.client
-            v = win32com.client.Dispatch("SAPI.SpVoice")
-            v.Volume = 100
-            v.Speak(text)
-        except Exception:
-            pass
+        print(f"[AttentionMonitor] WMP playback failed: {exc}. Falling back to SAPI.")
+        _speak_sapi(text)
         _cleanup_current_audio()
         return
+
 
 
 _speech_sink = None

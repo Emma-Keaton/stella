@@ -3898,33 +3898,21 @@ class BrahmaLive:
         if hasattr(self, "ui") and self.ui and not self.ui.muted:
             self.ui.set_state("LISTENING")
 
-    def speak(self, text: str, proactive: bool = False):
+    def speak(self, text: str, proactive: bool = True):
         text = (text or "").strip()
         if not text:
             return
 
-        # Proactive alerts, sensorium events, and system triggers speak instantly via unified neural TTS
-        if proactive or not (self.session and self._loop):
-            def _speak_thread():
-                try:
-                    self.set_speaking(True)
-                    from actions.attention_monitor import _speak_edge_native
-                    _speak_edge_native(text)
-                except Exception as exc:
-                    print(f"[Brahma Speak] Neural TTS failed: {exc}")
-                finally:
-                    self.set_speaking(False)
-            threading.Thread(target=_speak_thread, daemon=True).start()
-        else:
-            # Route conversational text through Gemini Live API
-            import asyncio
-            async def _send():
-                try:
-                    prompt = f"System Alert / Context: {text}\n\nPlease relay this information to me naturally now."
-                    await self.session.send(input=prompt, end_of_turn=True)
-                except Exception as e:
-                    print(f"[BRAHMA EVO] Unified Speak err: {e}")
-            asyncio.run_coroutine_threadsafe(_send(), self._loop)
+        def _speak_thread():
+            try:
+                self.set_speaking(True)
+                from actions.attention_monitor import _speak_edge_native
+                _speak_edge_native(text)
+            except Exception as exc:
+                print(f"[Brahma Speak] Unified TTS failed: {exc}")
+            finally:
+                self.set_speaking(False)
+        threading.Thread(target=_speak_thread, daemon=True).start()
 
     def speak_error(self, tool_name: str, error: str):
         short = str(error)[:120]
