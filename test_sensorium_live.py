@@ -51,43 +51,49 @@ sensorium.register_interjection_handler(on_interjection)
 sensorium.start()
 
 try:
-    streak = 0
+    user_is_away = False
+    streak_alerted = False
+
     while True:
         snap = sensorium.get_snapshot()
-        current_win = snap["window_title"]
+        current_win = snap["window_title"] or "Desktop / Background"
         proc = snap["process_name"]
         dwell = snap["dwell_seconds"]
         idle = snap["user_idle_seconds"]
-        ram = snap["ram_percent"]
 
         # Check for window switch
-        if current_win and current_win != last_window:
-            print(f"👁️  [FOCUS SWITCH] App: {proc} | Window: {current_win[:40]}...")
+        if current_win != last_window:
+            print(f"\n👁️  [FOCUS SWITCH] App: {proc} | Window: {current_win[:45]}...")
             last_window = current_win
-            idle_alerted = False
-            streak = 0
+            streak_alerted = False
 
-        # Autonomous Trigger: Stepped away for > 10 seconds
-        if idle >= 10.0 and not idle_alerted:
-            print(f"\n💤 [SENSORIUM TRIGGER]: Hands off controls for {idle:.0f}s. User marked as AWAY.")
-            idle_alerted = True
+        # Live status ticker on same line
+        status = "💤 AWAY" if user_is_away else "⚡ ACTIVE"
+        sys.stdout.write(f"\r[{status}] App: {proc[:15]} | Idle: {idle:.1f}s / 7.0s | Dwell: {dwell:.0f}s   ")
+        sys.stdout.flush()
 
-        if idle < 2.0 and idle_alerted:
+        # Step 1: Detect user leaving controls for >= 7 seconds
+        if idle >= 7.0 and not user_is_away:
+            user_is_away = True
+            print(f"\n\n💤 [SENSORIUM EVENT]: Idle reached {idle:.1f}s! User marked as AWAY.")
+            print("👉 Move your mouse or press any key to test Welcome Back speech!\n")
+
+        # Step 2: Detect user returning (idle drops back under 2 seconds)
+        elif idle < 2.0 and user_is_away:
+            user_is_away = False
             msg = f"Welcome back, sir. Your workspace on {proc} is ready."
-            print(f"\n✨ [SENSORIUM TRIGGER]: {msg}")
-            print(f"🔊 [BRAHMA SPEAKING]: \"{msg}\"\n")
+            print(f"\n\n✨ [PROACTIVE SPEECH TRIGGERED]: {msg}")
+            print(f"🔊 [BRAHMA SPEAKING OUT LOUD NOW...]\n")
             speak_proactive(msg)
-            idle_alerted = False
 
-        # Autonomous Trigger: Short 15s focus streak demo
-        if dwell >= 15.0 and streak == 0 and idle < 3.0:
-            msg = f"Deep focus streak on {proc} detected. Running smooth."
-            print(f"\n🎯 [SENSORIUM TRIGGER]: {msg}")
-            print(f"🔊 [BRAHMA SPEAKING]: \"{msg}\"\n")
+        # Step 3: Focus streak demo (15s continuous in window)
+        if dwell >= 15.0 and not streak_alerted and not user_is_away:
+            streak_alerted = True
+            msg = f"Focus streak on {proc} detected. Running smoothly."
+            print(f"\n\n🎯 [PROACTIVE FOCUS TRIGGER]: {msg}")
             speak_proactive(msg)
-            streak = 1
 
-        time.sleep(1.0)
+        time.sleep(0.5)
 
 except KeyboardInterrupt:
     sensorium.stop()
