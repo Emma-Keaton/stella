@@ -41,9 +41,12 @@ jobs:
         shell: bash
         run: |
           python -m pip install --upgrade pip
-          # Core requirements are needed for the edition's imports to resolve
-          # at build time; pyinstaller does the freezing.
-          pip install -r requirements.txt pyinstaller || true
+          # PyInstaller FIRST and standalone: requirements.txt contains
+          # Windows/py2-era packages (pypiwin32, win10toast) that cannot
+          # build on macOS/Linux — a single combined install would abort and
+          # silently leave pyinstaller uninstalled too.
+          pip install pyinstaller
+          pip install -r requirements.txt || true
 
       - name: Build edition (${{ matrix.edition }}) for ${{ matrix.os }}
         shell: bash
@@ -85,9 +88,13 @@ jobs:
 
   release:
     name: Publish GitHub Release
+    # Ship what's green: the APK (or any desktop zip) must not be held
+    # hostage by an unrelated platform's failure.
     needs: [desktop, android]
+    if: >-
+      startsWith(github.ref, 'refs/tags/') &&
+      (needs.android.result == 'success' || needs.desktop.result == 'success')
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/')
     steps:
       - uses: actions/download-artifact@v4
         with:
