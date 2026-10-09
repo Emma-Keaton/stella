@@ -5308,6 +5308,14 @@ def main():
 
     def runner():
         _startup_log("runner waiting api key")
+        # Start the bundled K2 Horizon local inference server alongside the app.
+        try:
+            from core import k2_server
+            if k2_server.autostart_enabled():
+                _startup_log("k2 server autostart")
+                k2_server.start_background()
+        except Exception as exc:
+            _startup_log(f"k2 server autostart notice: {exc}")
         ui.wait_for_api_key()
         _startup_log("runner api key ready")
         brahma_evo = BrahmaLive(

@@ -413,44 +413,74 @@ def _speak_edge_native(text: str, force_edge: bool = False) -> None:
             pass
 
     with _speak_lock:
+        voice = "en_US-lessac-medium"
         try:
-            import edge_tts
-        except Exception as exc:
-            print(f"[AttentionMonitor] Edge TTS import failed: {exc}. Falling back to offline male voice.")
-            _speak_sapi_male(text)
-            return
-
-        try:
-            _cleanup_current_audio()
+            from memory import config_manager
+            cfg = config_manager.load_settings()
+            voice = cfg.get("tts_voice", "en_US-lessac-medium")
         except Exception:
             pass
 
-        audio_path = os.path.join(tempfile.gettempdir(), f"brahma_edge_tts_{uuid.uuid4().hex}.mp3")
-        try:
-            communicator = edge_tts.Communicate(text, voice="en-US-GuyNeural")
-            communicator.save_sync(audio_path)
-        except Exception as exc:
-            print(f"[AttentionMonitor] Edge TTS generation failed: {exc}. Falling back to offline male voice.")
-            _cleanup_current_audio()
-            _speak_sapi_male(text)
-            return
+        voice_dir = Path(__file__).resolve().parent.parent / ".venv" / "piper" / "voices"
+        model_path = voice_dir / f"{voice}.onnx"
+        if not model_path.exists():
+            model_path = voice_dir / "en_US-lessac-medium.onnx"
 
-        # Play Edge TTS audio via Windows PresentationCore MediaPlayer (native across Windows 10 & 11)
-        _current_audio_path = audio_path
+        if model_path.exists():
+            try:
+                import piper
+                _cleanup_current_audio()
+                audio_path = os.path.join(tempfile.gettempdir(), f"brahma_piper_tts_{uuid.uuid4().hex}.wav")
+                with open(model_path, "rb") as mf:
+                    model = piper.PiperVoice.load(mf)
+                with open(audio_path, "wb") as af:
+                    model.synthesize(text, af)
+                _current_audio_path = audio_path
+                cmd = [
+                    "powershell", "-NoProfile", "-NonInteractive", "-Command",
+                    f"Add-Type -AssemblyName presentationCore; $p = New-Object System.Windows.Media.MediaPlayer; $p.Open([System.Uri]'{audio_path}'); $p.Play(); Start-Sleep -Milliseconds 400; while($p.NaturalDuration.HasTimeSpan -and $p.Position -lt $p.NaturalDuration.TimeSpan){{Start-Sleep -Milliseconds 80}}"
+                ]
+                flags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
+                _current_speech_proc = subprocess.Popen(cmd, creationflags=flags)
+                _current_speech_proc.wait()
+                _current_speech_proc = None
+                _cleanup_current_audio()
+                return
+            except Exception as exc:
+                print(f"[AttentionMonitor] Piper TTS failed: {exc}. Falling back to Edge TTS.")
+
         try:
-            cmd = [
-                "powershell", "-NoProfile", "-NonInteractive", "-Command",
-                f"Add-Type -AssemblyName presentationCore; $p = New-Object System.Windows.Media.MediaPlayer; $p.Open([System.Uri]'{audio_path}'); $p.Play(); Start-Sleep -Milliseconds 400; while($p.NaturalDuration.HasTimeSpan -and $p.Position -lt $p.NaturalDuration.TimeSpan){{Start-Sleep -Milliseconds 80}}"
-            ]
-            flags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
-            _current_speech_proc = subprocess.Popen(cmd, creationflags=flags)
-            _current_speech_proc.wait()
-            _current_speech_proc = None
-        except Exception as exc:
-            print(f"[AttentionMonitor] MediaPlayer playback failed: {exc}. Falling back to offline male voice.")
-            _speak_sapi_male(text)
-        finally:
+            import edge_tts
             _cleanup_current_audio()
+            audio_path = os.path.join(tempfile.gettempdir(), f"brahma_edge_tts_{uuid.uuid4().hex}.mp3")
+            try:
+                communicator = edge_tts.Communicate(text, voice="en-US-GuyNeural")
+                communicator.save_sync(audio_path)
+            except Exception as exc:
+                print(f"[AttentionMonitor] Edge TTS generation failed: {exc}. Falling back to offline male voice.")
+                _cleanup_current_audio()
+                _speak_sapi_male(text)
+                return
+
+            _current_audio_path = audio_path
+            try:
+                cmd = [
+                    "powershell", "-NoProfile", "-NonInteractive", "-Command",
+                    f"Add-Type -AssemblyName presentationCore; $p = New-Object System.Windows.Media.MediaPlayer; $p.Open([System.Uri]'{audio_path}'); $p.Play(); Start-Sleep -Milliseconds 400; while($p.NaturalDuration.HasTimeSpan -and $p.Position -lt $p.NaturalDuration.TimeSpan){{Start-Sleep -Milliseconds 80}}"
+                ]
+                flags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
+                _current_speech_proc = subprocess.Popen(cmd, creationflags=flags)
+                _current_speech_proc.wait()
+                _current_speech_proc = None
+            except Exception as exc:
+                print(f"[AttentionMonitor] MediaPlayer playback failed: {exc}. Falling back to offline male voice.")
+                _speak_sapi_male(text)
+            finally:
+                _cleanup_current_audio()
+            return
+        except ImportError:
+            print("[AttentionMonitor] Edge TTS not available. Falling back to offline male voice.")
+            _speak_sapi_male(text)
 
 
 

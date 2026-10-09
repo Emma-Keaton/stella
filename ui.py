@@ -1450,6 +1450,10 @@ def _default_app_settings() -> dict:
         "attention_call_prompts": True,
         "developer_mode_enabled": False,
         "developer_mode_workspace": "",
+        "k2_port": 11435,
+        "k2_threads": 0,
+        "k2_ctx": 2048,
+        "k2_autostart": True,
     }
 
 
@@ -11061,6 +11065,12 @@ class SystemConnectivityPage(QWidget):
         card = self._card("AI Providers", "Only the supported providers are shown here.")
         lay1 = card.layout()
         self._api_defaults = self._load_api_defaults()
+        self._groq_row, self._groq_status, self._groq_key = self._provider_row(
+            "Groq",
+            self._api_defaults.get("groq_api_key", ""),
+            "auto",
+            "groq",
+        )
         self._gemini_row, self._gemini_status, self._gemini_key = self._provider_row(
             "Google Gemini",
             self._api_defaults.get("gemini_api_key", ""),
@@ -11073,18 +11083,23 @@ class SystemConnectivityPage(QWidget):
             "auto",
             "openrouter",
         )
+        lay1.addWidget(self._groq_row)
         lay1.addWidget(self._gemini_row)
         lay1.addWidget(self._or_row)
         controls = QHBoxLayout()
         controls.setSpacing(12)
         self._default_provider = QComboBox()
-        self._default_provider.addItems(["Google Gemini", "OpenRouter", "Local"])
+        self._default_provider.addItems(["Groq", "K2 Horizon", "Google Gemini", "OpenRouter", "Local"])
         
         current_provider = self._load_app_settings().get("default_ai_provider", "Gemini")
         if current_provider in {"Gemini", "Google Gemini"}:
             self._default_provider.setCurrentText("Google Gemini")
         elif current_provider == "Local":
             self._default_provider.setCurrentText("Local")
+        elif current_provider == "Groq":
+            self._default_provider.setCurrentText("Groq")
+        elif current_provider == "K2":
+            self._default_provider.setCurrentText("K2 Horizon")
         else:
             self._default_provider.setCurrentText("OpenRouter")
             
@@ -11163,7 +11178,28 @@ class SystemConnectivityPage(QWidget):
         self._default_provider.currentTextChanged.connect(lambda t: self._local_ai_widget.setVisible(t == "Local"))
         
         lay1.addWidget(self._local_ai_widget)
-        
+
+        # Groq AI Settings
+        self._groq_ai_widget = QWidget()
+        groq_lay = QVBoxLayout(self._groq_ai_widget)
+        groq_lay.setContentsMargins(0, 8, 0, 8)
+        groq_lay.setSpacing(10)
+
+        groq_model_row = QHBoxLayout()
+        groq_model_row.addWidget(QLabel("Groq Model"))
+        self._groq_model_combo = QComboBox()
+        from groq_client import GROQ_MODELS
+        self._groq_model_combo.addItems(GROQ_MODELS)
+        saved_groq_model = self._load_app_settings().get("groq_model", "openai/gpt-oss-120b")
+        self._groq_model_combo.setCurrentText(saved_groq_model)
+        self._groq_model_combo.currentTextChanged.connect(lambda t: self._set_setting("groq_model", t))
+        groq_model_row.addWidget(self._groq_model_combo, 1)
+        groq_lay.addLayout(groq_model_row)
+
+        self._groq_ai_widget.setVisible(current_provider == "Groq")
+        self._default_provider.currentTextChanged.connect(lambda t: self._groq_ai_widget.setVisible(t == "Groq"))
+        lay1.addWidget(self._groq_ai_widget)
+
         self._auto_switch_btn = self._mk_toggle("Automatically switch if a provider fails", bool(self._load_app_settings().get("auto_provider_switch", True)), self._toggle_auto_provider_switch)
         lay1.addWidget(self._auto_switch_btn)
 
@@ -11467,6 +11503,21 @@ class SystemConnectivityPage(QWidget):
             self._on_ptt_toggled
         )
         tools_row.addWidget(self._ptt_toggle)
+
+        # TTS Voice Selection
+        voice_row = QHBoxLayout()
+        voice_row.addWidget(QLabel("TTS Voice"))
+        self._tts_voice_combo = QComboBox()
+        self._tts_voice_combo.addItems(["en_US-lessac-medium", "en_US-amy-medium", "en_US-kathleen-low"])
+        try:
+            from memory import config_manager
+            saved_voice = config_manager.get_setting("tts_voice", "en_US-lessac-medium")
+            self._tts_voice_combo.setCurrentText(saved_voice)
+        except Exception:
+            self._tts_voice_combo.setCurrentText("en_US-lessac-medium")
+        self._tts_voice_combo.currentTextChanged.connect(lambda v: self._set_setting("tts_voice", v))
+        voice_row.addWidget(self._tts_voice_combo, 1)
+        tools_row.addLayout(voice_row)
 
         mem_btn = QPushButton("🧠 Inspect Memory")
         mem_btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -12543,6 +12594,33 @@ class SystemConnectivityPage(QWidget):
             if hasattr(self, "_local_ai_widget"):
                 self._local_ai_widget.setVisible(True)
             msg = "SYS: Default AI provider set to Local AI (Ollama). Offline Mode active."
+        elif raw == "groq":
+            provider = "Groq"
+            self._set_setting("offline_mode_enabled", False)
+            if hasattr(self, "_offline_mode_btn"):
+                self._offline_mode_btn.blockSignals(True)
+                self._offline_mode_btn.setChecked(False)
+                self._offline_mode_btn.blockSignals(False)
+            if hasattr(self, "_local_ai_widget"):
+                self._local_ai_widget.setVisible(False)
+            msg = "SYS: Default AI provider set to Groq. Cloud connectivity active."
+        elif raw in ("k2", "k2 horizon", "k2horizon"):
+            provider = "K2"
+            self._set_setting("offline_mode_enabled", False)
+            if hasattr(self, "_offline_mode_btn"):
+                self._offline_mode_btn.blockSignals(True)
+                self._offline_mode_btn.setChecked(False)
+                self._offline_mode_btn.blockSignals(False)
+            if hasattr(self, "_local_ai_widget"):
+                self._local_ai_widget.setVisible(False)
+            if hasattr(self, "_groq_ai_widget"):
+                self._groq_ai_widget.setVisible(False)
+            try:
+                from core import k2_server
+                k2_server.start_background()
+            except Exception:
+                pass
+            msg = "SYS: Default AI provider set to K2 Horizon (local llama.cpp). Starting local server."
         else:
             provider = "OpenRouter"
             self._set_setting("offline_mode_enabled", False)
@@ -12574,6 +12652,8 @@ class SystemConnectivityPage(QWidget):
                 self._default_provider.blockSignals(False)
             if hasattr(self, "_local_ai_widget"):
                 self._local_ai_widget.setVisible(True)
+            if hasattr(self, "_groq_ai_widget"):
+                self._groq_ai_widget.setVisible(False)
             if hasattr(self, "_sys_provider"):
                 self._sys_provider.setText("Local")
             msg = "🔒 SYSTEM: Air-Gapped Offline Mode ENGAGED. All operations running 100% locally."
@@ -12696,8 +12776,10 @@ class SystemConnectivityPage(QWidget):
         try:
             self._gemini_status.setText("Connected" if api.get("gemini_api_key") else "Not connected")
             self._or_status.setText("Connected" if api.get("openrouter_api_key") else "Not connected")
+            self._groq_status.setText("Connected" if api.get("groq_api_key") else "Not connected")
             self._gemini_key.setText(self._provider_key_preview(api.get("gemini_api_key", "")))
             self._or_key.setText(self._provider_key_preview(api.get("openrouter_api_key", "")))
+            self._groq_key.setText(self._provider_key_preview(api.get("groq_api_key", "")))
             
             prov = app.get("default_ai_provider", "Gemini")
             is_offline = bool(app.get("offline_mode_enabled", False))
@@ -12705,6 +12787,10 @@ class SystemConnectivityPage(QWidget):
                 disp_prov = "Local"
             elif prov == "OpenRouter":
                 disp_prov = "OpenRouter"
+            elif prov == "Groq":
+                disp_prov = "Groq"
+            elif prov == "K2":
+                disp_prov = "K2 Horizon"
             else:
                 disp_prov = "Google Gemini"
             if hasattr(self, "_default_provider"):
@@ -12713,6 +12799,8 @@ class SystemConnectivityPage(QWidget):
                 self._offline_mode_btn.setChecked(is_offline or prov == "Local")
             if hasattr(self, "_local_ai_widget"):
                 self._local_ai_widget.setVisible(is_offline or prov == "Local")
+            if hasattr(self, "_groq_ai_widget"):
+                self._groq_ai_widget.setVisible(not is_offline and prov == "Groq")
 
             self._auto_switch_btn.setChecked(bool(app.get("auto_provider_switch", True)))
             self._attention_message_btn.setChecked(bool(app.get("attention_message_prompts", True)))
