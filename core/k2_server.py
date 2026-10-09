@@ -86,6 +86,10 @@ def autostart_enabled() -> bool:
 
 
 def resolve_model_path() -> Path | None:
+    try:
+        MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
+    except Exception:
+        pass
     if MODEL_PATH.exists():
         return MODEL_PATH
     if _FALLBACK_MODEL.exists():

@@ -59,6 +59,7 @@ from gesture_utils import estimate_gesture_state, GestureTracker
 from smart_home import SmartHomeService
 from smart_home_page_new import BrahmaHomePage, _DeviceTile
 from core.local_brain import local_brain
+from core import voice_gate
 from workspace_store import store as workspace_store
 from core.identity import identity
 from sound_manager import sound_mgr
@@ -1454,6 +1455,9 @@ def _default_app_settings() -> dict:
         "k2_threads": 0,
         "k2_ctx": 2048,
         "k2_autostart": True,
+        "feedback_channel": "local",
+        "feedback_contact": "",
+        "feedback_github_repo": "Emma-Keaton/stella",
     }
 
 
@@ -3537,6 +3541,7 @@ class WorkspaceSidebar(QWidget):
             f"QLineEdit {{ background: transparent; color: {C.WHITE}; border: none; padding: 2px 4px; selection-background-color: rgba(0, 229, 255, 0.25); }}"
         )
         self._input.returnPressed.connect(self._send)
+        self._input.textChanged.connect(lambda t: voice_gate.set_typing(bool((t or "").strip())))
         input_row.addWidget(self._input, 1)
 
         self._mic_btn = QPushButton("🎙")
@@ -4123,6 +4128,7 @@ class InlineChatWorkspace(QFrame):
             f"QLineEdit {{ background: transparent; color: {C.WHITE}; border: none; padding: 0 4px; selection-background-color: rgba(0, 229, 255, 0.25); }}"
         )
         self._input.returnPressed.connect(self._send)
+        self._input.textChanged.connect(lambda t: voice_gate.set_typing(bool((t or "").strip())))
         input_row.addWidget(self._input, 1)
 
         self._mic_btn = QPushButton("🎙")
@@ -6749,6 +6755,7 @@ class CommandBar(QWidget):
             }}
         """)
         self._input.returnPressed.connect(self._submit)
+        self._input.textChanged.connect(lambda t: voice_gate.set_typing(bool((t or "").strip())))
         lay.addWidget(self._input, stretch=1)
 
         # Action buttons container
@@ -10258,6 +10265,7 @@ class MainWindow(QMainWindow):
             }}
         """)
         self._input.returnPressed.connect(self._send)
+        self._input.textChanged.connect(lambda t: voice_gate.set_typing(bool((t or "").strip())))
         row.addWidget(self._input, stretch=1)
 
         icon_button_style = f"""
@@ -11140,11 +11148,30 @@ class SystemConnectivityPage(QWidget):
         
         def _populate_models():
             self._local_model_combo.clear()
-            installed = local_brain.list_installed_models()
-            if installed:
-                self._local_model_combo.addItems(installed)
+            seen = []
+            try:
+                installed = local_brain.list_installed_models() or []
+            except Exception:
+                installed = []
+            for m in installed:
+                if m and m not in seen:
+                    seen.append(m)
+            # Direct .gguf files (project models/ + user models dir). Works on
+            # fresh setups with no Ollama/LM Studio, and with existing files.
+            try:
+                import sys
+                sys.path.insert(0, str(Path(__file__).resolve().parent / "scripts"))
+                from stella_model_manager import list_local
+                for m in list_local():
+                    label = f"{m['name']}  (file)"
+                    if m["name"] not in seen and label not in seen:
+                        seen.append(label)
+            except Exception:
+                pass
+            if seen:
+                self._local_model_combo.addItems(seen)
             else:
-                self._local_model_combo.addItem("qwen2.5:3b")
+                self._local_model_combo.addItem("(no local models — Pull, Browse, or start Ollama)")
             saved_model = self._load_app_settings().get("local_ai_model", "qwen2.5:3b")
             self._local_model_combo.setCurrentText(saved_model)
             online = local_brain.is_available()
@@ -11152,7 +11179,7 @@ class SystemConnectivityPage(QWidget):
             self._local_status_lbl.setStyleSheet("color: #00ffaa; font-weight: bold;" if online else "color: #ff5555; font-weight: bold;")
 
         _populate_models()
-        self._local_model_combo.currentTextChanged.connect(lambda t: self._set_setting("local_ai_model", t))
+        self._local_model_combo.currentTextChanged.connect(self._on_local_model_changed)
         model_row.addWidget(self._local_model_combo, 1)
 
         btn_refresh = QPushButton("🔄 Refresh")
@@ -11172,6 +11199,21 @@ class SystemConnectivityPage(QWidget):
             local_brain.pull_model_async("qwen2.5:3b", lambda chunk: _populate_models())
         btn_pull.clicked.connect(_on_download_click)
         action_row.addWidget(btn_pull)
+        btn_remove = QPushButton("🗑 Remove")
+        btn_remove.setFixedWidth(85)
+        btn_remove.setStyleSheet("background: rgba(255, 85, 85, 0.15); color: #ff7777; border: 1px solid #ff5555; border-radius: 4px; padding: 6px;")
+        btn_remove.clicked.connect(self._remove_local_model)
+        action_row.addWidget(btn_remove)
+        btn_replace = QPushButton("🔁 Replace")
+        btn_replace.setFixedWidth(85)
+        btn_replace.setStyleSheet("background: rgba(255, 179, 0, 0.15); color: #ffb300; border: 1px solid #ffb300; border-radius: 4px; padding: 6px;")
+        btn_replace.clicked.connect(self._replace_local_model)
+        action_row.addWidget(btn_replace)
+        btn_browse = QPushButton("📂 Browse")
+        btn_browse.setFixedWidth(85)
+        btn_browse.setStyleSheet("background: rgba(0, 229, 255, 0.10); color: #00e5ff; border: 1px solid #00e5ff; border-radius: 4px; padding: 6px;")
+        btn_browse.clicked.connect(self._browse_local_model)
+        action_row.addWidget(btn_browse)
         local_lay.addLayout(action_row)
 
         self._local_ai_widget.setVisible(current_provider == "Local")
@@ -11212,6 +11254,42 @@ class SystemConnectivityPage(QWidget):
         )
         lay1.addWidget(self._offline_mode_btn)
         lay.addWidget(card)
+
+        # Feedback & Updates — upgrade/update pings to the creator
+        fb = self._card("Feedback & Updates", "Request upgrades. Secrets are scrubbed and never leave your device raw.")
+        fl = fb.layout()
+        try:
+            from core import feedback as _fb
+            _channels = _fb.CHANNELS
+        except Exception:
+            _channels = ["local", "email", "github", "webhook", "off"]
+        ch_row = QHBoxLayout()
+        ch_row.addWidget(QLabel("Ping channel"))
+        self._feedback_channel = QComboBox()
+        self._feedback_channel.addItems(_channels)
+        self._feedback_channel.setCurrentText(self._load_app_settings().get("feedback_channel", "local"))
+        self._feedback_channel.currentTextChanged.connect(lambda t: self._set_setting("feedback_channel", t))
+        ch_row.addWidget(self._feedback_channel, 1)
+        fl.addLayout(ch_row)
+        cd_row = QHBoxLayout()
+        cd_row.addWidget(QLabel("Contact detail"))
+        self._feedback_contact = QLineEdit(self._load_app_settings().get("feedback_contact", ""))
+        self._feedback_contact.setPlaceholderText("email address · owner/repo · https webhook URL")
+        self._feedback_contact.textChanged.connect(self._on_feedback_contact_changed)
+        cd_row.addWidget(self._feedback_contact, 1)
+        fl.addLayout(cd_row)
+        smtp_row = QHBoxLayout()
+        smtp_row.addWidget(QLabel("SMTP (email channel)"))
+        self._feedback_smtp = QLineEdit(self._load_app_settings().get("feedback_smtp_host", ""))
+        self._feedback_smtp.setPlaceholderText("host:port:user  (pass prompted at send time, never stored)")
+        self._feedback_smtp.textChanged.connect(lambda t: self._set_setting("feedback_smtp_host", t))
+        smtp_row.addWidget(self._feedback_smtp, 1)
+        fl.addLayout(smtp_row)
+        btn_fb = QPushButton("📨 Request upgrade / Send feedback")
+        btn_fb.setStyleSheet("background: rgba(0, 229, 255, 0.15); color: #00e5ff; border: 1px solid #00e5ff; border-radius: 4px; padding: 6px;")
+        btn_fb.clicked.connect(self._open_feedback_dialog)
+        fl.addWidget(btn_fb)
+        lay.addWidget(fb)
 
         # Mobile connect
         mobile = self._card("Mobile Connect", "Connect your phone and control Brahma Evo remotely.")
@@ -12671,6 +12749,239 @@ class SystemConnectivityPage(QWidget):
         if self._ctrl() and hasattr(self._ctrl(), "write_log"):
             self._ctrl().write_log(msg)
 
+    def _on_local_model_changed(self, text: str):
+        # Combo shows direct files as "name.gguf  (file)"; store the bare name.
+        t = (text or "").strip()
+        if t.endswith("(file)"):
+            t = t[: -len("(file)")].strip()
+        self._set_setting("local_ai_model", t)
+
+    def _browse_local_model(self):
+        log = self._ctrl().write_log if self._ctrl() and hasattr(self._ctrl(), "write_log") else print
+        path, _ = QFileDialog.getOpenFileName(self, "Select GGUF model",
+            str(Path.home()), "GGUF models (*.gguf);;All files (*)")
+        if not path:
+            return
+        src = Path(path)
+        dest_dir = Path(__file__).resolve().parent / "models"
+        try:
+            dest_dir.mkdir(parents=True, exist_ok=True)
+        except Exception:
+            pass
+        def _work():
+            try:
+                import shutil
+                dest = dest_dir / src.name
+                if src.resolve() != dest.resolve():
+                    log(f"SYS: Loading '{src.name}' into app models...")
+                    shutil.copy2(str(src), str(dest))
+                    log(f"SYS: Model ready → {dest}")
+                else:
+                    dest = src
+                self._set_setting("local_ai_model", dest.name)
+                try:
+                    self._local_model_combo.setCurrentText(f"{dest.name}  (file)")
+                except Exception:
+                    pass
+                log(f"SYS: Active local model → {dest.name}")
+            except Exception as e:
+                log(f"ERR: Browse-load failed: {e}")
+        threading.Thread(target=_work, daemon=True).start()
+
+    def _resolve_model_path(self, name: str):
+        """Resolve a model combo entry to a local .gguf path, if any."""
+        try:
+            import sys
+            sys.path.insert(0, str(Path(__file__).resolve().parent / "scripts"))
+            from stella_model_manager import list_local
+            for m in list_local():
+                if m["name"] == name or m["path"] == name:
+                    return m["path"]
+        except Exception:
+            pass
+        return None
+
+    def _remove_local_model(self):
+        name = ""
+        try:
+            name = self._local_model_combo.currentText().strip()
+        except Exception:
+            pass
+        if name.endswith("(file)"):
+            name = name[: -len("(file)")].strip()
+        if not name:
+            return
+        ans = QMessageBox.question(self, "Remove model",
+            f"Delete local model '{name}' from disk? This frees space but cannot be undone.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        if ans != QMessageBox.StandardButton.Yes:
+            return
+        log = self._ctrl().write_log if self._ctrl() and hasattr(self._ctrl(), "write_log") else print
+        path = self._resolve_model_path(name)
+        try:
+            if path:
+                try:
+                    from core import k2_server
+                    k2_server.stop()
+                except Exception:
+                    pass
+                import os
+                os.remove(path)
+                log(f"SYS: Removed local model file: {name}")
+            else:
+                import subprocess
+                r = subprocess.run(["ollama", "rm", name], capture_output=True, text=True, timeout=120)
+                if r.returncode == 0:
+                    log(f"SYS: Removed Ollama model: {name}")
+                else:
+                    log(f"ERR: Could not remove '{name}': {(r.stderr or r.stdout or 'unknown error')[:200]}")
+                    return
+        except Exception as e:
+            log(f"ERR: Remove failed: {e}")
+            return
+        try:
+            self._set_setting("local_ai_model", "")
+        except Exception:
+            pass
+        if self._ctrl() and hasattr(self._ctrl(), "write_log"):
+            self._ctrl().write_log("SYS: Pick or download a replacement model to continue using Local mode.")
+
+    def _replace_local_model(self):
+        old = ""
+        try:
+            old = self._local_model_combo.currentText().strip()
+        except Exception:
+            pass
+        if old.endswith("(file)"):
+            old = old[: -len("(file)")].strip()
+        new, ok = QInputDialog.getText(self, "Replace model",
+            "New model — HF repo/file (e.g. Qwen/Qwen2.5-1.5B-Instruct-GGUF :: qwen2.5-1.5b-instruct-q4_k_m.gguf)\n"
+            "or a local .gguf path. Old model is deleted first to free space:",
+            QLineEdit.EchoMode.Normal, old)
+        new = (new or "").strip()
+        if not ok or not new or new == old:
+            return
+        log = self._ctrl().write_log if self._ctrl() and hasattr(self._ctrl(), "write_log") else print
+        log(f"SYS: Replacing '{old}' with '{new}' in background...")
+        def _work():
+            try:
+                import sys
+                sys.path.insert(0, str(Path(__file__).resolve().parent / "scripts"))
+                from stella_model_manager import replace_model
+                if "::" in new:
+                    repo, fname = [p.strip() for p in new.split("::", 1)]
+                    info = replace_model(old, repo, fname)
+                    self._set_setting("local_ai_model", fname)
+                    log(f"SYS: Replacement complete → {info.get('new')} (freed {info.get('freed_gb', 0)}GB)")
+                else:
+                    from stella_model_manager import remove_model
+                    info = remove_model(old)
+                    log(f"SYS: Removed '{old}' (freed {info.get('freed_gb', 0)}GB). Point Local mode at: {new}")
+                    self._set_setting("local_ai_model", new)
+            except Exception as e:
+                log(f"ERR: Replace failed: {e}")
+        threading.Thread(target=_work, daemon=True).start()
+
+    def _on_feedback_contact_changed(self, text: str):
+        ch = ""
+        try:
+            ch = self._feedback_channel.currentText().strip().lower()
+        except Exception:
+            pass
+        t = (text or "").strip()
+        self._set_setting("feedback_contact", t)
+        if ch == "email":
+            self._set_setting("feedback_email_to", t)
+        elif ch == "github":
+            self._set_setting("feedback_github_repo", t)
+        elif ch == "webhook":
+            self._set_setting("feedback_webhook_url", t)
+
+    def _open_feedback_dialog(self):
+        dlg = QDialog(self)
+        dlg.setWindowTitle("Request upgrade / Send feedback")
+        dlg.setMinimumWidth(460)
+        v = QVBoxLayout(dlg)
+        fields = {}
+        for label, key in (("What did you encounter?", "encountered"),
+                           ("What did you do?", "did"),
+                           ("How did you do it?", "how"),
+                           ("What do you need next?", "need")):
+            v.addWidget(QLabel(label))
+            te = QTextEdit()
+            te.setFixedHeight(60)
+            fields[key] = te
+            v.addWidget(te)
+        kind_row = QHBoxLayout()
+        kind_row.addWidget(QLabel("Kind"))
+        kind = QComboBox()
+        kind.addItems(["upgrade-request", "bug-report", "feature-request", "skill-proposal"])
+        kind_row.addWidget(kind, 1)
+        v.addLayout(kind_row)
+        status = QLabel("Secrets are scrubbed before anything is sent.")
+        v.addWidget(status)
+        btns = QHBoxLayout()
+        btn_send = QPushButton("Send")
+        btn_cancel = QPushButton("Cancel")
+        btns.addWidget(btn_send)
+        btns.addWidget(btn_cancel)
+        v.addLayout(btns)
+        btn_cancel.clicked.connect(dlg.reject)
+
+        def _do_send():
+            btn_send.setEnabled(False)
+            status.setText("Sending...")
+            try:
+                from core import feedback as _fb
+                rep = _fb.build_report(fields["encountered"].toPlainText(),
+                                       fields["did"].toPlainText(),
+                                       fields["how"].toPlainText(),
+                                       fields["need"].toPlainText(),
+                                       kind=kind.currentText())
+                cfg = dict(self._load_app_settings())
+                # SMTP password is never stored: ask at send time for email channel
+                if (cfg.get("feedback_channel") or "local") == "email" and not cfg.get("feedback_smtp_pass"):
+                    pw, ok = QInputDialog.getText(dlg, "SMTP password",
+                        "Your email password/app-password (used once, never stored):",
+                        QLineEdit.EchoMode.Password)
+                    if not ok:
+                        status.setText("Cancelled.")
+                        btn_send.setEnabled(True)
+                        return
+                    cfg["feedback_smtp_pass"] = pw
+                    try:
+                        u = (self._feedback_smtp.text() or "").strip()
+                        if ":" in u:
+                            parts = u.split(":")
+                            cfg["feedback_smtp_host"] = parts[0]
+                            if len(parts) > 1 and parts[1].isdigit():
+                                cfg["feedback_smtp_port"] = int(parts[1])
+                            if len(parts) > 2:
+                                cfg["feedback_smtp_user"] = parts[2]
+                    except Exception:
+                        pass
+                    if not cfg.get("feedback_smtp_user"):
+                        em, ok = QInputDialog.getText(dlg, "SMTP username", "Your email address:",
+                            QLineEdit.EchoMode.Normal, cfg.get("feedback_smtp_user", ""))
+                        if ok and em.strip():
+                            cfg["feedback_smtp_user"] = em.strip()
+                res = _fb.send_report(rep, cfg)
+                if res.get("open_url"):
+                    import webbrowser
+                    webbrowser.open(res["open_url"])
+                    status.setText("Opened GitHub issue draft in your browser — submit it there.")
+                elif res.get("ok"):
+                    where = res.get("path") or res.get("channel")
+                    status.setText(f"Sent via {res.get('channel')} → {where}")
+                else:
+                    status.setText(f"Failed: {res.get('error', 'unknown error')}")
+            except Exception as e:
+                status.setText(f"Failed: {e}")
+            finally:
+                btn_send.setEnabled(True)
+        btn_send.clicked.connect(_do_send)
+        dlg.exec()
+
     def _toggle_attention_message_prompts(self, checked: bool):
         self._set_setting("attention_message_prompts", bool(checked))
         if self._ctrl() and hasattr(self._ctrl(), "write_log"):
@@ -12770,6 +13081,12 @@ class SystemConnectivityPage(QWidget):
             getattr(self, "_discord_token", None),
             getattr(self, "_discord_channel", None),
             getattr(self, "_discord_reveal", None),
+            getattr(self, "_feedback_channel", None),
+            getattr(self, "_feedback_contact", None),
+            getattr(self, "_feedback_smtp", None),
+            getattr(self, "_groq_model_combo", None),
+            getattr(self, "_tts_voice_combo", None),
+            getattr(self, "_local_model_combo", None),
         ):
             if widget is not None:
                 widget.blockSignals(True)
@@ -12811,6 +13128,18 @@ class SystemConnectivityPage(QWidget):
             self._startup_anim_enable_btn.setChecked(bool(self._startup_animation_enabled()))
             self._discord_token.setText((discord.get("bot_token") or "").strip())
             self._discord_channel.setText((discord.get("channel_id") or "").strip())
+            if hasattr(self, "_feedback_channel"):
+                self._feedback_channel.setCurrentText(app.get("feedback_channel", "local"))
+            if hasattr(self, "_feedback_contact"):
+                self._feedback_contact.setText(app.get("feedback_contact", ""))
+            if hasattr(self, "_feedback_smtp"):
+                self._feedback_smtp.setText(app.get("feedback_smtp_host", ""))
+            if hasattr(self, "_groq_model_combo"):
+                self._groq_model_combo.setCurrentText(app.get("groq_model", "openai/gpt-oss-120b"))
+            if hasattr(self, "_tts_voice_combo"):
+                self._tts_voice_combo.setCurrentText(app.get("tts_voice", "en_US-lessac-medium"))
+            if hasattr(self, "_local_model_combo"):
+                self._local_model_combo.setCurrentText(app.get("local_ai_model", "qwen2.5:3b"))
         finally:
             for widget in (
                 getattr(self, "_default_provider", None),
@@ -12825,6 +13154,12 @@ class SystemConnectivityPage(QWidget):
                 getattr(self, "_discord_token", None),
                 getattr(self, "_discord_channel", None),
                 getattr(self, "_discord_reveal", None),
+                getattr(self, "_feedback_channel", None),
+                getattr(self, "_feedback_contact", None),
+                getattr(self, "_feedback_smtp", None),
+                getattr(self, "_groq_model_combo", None),
+                getattr(self, "_tts_voice_combo", None),
+                getattr(self, "_local_model_combo", None),
             ):
                 if widget is not None:
                     widget.blockSignals(False)

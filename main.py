@@ -4893,6 +4893,18 @@ class BrahmaLive:
             if self._phone_active:
                 return
 
+            try:
+                from core import voice_gate
+                if not voice_gate.mic_allowed():
+                    data = np.zeros_like(indata).tobytes()
+                    loop.call_soon_threadsafe(
+                        self.out_queue.put_nowait,
+                        {"data": data, "mime_type": "audio/pcm"}
+                    )
+                    return
+            except Exception:
+                pass
+
             if getattr(self, "_ptt_enabled", False) and not getattr(self, "_ptt_held", False):
                 data = np.zeros_like(indata).tobytes()
                 loop.call_soon_threadsafe(
