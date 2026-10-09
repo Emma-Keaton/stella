@@ -7,7 +7,7 @@ import threading
 from pathlib import Path
 import subprocess
 
-GITHUB_REPO = "titechprabhasolutions/Brahma---personal"
+GITHUB_REPO = "Emma-Keaton/stella"
 
 def get_current_version() -> str:
     try:
@@ -33,7 +33,7 @@ def check_for_updates() -> dict | None:
     """Checks the GitHub API for a new release. Returns release data if an update is available."""
     try:
         url = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
-        req = urllib.request.Request(url, headers={'User-Agent': 'BrahmaEcho-OTA'})
+        req = urllib.request.Request(url, headers={'User-Agent': 'Stella-OTA'})
         with urllib.request.urlopen(req, timeout=10) as response:
             data = json.loads(response.read().decode('utf-8'))
             
@@ -69,7 +69,7 @@ def download_and_apply_update(url: str, ui_callback=None):
         update_dir.mkdir(parents=True, exist_ok=True)
         setup_path = update_dir / "BrahmaEcho_Setup_Update.exe"
         
-        req = urllib.request.Request(url, headers={'User-Agent': 'BrahmaEcho-OTA'})
+        req = urllib.request.Request(url, headers={'User-Agent': 'Stella-OTA'})
         with urllib.request.urlopen(req, timeout=15) as response:
             total_size = int(response.info().get('Content-Length', 0))
             downloaded = 0

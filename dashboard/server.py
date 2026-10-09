@@ -461,7 +461,7 @@ def _ensure_ssl_certs() -> bool:
         certs.mkdir(parents=True, exist_ok=True)
         key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
         subject = issuer = x509.Name([
-            x509.NameAttribute(NameOID.COMMON_NAME, "Brahma AI Local Remote"),
+            x509.NameAttribute(NameOID.COMMON_NAME, "Stella AI Local Remote"),
         ])
         alt_names = [
             x509.DNSName("localhost"),

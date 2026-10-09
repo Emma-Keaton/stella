@@ -1,5 +1,5 @@
 """
-Brahma AI - Autonomous Self-Healing & Self-Improvement Test Runner
+Stella AI - Autonomous Self-Healing & Self-Improvement Test Runner
 Demonstrates:
 1. Catching an unhandled runtime exception in an action (ZeroDivisionError)
 2. Autonomous analysis, AST sandbox verification, and atomic self-patching

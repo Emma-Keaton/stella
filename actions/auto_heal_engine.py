@@ -1,5 +1,5 @@
 """
-Auto-Heal & Self-Patching Engine for Brahma AI
+Auto-Heal & Self-Patching Engine for Stella AI
 Enables Brahma to detect its own bugs, tracebacks, and tool exceptions,
 synthesize minimal surgical hotfixes, verify syntax in an isolated sandbox,
 safely apply patches with atomic rollback guarantees, and record changelogs.

@@ -1,5 +1,5 @@
 """
-Brahma AI Evo - Holographic Hardware Assembler & Interactive Circuit HUD.
+Stella AI Evo - Holographic Hardware Assembler & Interactive Circuit HUD.
 Compact, elegant in-app popup overlay that visually shows pin-to-pin wiring
 between microcontroller and sensors, matching the user's reference diagram.
 """
@@ -436,7 +436,7 @@ def generate_circuit_html(circuit: Dict[str, Any]) -> str:
 class CircuitPopupOverlay(QWidget):
     """
     Sleek, compact holographic circuit popup overlay that floats directly
-    inside the Brahma AI main window (not a separate OS window or application).
+    inside the Stella AI main window (not a separate OS window or application).
     """
     closed = pyqtSignal()
 

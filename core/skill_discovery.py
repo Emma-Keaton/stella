@@ -1,6 +1,6 @@
 """
 Skill Discovery & Autonomous Intent Detector
-Part of Project Ultron for Brahma AI.
+Part of Project Ultron for Stella AI.
 
 Detects capability gaps from voice/text queries, parses explicit "learn this" commands,
 and runs the background idle reflection daemon ("Dream Cycle").

@@ -74,3 +74,7 @@ process_logo.py
 # Local LLM model files (large binaries, user-specific)
 models/
 *.gguf
+
+# Personal-only local runtime (K2 + bundled llama.cpp) — not for other devices
+core/k2_server.py
+.venv/llama.cpp/

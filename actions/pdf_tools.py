@@ -1,5 +1,5 @@
 """
-pdf_tools.py - Brahma AI PDF support
+pdf_tools.py - Stella AI PDF support
 
 Creates publication-grade PDF documents from structured content or markdown,
 with multi-page running headers/footers, table formatting, chapter pagination,
@@ -23,7 +23,7 @@ try:
 except Exception:
     pass
 
-PROJECT_NAME = "Brahma AI - Lite"
+PROJECT_NAME = "Stella AI - Lite"
 DEFAULT_OUTPUT_DIR = Path.home() / "Downloads"
 
 
@@ -175,7 +175,7 @@ def _import_pdf():
                 self.setFillColor(colors.HexColor("#64748B"))
 
                 # Running header
-                doc_title = getattr(self, "doc_title", "Brahma AI Executive Report")
+                doc_title = getattr(self, "doc_title", "Stella AI Executive Report")
                 self.drawString(54, 750, doc_title[:80])
                 self.setStrokeColor(colors.HexColor("#CBD5E1"))
                 self.setLineWidth(0.5)
@@ -517,14 +517,14 @@ def _render_title_page(story, pdf, title: str, subtitle: str | None, styles, aut
     author_text = author or "User"
     story.append(
         pdf["Paragraph"](
-            f"<b>Author:</b> {author_text} &nbsp;|&nbsp; <b>Division:</b> Brahma AI Autonomous Systems &nbsp;|&nbsp; <b>Date:</b> {datetime.now().strftime('%B %d, %Y')}",
+            f"<b>Author:</b> {author_text} &nbsp;|&nbsp; <b>Division:</b> Stella AI Autonomous Systems &nbsp;|&nbsp; <b>Date:</b> {datetime.now().strftime('%B %d, %Y')}",
             styles["brahma_doc_meta"],
         )
     )
     story.append(pdf["Spacer"](1, 0.1 * pdf["inch"]))
     story.append(
         pdf["Paragraph"](
-            "<b>Classification:</b> Public Technical Monograph &nbsp;|&nbsp; <b>Engine:</b> Brahma AI Publication Core",
+            "<b>Classification:</b> Public Technical Monograph &nbsp;|&nbsp; <b>Engine:</b> Stella AI Publication Core",
             styles["brahma_doc_meta"],
         )
     )

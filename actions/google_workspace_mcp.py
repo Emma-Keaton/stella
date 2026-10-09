@@ -270,7 +270,7 @@ class GoogleCalendarEngine:
 class GoogleDriveEngine:
     @classmethod
     def search_files(cls, query: str) -> str:
-        """Searches Google Drive or local Brahma AI generated files."""
+        """Searches Google Drive or local Stella AI generated files."""
         # Search Desktop/BrahmaAI folder
         desktop_ai = Path.home() / "Desktop" / "BrahmaAI"
         if not desktop_ai.exists():
@@ -379,7 +379,7 @@ def google_workspace(
 
         elif action in {"send", "compose", "draft"}:
             to = params.get("to") or params.get("receiver") or ""
-            subject = params.get("subject", "Message from Brahma AI")
+            subject = params.get("subject", "Message from Stella AI")
             body = params.get("body") or params.get("message") or ""
             if not to:
                 return "Recipient email address ('to') is required."

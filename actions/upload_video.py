@@ -1,5 +1,5 @@
 """
-Brahma AI — Multi-Platform Video Publisher & Content Optimizer.
+Stella AI — Multi-Platform Video Publisher & Content Optimizer.
 
 Automates video uploading and publishing across TikTok Studio, YouTube Shorts,
 and Instagram Reels. Discovers the latest video file from Desktop/Downloads/Videos,
@@ -106,7 +106,7 @@ def _find_candidate_video(custom_path: Optional[str] = None) -> Optional[Path]:
 def _generate_video_copy(brief: str, platform: str) -> dict:
     """Uses Brahma's AI client to generate high-performing hooks, captions, and tags."""
     system_prompt = (
-        "You are Brahma AI's Social Media Video Director and Viral Copywriter. "
+        "You are Stella AI's Social Media Video Director and Viral Copywriter. "
         f"Generate high-engagement publication metadata for {platform.title()}. "
         "Respond ONLY with a valid JSON object matching this schema:\n"
         "{\n"

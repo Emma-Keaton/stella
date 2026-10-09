@@ -1,6 +1,6 @@
 """
 Dynamic Tool Registry & Hot-Plugging Engine
-Part of Project Ultron for Brahma AI.
+Part of Project Ultron for Stella AI.
 
 Manages persistent synthetic skills, dynamic tool declarations for Gemini Live,
 hot-reloading, execution dispatch, and lifecycle management.
@@ -32,7 +32,7 @@ APPDATA_SKILLS_DIR = get_user_data_dir() / "skills"
 
 
 class DynamicSkill:
-    """Represents a loaded, runnable feature or synthetic skill in Brahma AI."""
+    """Represents a loaded, runnable feature or synthetic skill in Stella AI."""
 
     def __init__(self, skill_path: Path, manifest: Dict[str, Any], module: Any = None):
         self.skill_path = skill_path

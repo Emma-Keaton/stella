@@ -1,5 +1,5 @@
 """
-Clipboard Sentry for Brahma AI.
+Clipboard Sentry for Stella AI.
 Monitors the Windows clipboard in the background for actionable technical content:
 - Tracebacks / Exceptions
 - JSON structures

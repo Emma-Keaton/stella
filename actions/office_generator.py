@@ -119,7 +119,7 @@ def generate_presentation_from_prompt(user_prompt: str, player=None, speak: Opti
         clean_title = clean_title.title() or "Presentation Overview"
         data = {
             "title": clean_title,
-            "subtitle": "Prepared by Brahma AI",
+            "subtitle": "Prepared by Stella AI",
             "theme": "corporate",
             "slides": [
                 {

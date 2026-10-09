@@ -1,7 +1,7 @@
 from core.user_paths import get_user_data_dir
 # actions/calendar_scheduler.py
 """
-Calendar and Schedule Management for Brahma AI.
+Calendar and Schedule Management for Stella AI.
 
 Allows creating, listing, checking, and managing calendar appointments,
 meetings, and events with local persistent storage and .ics calendar exports.
@@ -220,7 +220,7 @@ def calendar_scheduler(
         ics_lines = [
             "BEGIN:VCALENDAR",
             "VERSION:2.0",
-            "PRODID:-//Brahma AI//Calendar Scheduler//EN",
+            "PRODID:-//Stella AI//Calendar Scheduler//EN",
         ]
         for ev in events:
             try:

@@ -1,4 +1,4 @@
-"""Check for and apply fast-forward updates from the Brahma GitHub repository."""
+"""Check for and apply fast-forward updates from the Stella GitHub repository."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ import sys
 from pathlib import Path
 
 
-REMOTE = "https://github.com/titechprabhasolutions/Brahma---personal.git"
+REMOTE = "https://github.com/Emma-Keaton/stella.git"
 BRANCH = "main"
 
 

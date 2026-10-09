@@ -23,7 +23,7 @@ class IdentityService:
             },
             "assistant": {
                 "name": "Brahma",
-                "application_name": "Brahma Evo",
+                "application_name": "Stella",
                 "title": "Personal AI Assistant"
             },
             "behavior": {
@@ -72,8 +72,8 @@ class IdentityService:
         self.save()
 
     def get_application_name(self) -> str:
-        val = self.data["assistant"].get("application_name", "Brahma Evo")
-        return val if val is not None else "Brahma Evo"
+        val = self.data["assistant"].get("application_name", "Stella")
+        return val if val is not None else "Stella"
         
     def set_application_name(self, name: str):
         self.data["assistant"]["application_name"] = name

@@ -88,30 +88,38 @@ _OS = platform.system()  # "Windows" | "Darwin" | "Linux"
 
 
 class C:
-    BG        = "#020305"
-    PANEL     = "#07080b"
-    PANEL2    = "#0d0f14"
-    BORDER    = "rgba(0, 229, 255, 0.16)"
-    BORDER_B  = "rgba(0, 229, 255, 0.35)"
-    BORDER_A  = "rgba(255, 255, 255, 0.20)"
+    # Stella palette — "Atmospheric Functionalism" (dark-first)
+    VOID      = "#0C0D14"  # Cosmic Void — primary dark background
+    OBSIDIAN  = "#161826"  # Obsidian Surface — cards / containers
+    IRIS      = "#7C6EE6"  # Luminous Iris — primary brand / action
+    MINT      = "#38E2B8"  # Aurora Mint — evolution / success
+    ALABASTER = "#F4F3EF"  # Warm Alabaster — primary text
+    SLATE     = "#86899F"  # Muted Slate — secondary text / borders
+    EMBER     = "#FF8A5B"  # Solar Ember — accent / focus
+    BG        = "#0C0D14"
+    PANEL     = "#161826"
+    PANEL2    = "#10121b"
+    BORDER    = "rgba(124, 110, 230, 0.16)"
+    BORDER_B  = "rgba(124, 110, 230, 0.35)"
+    BORDER_A  = "rgba(244, 243, 239, 0.20)"
     PRI       = "#ffffff"
     PRI_DIM   = "#e2e8f0"
     PRI_GHO   = "rgba(255, 255, 255, 0.12)"
-    ACC       = "#00e5ff"
-    ACC2      = "#80ffff"
-    GREEN     = "#37ff5f"
-    GREEN_D   = "#1dcc43"
-    RED       = "#ff3b30"
-    MUTED_C   = "#00e5ff"
-    TEXT      = "#f4f6f8"
-    TEXT_DIM  = "#8e949d"
+    ACC       = "#7C6EE6"
+    ACC2      = "#a89df0"
+    GREEN     = "#38E2B8"
+    GREEN_D   = "#25b58f"
+    RED       = "#FF8A5B"
+    MUTED_C   = "#7C6EE6"
+    TEXT      = "#F4F3EF"
+    TEXT_DIM  = "#86899F"
     TEXT_MED  = "#c5cad2"
     WHITE     = "#ffffff"
     DARK      = "#000000"
     BAR_BG    = "#222222"
-    ICE       = "#00e5ff"
-    ICE_DIM   = "#0099cc"
-    ICE_GHO   = "rgba(0, 229, 255, 0.15)"
+    ICE       = "#7C6EE6"
+    ICE_DIM   = "#5a4fc4"
+    ICE_GHO   = "rgba(124, 110, 230, 0.15)"
     _listeners: list = []
 
     @classmethod
@@ -131,7 +139,7 @@ class C:
             if theme_hex.lower() == "blue": theme_hex = "#007aff"
             elif theme_hex.lower() == "green": theme_hex = "#37ff5f"
             elif theme_hex.lower() == "red": theme_hex = "#ff3b30"
-            elif theme_hex.lower() == "ice": theme_hex = "#00e5ff"
+            elif theme_hex.lower() == "ice": theme_hex = "#7C6EE6"
             elif theme_hex.lower() == "white": theme_hex = "#ffffff"
             else: theme_hex = "#ffffff"
             
@@ -159,11 +167,11 @@ class C:
         cls.PRI       = theme_hex
         cls.PRI_DIM   = hex_dim
         cls.PRI_GHO   = f"rgba({r}, {g}, {b}, 0.15)"
-        cls.ACC       = "#00e5ff" if theme_hex.lower() in ("#ffffff", "#f4f6f8") else theme_hex
-        cls.ACC2      = "#80ffff" if theme_hex.lower() in ("#ffffff", "#f4f6f8") else hex_light
-        cls.MUTED_C   = "#00e5ff" if theme_hex.lower() in ("#ffffff", "#f4f6f8") else theme_hex
+        cls.ACC       = "#7C6EE6" if theme_hex.lower() in ("#ffffff", "#f4f6f8") else theme_hex
+        cls.ACC2      = "#a89df0" if theme_hex.lower() in ("#ffffff", "#f4f6f8") else hex_light
+        cls.MUTED_C   = "#7C6EE6" if theme_hex.lower() in ("#ffffff", "#f4f6f8") else theme_hex
         cls.BORDER    = f"rgba({r}, {g}, {b}, 0.15)"
-        cls.BORDER_B  = "rgba(0, 229, 255, 0.35)" if theme_hex.lower() in ("#ffffff", "#f4f6f8") else f"rgba({r}, {g}, {b}, 0.25)"
+        cls.BORDER_B  = "rgba(124, 110, 230, 0.35)" if theme_hex.lower() in ("#ffffff", "#f4f6f8") else f"rgba({r}, {g}, {b}, 0.25)"
         cls.BORDER_A  = f"rgba({r}, {g}, {b}, 0.18)"
 
         for cb in list(cls._listeners):
@@ -184,17 +192,17 @@ except Exception:
 _old_setStyleSheet = QWidget.setStyleSheet
 def _new_setStyleSheet(self, style):
     if style:
-        style = style.replace("#00e5ff", getattr(C, "ACC", "#00e5ff"))
-        style = style.replace("#00e5ff", getattr(C, "ACC", "#00e5ff"))
-        style = style.replace("#00e5ff", getattr(C, "ACC", "#00e5ff"))
-        style = style.replace("#ffd700", getattr(C, "ACC", "#00e5ff"))
-        style = style.replace("#d4af37", getattr(C, "ACC", "#00e5ff"))
-        style = style.replace("#80ffff", getattr(C, "ACC2", "#80ffff"))
-        style = style.replace("#00b4d8", getattr(C, "ACC", "#00e5ff"))
-        style = style.replace("255, 179, 0", "0, 229, 255")
+        style = style.replace("#7C6EE6", getattr(C, "ACC", "#7C6EE6"))
+        style = style.replace("#7C6EE6", getattr(C, "ACC", "#7C6EE6"))
+        style = style.replace("#7C6EE6", getattr(C, "ACC", "#7C6EE6"))
+        style = style.replace("#ffd700", getattr(C, "ACC", "#7C6EE6"))
+        style = style.replace("#d4af37", getattr(C, "ACC", "#7C6EE6"))
+        style = style.replace("#a89df0", getattr(C, "ACC2", "#a89df0"))
+        style = style.replace("#00b4d8", getattr(C, "ACC", "#7C6EE6"))
+        style = style.replace("255, 179, 0", "124, 110, 230")
         style = style.replace("255,179,0", "0,229,255")
-        style = style.replace("255, 190, 26", "0, 229, 255")
-        style = style.replace("244, 180, 0", "0, 229, 255")
+        style = style.replace("255, 190, 26", "124, 110, 230")
+        style = style.replace("244, 180, 0", "124, 110, 230")
     _old_setStyleSheet(self, style)
 QWidget.setStyleSheet = _new_setStyleSheet
 
@@ -437,7 +445,7 @@ class RemoteKeyOverlay(QWidget):
         title.setStyleSheet("color: #ffffff; background: transparent; border: none;")
         lay.addWidget(title)
 
-        subtitle = QLabel("Scan the QR code with your phone to remotely control Brahma Evo.")
+        subtitle = QLabel("Scan the QR code with your phone to remotely control Stella.")
         subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
         subtitle.setWordWrap(True)
         subtitle.setFont(QFont("Segoe UI", 9))
@@ -471,9 +479,9 @@ class RemoteKeyOverlay(QWidget):
         self._key_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._key_lbl.setFont(QFont("Consolas", 36, QFont.Weight.Black))
         self._key_lbl.setStyleSheet(f"""
-            color: #00e5ff;
-            background: rgba(0, 229, 255, 0.05);
-            border: 1px solid rgba(0, 229, 255, 0.2);
+            color: #7C6EE6;
+            background: rgba(124, 110, 230, 0.05);
+            border: 1px solid rgba(124, 110, 230, 0.2);
             border-radius: 16px;
             padding: 18px;
             letter-spacing: 14px;
@@ -504,9 +512,9 @@ class RemoteKeyOverlay(QWidget):
                 border-radius: 12px;
             }}
             QPushButton:hover {{ 
-                background: rgba(0, 229, 255, 0.08); 
-                border: 1px solid rgba(0, 229, 255, 0.3);
-                color: #00e5ff;
+                background: rgba(124, 110, 230, 0.08); 
+                border: 1px solid rgba(124, 110, 230, 0.3);
+                color: #7C6EE6;
             }}
         """)
         self._new_btn.clicked.connect(self._refresh_key)
@@ -593,7 +601,7 @@ class RemoteKeyOverlay(QWidget):
         self._qr_label.setText("OK")
         self._qr_label.setFont(QFont("Segoe UI", 34, QFont.Weight.Black))
         self._qr_label.setStyleSheet("color: #37ff5f; background: #041006; border-radius: 12px;")
-        self._timer_lbl.setText("Phone connected. Brahma Evo remote is ready.")
+        self._timer_lbl.setText("Phone connected. Stella remote is ready.")
 
     def _refresh_key(self):
         if not self._on_new_key:
@@ -611,7 +619,7 @@ class RemoteKeyOverlay(QWidget):
         self._key_lbl.setText(key)
         self._key_lbl.setStyleSheet(f"""
             color: {C.WHITE};
-            background: rgba(0, 229, 255,28);
+            background: rgba(124, 110, 230,28);
             border: 1px solid {C.PRI};
             border-radius: 10px;
             padding: 8px;
@@ -661,7 +669,7 @@ class DailyBriefingOverlay(QWidget):
         self._frame.setStyleSheet(f"""
             QFrame#BriefingOverlayMainFrame {{
                 background: rgba(10, 12, 18, 250);
-                border: 1px solid rgba(0, 229, 255, 0.4);
+                border: 1px solid rgba(124, 110, 230, 0.4);
                 border-radius: 20px;
             }}
         """)
@@ -783,13 +791,13 @@ class DailyBriefingOverlay(QWidget):
         dismiss_btn.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
         dismiss_btn.setStyleSheet(f"""
             QPushButton {{
-                background: rgba(0, 229, 255, 0.12);
+                background: rgba(124, 110, 230, 0.12);
                 color: {C.PRI};
-                border: 1px solid rgba(0, 229, 255, 0.35);
+                border: 1px solid rgba(124, 110, 230, 0.35);
                 border-radius: 8px;
             }}
             QPushButton:hover {{
-                background: rgba(0, 229, 255, 0.25);
+                background: rgba(124, 110, 230, 0.25);
                 border: 1px solid {C.PRI};
             }}
         """)
@@ -808,7 +816,7 @@ class DailyBriefingOverlay(QWidget):
         box.setStyleSheet("""
             QFrame {
                 background: rgba(255, 255, 255, 0.025);
-                border: 1px solid rgba(0, 229, 255, 0.18);
+                border: 1px solid rgba(124, 110, 230, 0.18);
                 border-radius: 12px;
             }
         """)
@@ -1060,14 +1068,14 @@ class ConfirmationOverlay(QWidget):
         yes.setCursor(Qt.CursorShape.PointingHandCursor)
         yes.setStyleSheet(f"""
             QPushButton {{
-                background: rgba(0, 229, 255, 0.15);
+                background: rgba(124, 110, 230, 0.15);
                 color: {C.ACC};
                 border: 1.5px solid {C.ACC};
                 border-radius: 6px;
                 padding: 0 16px;
             }}
             QPushButton:hover {{
-                background: rgba(0, 229, 255, 0.35);
+                background: rgba(124, 110, 230, 0.35);
                 color: {C.WHITE};
             }}
         """)
@@ -1287,7 +1295,7 @@ class MemoryInspectorOverlay(QWidget):
             QPushButton:hover {{
                 color: {C.WHITE};
                 border-color: {C.BORDER_B};
-                background: rgba(0, 229, 255, 0.15);
+                background: rgba(124, 110, 230, 0.15);
             }}
         """)
         close.clicked.connect(self._do_close)
@@ -1724,7 +1732,7 @@ class _GestureRenderCanvas(QWidget):
             pts = self._normalized_points(rect)
             if pts:
                 # soft glow
-                glow_pen = QPen(QColor(0, 229, 255, int(120 * self._skeleton_opacity)), 18,
+                glow_pen = QPen(QColor(124, 110, 230, int(120 * self._skeleton_opacity)), 18,
                                 Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap)
                 painter.setPen(glow_pen)
                 for a, b in self.CONNECTIONS:
@@ -1740,7 +1748,7 @@ class _GestureRenderCanvas(QWidget):
                     radius = 7.0
                     grad = QRadialGradient(point, radius * 2.2)
                     grad.setColorAt(0.0, QColor(255, 255, 255, int(240 * self._skeleton_opacity)))
-                    grad.setColorAt(0.15, QColor(0, 229, 255, int(180 * self._skeleton_opacity)))
+                    grad.setColorAt(0.15, QColor(124, 110, 230, int(180 * self._skeleton_opacity)))
                     grad.setColorAt(1.0, QColor(255, 160, 40, int(16 * self._skeleton_opacity)))
                     painter.setBrush(QBrush(grad))
                     painter.setPen(Qt.PenStyle.NoPen)
@@ -1768,7 +1776,7 @@ class GestureCameraPreview(QFrame):
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
                     stop:0 rgba(9, 10, 14, 255),
                     stop:1 rgba(3, 4, 7, 255));
-                border: 1px solid rgba(0, 229, 255, 0.24);
+                border: 1px solid rgba(124, 110, 230, 0.24);
                 border-radius: 16px;
             }}
             QLabel {{ background: transparent; }}
@@ -1827,7 +1835,7 @@ class GestureCameraPreview(QFrame):
         self._invert_btn.setChecked(True)
         self._invert_btn.setFixedHeight(26)
         self._invert_btn.setStyleSheet(
-            "QPushButton { background: rgba(0, 229, 255, 0.15); color: #ffb347; border: 1px solid rgba(0, 229, 255, 0.4); border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: bold; }"
+            "QPushButton { background: rgba(124, 110, 230, 0.15); color: #ffb347; border: 1px solid rgba(124, 110, 230, 0.4); border-radius: 6px; padding: 2px 8px; font-size: 11px; font-weight: bold; }"
             "QPushButton:!checked { background: rgba(255, 255, 255, 0.05); color: #888; border: 1px solid rgba(255, 255, 255, 0.15); }"
         )
         def _toggle_invert(checked):
@@ -1842,7 +1850,7 @@ class GestureCameraPreview(QFrame):
         self._sensitivity_select.setCurrentText("Medium")
         self._sensitivity_select.setFixedWidth(84)
         self._sensitivity_select.setStyleSheet(
-            "QComboBox { background: rgba(255,255,255,0.05); color: #f4f6f8; border: 1px solid rgba(0, 229, 255,0.24); border-radius: 8px; padding: 4px 8px; }"
+            "QComboBox { background: rgba(255,255,255,0.05); color: #f4f6f8; border: 1px solid rgba(124, 110, 230,0.24); border-radius: 8px; padding: 4px 8px; }"
             "QComboBox::drop-down { border: none; }")
         self._sensitivity_select.currentTextChanged.connect(self._set_sensitivity_level)
         header_row.addWidget(self._sensitivity_select)
@@ -2476,7 +2484,7 @@ class TaskCard(QFrame):
                 border-radius: 16px;
             }}
             QFrame#TaskCard:hover {{
-                border: 1px solid rgba(0, 229, 255, 0.28);
+                border: 1px solid rgba(124, 110, 230, 0.28);
             }}
             """
         )
@@ -2504,7 +2512,7 @@ class TaskCard(QFrame):
         self._command_lbl.setStyleSheet(f"color: {C.WHITE}; background: transparent;")
         lay.addWidget(self._command_lbl)
 
-        self._plan_lbl = QLabel("Plan: Brahma Evo will generate a task plan after you send a command.")
+        self._plan_lbl = QLabel("Plan: Stella will generate a task plan after you send a command.")
         self._plan_lbl.setWordWrap(True)
         self._plan_lbl.setFont(QFont("Segoe UI", 9))
         self._plan_lbl.setStyleSheet(f"color: {C.TEXT_MED}; background: transparent;")
@@ -2556,7 +2564,7 @@ class TaskCard(QFrame):
         self._title.setText(title)
         self._status_lbl.setText(desc)
         self._output_lbl.setText(desc)
-        self._plan_lbl.setText("Plan: Brahma Evo will generate a task plan after you send a command.")
+        self._plan_lbl.setText("Plan: Stella will generate a task plan after you send a command.")
         self._command_lbl.setText("Command: waiting for input")
         self._pct.setText(f"{percent}%")
         self._bar.setValue(max(0, min(100, percent)))
@@ -2625,7 +2633,7 @@ class TaskCard(QFrame):
         self._workspace_locked = False
         self._title.setText("Ready")
         self._command_lbl.setText("Command: waiting for input")
-        self._plan_lbl.setText("Plan: Brahma Evo will generate a task plan after you send a command.")
+        self._plan_lbl.setText("Plan: Stella will generate a task plan after you send a command.")
         self._status_lbl.setText("Status: Idle")
         self._output_lbl.setText("Output: Ready to work.")
         self._pct.setText("0%")
@@ -2686,7 +2694,7 @@ class AttachmentCard(QFrame):
         self.setStyleSheet("""
             QFrame#AttachmentCard {
                 background: rgba(255,255,255,0.04);
-                border: 1px solid rgba(0, 229, 255,0.26);
+                border: 1px solid rgba(124, 110, 230,0.26);
                 border-radius: 10px;
             }
         """)
@@ -2696,7 +2704,7 @@ class AttachmentCard(QFrame):
         icon = QLabel("⎙")
         icon.setFixedSize(26, 26)
         icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        icon.setStyleSheet("color: #00e5ff; background: rgba(255,255,255,0.03); border-radius: 13px; font-size: 14px;")
+        icon.setStyleSheet("color: #7C6EE6; background: rgba(255,255,255,0.03); border-radius: 13px; font-size: 14px;")
         lay.addWidget(icon)
         txt = QVBoxLayout()
         txt.setContentsMargins(0, 0, 0, 0)
@@ -2711,14 +2719,14 @@ class AttachmentCard(QFrame):
 
 
 class EventCard(QFrame):
-    def __init__(self, title: str, detail: str, stamp: str, icon: str = "●", accent: str = "#00e5ff", parent=None):
+    def __init__(self, title: str, detail: str, stamp: str, icon: str = "●", accent: str = "#7C6EE6", parent=None):
         super().__init__(parent)
         self.setObjectName("EventCard")
         self.setStyleSheet(
             f"""
             QFrame#EventCard {{
                 background: rgba(255, 255, 255, 0.03);
-                border: 1px solid rgba(0, 229, 255,0.15);
+                border: 1px solid rgba(124, 110, 230,0.15);
                 border-radius: 12px;
             }}
             """
@@ -2760,7 +2768,7 @@ class ArtifactCard(QFrame):
             """
             QFrame#ArtifactCard {
                 background: rgba(11, 12, 16, 230);
-                border: 1px solid rgba(0, 229, 255,0.22);
+                border: 1px solid rgba(124, 110, 230,0.22);
                 border-radius: 12px;
             }
             QPushButton {
@@ -2771,8 +2779,8 @@ class ArtifactCard(QFrame):
                 padding: 6px 10px;
             }
             QPushButton:hover {
-                background: rgba(0, 229, 255,0.08);
-                border: 1px solid rgba(0, 229, 255,0.35);
+                background: rgba(124, 110, 230,0.08);
+                border: 1px solid rgba(124, 110, 230,0.35);
             }
             QPushButton:disabled {
                 color: rgba(255,255,255,0.35);
@@ -2789,7 +2797,7 @@ class ArtifactCard(QFrame):
         badge.setFixedSize(30, 30)
         badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
         badge.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
-        badge.setStyleSheet("background: rgba(0, 229, 255,0.08); color: #00e5ff; border: 1px solid rgba(0, 229, 255,0.24); border-radius: 15px;")
+        badge.setStyleSheet("background: rgba(124, 110, 230,0.08); color: #7C6EE6; border: 1px solid rgba(124, 110, 230,0.24); border-radius: 15px;")
         head.addWidget(badge)
 
         meta = QVBoxLayout()
@@ -2858,9 +2866,9 @@ class ChatBubble(QFrame):
             self.setMinimumWidth(120)
 
         bg_style = (
-            "background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(20, 16, 12, 0.45), stop:1 rgba(10, 8, 5, 0.60)); border: 1px solid rgba(0, 229, 255, 0.25); border-radius: 16px;"
+            "background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(20, 16, 12, 0.45), stop:1 rgba(10, 8, 5, 0.60)); border: 1px solid rgba(124, 110, 230, 0.25); border-radius: 16px;"
             if role != "user"
-            else "background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 rgba(0, 229, 255, 0.22), stop:1 rgba(210, 140, 0, 0.32)); border: 1px solid rgba(0, 229, 255, 0.55); border-radius: 16px;"
+            else "background: qlineargradient(x1:0, y1:0, x2:1, y2:1, stop:0 rgba(124, 110, 230, 0.22), stop:1 rgba(210, 140, 0, 0.32)); border: 1px solid rgba(124, 110, 230, 0.55); border-radius: 16px;"
         )
         self.setStyleSheet(f"QFrame#ChatBubble {{ {bg_style} }}")
 
@@ -2873,9 +2881,9 @@ class ChatBubble(QFrame):
         head.setSpacing(8)
 
         if role == "assistant":
-            avatar = _framed_logo(24, 24, bg="rgba(12,14,20,245)", border="rgba(0, 229, 255,0.50)", radius=12, inset=4)
+            avatar = _framed_logo(24, 24, bg="rgba(12,14,20,245)", border="rgba(124, 110, 230,0.50)", radius=12, inset=4)
             head.addWidget(avatar)
-            name_lbl = QLabel(name or "Brahma Evo")
+            name_lbl = QLabel(name or "Stella")
             name_lbl.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
             name_lbl.setStyleSheet("color: #ffffff; background: transparent;")
             head.addWidget(name_lbl)
@@ -2887,7 +2895,7 @@ class ChatBubble(QFrame):
         elif role == "user":
             user_icon = QLabel("👤")
             user_icon.setFont(QFont("Segoe UI", 9))
-            user_icon.setStyleSheet("color: #00e5ff; background: transparent;")
+            user_icon.setStyleSheet("color: #7C6EE6; background: transparent;")
             head.addWidget(user_icon)
             name_lbl = QLabel(name or "You")
             name_lbl.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
@@ -2956,12 +2964,12 @@ class HistoryConversationItem(QFrame):
             """
             QFrame#HistoryConversationItem {
                 background: rgba(255,255,255,0.03);
-                border: 1px solid rgba(0, 229, 255,0.18);
+                border: 1px solid rgba(124, 110, 230,0.18);
                 border-radius: 10px;
             }
             QFrame#HistoryConversationItem:hover {
-                background: rgba(0, 229, 255,0.07);
-                border: 1px solid rgba(0, 229, 255,0.32);
+                background: rgba(124, 110, 230,0.07);
+                border: 1px solid rgba(124, 110, 230,0.32);
             }
             """
         )
@@ -2972,7 +2980,7 @@ class HistoryConversationItem(QFrame):
         icon = QLabel("B")
         icon.setFixedSize(30, 30)
         icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        icon.setStyleSheet("background: rgba(0, 229, 255,0.10); color: #00e5ff; border: 1px solid rgba(0, 229, 255,0.28); border-radius: 15px; font: 700 11pt 'Segoe UI';")
+        icon.setStyleSheet("background: rgba(124, 110, 230,0.10); color: #7C6EE6; border: 1px solid rgba(124, 110, 230,0.28); border-radius: 15px; font: 700 11pt 'Segoe UI';")
         lay.addWidget(icon)
 
         meta = QVBoxLayout()
@@ -3019,7 +3027,7 @@ class ConversationFeed(QScrollArea):
                 margin: 6px 0 6px 0;
             }
             QScrollBar::handle:vertical {
-                background: rgba(0, 229, 255,0.45);
+                background: rgba(124, 110, 230,0.45);
                 border-radius: 4px;
                 min-height: 24px;
             }
@@ -3043,7 +3051,7 @@ class ConversationFeed(QScrollArea):
             """
             QFrame {
                 background: rgba(255,255,255,0.03);
-                border: 1px solid rgba(0, 229, 255,0.16);
+                border: 1px solid rgba(124, 110, 230,0.16);
                 border-radius: 14px;
             }
             QPushButton {
@@ -3055,15 +3063,15 @@ class ConversationFeed(QScrollArea):
                 text-align: left;
             }
             QPushButton:hover {
-                background: rgba(0, 229, 255,0.08);
-                border: 1px solid rgba(0, 229, 255,0.28);
+                background: rgba(124, 110, 230,0.08);
+                border: 1px solid rgba(124, 110, 230,0.28);
             }
             """
         )
         lay = QVBoxLayout(frame)
         lay.setContentsMargins(14, 12, 14, 12)
         lay.setSpacing(10)
-        title = QLabel("Try asking Brahma Evo")
+        title = QLabel("Try asking Stella")
         title.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
         title.setStyleSheet("color: #ffffff; background: transparent;")
         subtitle = QLabel("Create a presentation, analyze a screen, build a website, organize files, or run browser automation.")
@@ -3136,7 +3144,7 @@ class ConversationFeed(QScrollArea):
         low = (event_type or text or "").lower()
         title = "System Event"
         icon = "●"
-        accent = "#00e5ff"
+        accent = "#7C6EE6"
         if "discord" in low and "connected" in low:
             title, icon, accent = "Discord Connected", "◉", "#5865F2"
         elif "presentation" in low:
@@ -3176,10 +3184,10 @@ class ConversationFeed(QScrollArea):
             attachments = msg.get("attachments") or []
             name = {
                 "user": "You",
-                "assistant": "Brahma Evo",
+                "assistant": "Stella",
                 "system": "System",
                 "file": "Files",
-            }.get(role, "Brahma Evo")
+            }.get(role, "Stella")
             self.add_message(role, name, content, stamp, attachments=attachments, animate=False)
         self._sync_empty_state()
         QTimer.singleShot(0, self.scroll_to_bottom)
@@ -3228,7 +3236,7 @@ class TaskDock(QFrame):
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
                     stop:0 rgba(7, 8, 12, 250),
                     stop:1 rgba(3, 4, 6, 245));
-                border-left: 1px solid rgba(0, 229, 255, 0.55);
+                border-left: 1px solid rgba(124, 110, 230, 0.55);
             }}
             """
         )
@@ -3442,9 +3450,9 @@ class WorkspaceSidebar(QWidget):
         if active:
             return """
                 QPushButton {
-                    background: rgba(0, 229, 255,0.16);
+                    background: rgba(124, 110, 230,0.16);
                     color: #FFFFFF;
-                    border: 1px solid rgba(0, 229, 255,180);
+                    border: 1px solid rgba(124, 110, 230,180);
                     border-radius: 10px;
                     padding: 0 14px;
                 }
@@ -3458,8 +3466,8 @@ class WorkspaceSidebar(QWidget):
                 padding: 0 14px;
             }
             QPushButton:hover {
-                background: rgba(0, 229, 255,0.08);
-                border: 1px solid rgba(0, 229, 255,120);
+                background: rgba(124, 110, 230,0.08);
+                border: 1px solid rgba(124, 110, 230,120);
             }
         """
 
@@ -3488,8 +3496,8 @@ class WorkspaceSidebar(QWidget):
         self._memory_frame.setStyleSheet(
             """
             QFrame {
-                background: rgba(0, 229, 255,0.05);
-                border: 1px solid rgba(0, 229, 255,0.24);
+                background: rgba(124, 110, 230,0.05);
+                border: 1px solid rgba(124, 110, 230,0.24);
                 border-radius: 12px;
             }
             """
@@ -3515,7 +3523,7 @@ class WorkspaceSidebar(QWidget):
         input_container.setStyleSheet(
             f"QFrame {{ "
             f"  background: rgba(14, 17, 24, 0.75); "
-            f"  border: 1px solid rgba(0, 229, 255, 0.35); "
+            f"  border: 1px solid rgba(124, 110, 230, 0.35); "
             f"  border-radius: 14px; "
             f"}}"
         )
@@ -3535,10 +3543,10 @@ class WorkspaceSidebar(QWidget):
         input_row.addWidget(self._attach_btn)
 
         self._input = QLineEdit()
-        self._input.setPlaceholderText("Message Brahma Evo...")
+        self._input.setPlaceholderText("Message Stella...")
         self._input.setFont(QFont("Segoe UI", 10))
         self._input.setStyleSheet(
-            f"QLineEdit {{ background: transparent; color: {C.WHITE}; border: none; padding: 2px 4px; selection-background-color: rgba(0, 229, 255, 0.25); }}"
+            f"QLineEdit {{ background: transparent; color: {C.WHITE}; border: none; padding: 2px 4px; selection-background-color: rgba(124, 110, 230, 0.25); }}"
         )
         self._input.returnPressed.connect(self._send)
         self._input.textChanged.connect(lambda t: voice_gate.set_typing(bool((t or "").strip())))
@@ -3560,8 +3568,8 @@ class WorkspaceSidebar(QWidget):
         self._send_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._send_btn.setToolTip("Send message (Enter)")
         self._send_btn.setStyleSheet(
-            f"QPushButton {{ background: rgba(0, 229, 255, 0.25); color: {C.PRI}; border: 1px solid rgba(0, 229, 255, 0.50); border-radius: 8px; font-weight: bold; font-size: 13px; }}"
-            f"QPushButton:hover {{ background: rgba(0, 229, 255, 0.45); color: #FFFFFF; border-color: {C.PRI}; }}"
+            f"QPushButton {{ background: rgba(124, 110, 230, 0.25); color: {C.PRI}; border: 1px solid rgba(124, 110, 230, 0.50); border-radius: 8px; font-weight: bold; font-size: 13px; }}"
+            f"QPushButton:hover {{ background: rgba(124, 110, 230, 0.45); color: #FFFFFF; border-color: {C.PRI}; }}"
         )
         self._send_btn.clicked.connect(self._send)
         input_row.addWidget(self._send_btn)
@@ -3586,12 +3594,12 @@ class WorkspaceSidebar(QWidget):
             QLineEdit {
                 background: rgba(10,11,14,205);
                 color: #FFFFFF;
-                border: 1px solid rgba(0, 229, 255,100);
+                border: 1px solid rgba(124, 110, 230,100);
                 border-radius: 12px;
                 padding: 0 12px;
             }
             QLineEdit:focus {
-                border: 1px solid rgba(0, 229, 255,190);
+                border: 1px solid rgba(124, 110, 230,190);
             }
             """
         )
@@ -3611,7 +3619,7 @@ class WorkspaceSidebar(QWidget):
                 margin: 6px 0 6px 0;
             }
             QScrollBar::handle:vertical {
-                background: rgba(0, 229, 255,0.45);
+                background: rgba(124, 110, 230,0.45);
                 border-radius: 4px;
                 min-height: 24px;
             }
@@ -3673,13 +3681,13 @@ class WorkspaceSidebar(QWidget):
                     widget.setStyleSheet(
                         """
                         QFrame#HistoryConversationItem {
-                            background: rgba(0, 229, 255,0.10);
-                            border: 1px solid rgba(0, 229, 255,0.55);
+                            background: rgba(124, 110, 230,0.10);
+                            border: 1px solid rgba(124, 110, 230,0.55);
                             border-radius: 10px;
                         }
                         QFrame#HistoryConversationItem:hover {
-                            background: rgba(0, 229, 255,0.14);
-                            border: 1px solid rgba(0, 229, 255,0.70);
+                            background: rgba(124, 110, 230,0.14);
+                            border: 1px solid rgba(124, 110, 230,0.70);
                         }
                         """
                     )
@@ -3892,7 +3900,7 @@ class WorkspaceSidebar(QWidget):
         elif role == "assistant":
             convo_id = self._store.record_chat("assistant", text, conversation_id=convo_id, attachments=attachments)
             self._active_conversation_id = convo_id
-            self._feed.add_message("assistant", "Brahma Evo", text, _fmt_time_stamp(stamp), attachments=attachments, animate=True)
+            self._feed.add_message("assistant", "Stella", text, _fmt_time_stamp(stamp), attachments=attachments, animate=True)
             self._hide_memory_banner()
         elif role == "system":
             convo_id = self._store.record_chat("system", text, conversation_id=convo_id, attachments=attachments)
@@ -4017,8 +4025,8 @@ class InlineChatWorkspace(QFrame):
                 padding: 0 14px;
             }
             QPushButton:hover {
-                background: rgba(0, 229, 255,0.08);
-                border: 1px solid rgba(0, 229, 255,0.30);
+                background: rgba(124, 110, 230,0.08);
+                border: 1px solid rgba(124, 110, 230,0.30);
             }
             """
         )
@@ -4030,19 +4038,19 @@ class InlineChatWorkspace(QFrame):
         self._history_btn.setChecked(index == 1)
         if index == 0:
             self._chat_btn.setStyleSheet("""
-                QPushButton { background: rgba(0, 229, 255,0.16); color: #FFFFFF; border: 1px solid rgba(0, 229, 255,180); border-radius: 10px; padding: 0 14px; }
+                QPushButton { background: rgba(124, 110, 230,0.16); color: #FFFFFF; border: 1px solid rgba(124, 110, 230,180); border-radius: 10px; padding: 0 14px; }
             """)
             self._history_btn.setStyleSheet("""
                 QPushButton { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.82); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 0 14px; }
-                QPushButton:hover { background: rgba(0, 229, 255,0.08); border: 1px solid rgba(0, 229, 255,0.30); }
+                QPushButton:hover { background: rgba(124, 110, 230,0.08); border: 1px solid rgba(124, 110, 230,0.30); }
             """)
         else:
             self._history_btn.setStyleSheet("""
-                QPushButton { background: rgba(0, 229, 255,0.16); color: #FFFFFF; border: 1px solid rgba(0, 229, 255,180); border-radius: 10px; padding: 0 14px; }
+                QPushButton { background: rgba(124, 110, 230,0.16); color: #FFFFFF; border: 1px solid rgba(124, 110, 230,180); border-radius: 10px; padding: 0 14px; }
             """)
             self._chat_btn.setStyleSheet("""
                 QPushButton { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.82); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 0 14px; }
-                QPushButton:hover { background: rgba(0, 229, 255,0.08); border: 1px solid rgba(0, 229, 255,0.30); }
+                QPushButton:hover { background: rgba(124, 110, 230,0.08); border: 1px solid rgba(124, 110, 230,0.30); }
             """)
 
     def _build_chat_tab(self) -> QWidget:
@@ -4058,9 +4066,9 @@ class InlineChatWorkspace(QFrame):
         today_pill.setFont(QFont("Segoe UI", 8, QFont.Weight.Bold))
         today_pill.setStyleSheet("""
             QLabel {
-                background: rgba(0, 229, 255, 0.12);
+                background: rgba(124, 110, 230, 0.12);
                 color: rgba(255, 255, 255, 0.85);
-                border: 1px solid rgba(0, 229, 255, 0.25);
+                border: 1px solid rgba(124, 110, 230, 0.25);
                 border-radius: 12px;
                 padding: 4px 14px;
             }
@@ -4077,8 +4085,8 @@ class InlineChatWorkspace(QFrame):
         self._memory_frame.setVisible(False)
         self._memory_frame.setStyleSheet("""
             QFrame {
-                background: rgba(0, 229, 255,0.05);
-                border: 1px solid rgba(0, 229, 255,0.24);
+                background: rgba(124, 110, 230,0.05);
+                border: 1px solid rgba(124, 110, 230,0.24);
                 border-radius: 12px;
             }
         """)
@@ -4102,7 +4110,7 @@ class InlineChatWorkspace(QFrame):
         input_container.setStyleSheet(
             f"QFrame {{ "
             f"  background: rgba(14, 17, 24, 0.40); "
-            f"  border: 1px solid rgba(0, 229, 255, 0.32); "
+            f"  border: 1px solid rgba(124, 110, 230, 0.32); "
             f"  border-radius: 12px; "
             f"}}"
         )
@@ -4122,10 +4130,10 @@ class InlineChatWorkspace(QFrame):
         input_row.addWidget(self._attach_btn)
 
         self._input = QLineEdit()
-        self._input.setPlaceholderText("Message Brahma Evo...")
+        self._input.setPlaceholderText("Message Stella...")
         self._input.setFont(QFont("Segoe UI", 10))
         self._input.setStyleSheet(
-            f"QLineEdit {{ background: transparent; color: {C.WHITE}; border: none; padding: 0 4px; selection-background-color: rgba(0, 229, 255, 0.25); }}"
+            f"QLineEdit {{ background: transparent; color: {C.WHITE}; border: none; padding: 0 4px; selection-background-color: rgba(124, 110, 230, 0.25); }}"
         )
         self._input.returnPressed.connect(self._send)
         self._input.textChanged.connect(lambda t: voice_gate.set_typing(bool((t or "").strip())))
@@ -4147,8 +4155,8 @@ class InlineChatWorkspace(QFrame):
         self._send_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._send_btn.setToolTip("Send message")
         self._send_btn.setStyleSheet(
-            f"QPushButton {{ background: rgba(0, 229, 255, 0.22); color: {C.PRI}; border: 1px solid rgba(0, 229, 255, 0.45); border-radius: 7px; font-weight: bold; font-size: 13px; }}"
-            f"QPushButton:hover {{ background: rgba(0, 229, 255, 0.40); color: #FFFFFF; border-color: {C.PRI}; }}"
+            f"QPushButton {{ background: rgba(124, 110, 230, 0.22); color: {C.PRI}; border: 1px solid rgba(124, 110, 230, 0.45); border-radius: 7px; font-weight: bold; font-size: 13px; }}"
+            f"QPushButton:hover {{ background: rgba(124, 110, 230, 0.40); color: #FFFFFF; border-color: {C.PRI}; }}"
         )
         self._send_btn.clicked.connect(self._send)
         input_row.addWidget(self._send_btn)
@@ -4157,7 +4165,7 @@ class InlineChatWorkspace(QFrame):
 
         footer = QHBoxLayout()
         footer.setContentsMargins(4, 2, 4, 2)
-        self._footer_status = QLabel("Brahma Evo is ready")
+        self._footer_status = QLabel("Stella is ready")
         self._footer_status.setFont(QFont("Segoe UI", 8))
         self._footer_status.setStyleSheet("color: rgba(255, 255, 255, 0.55); background: transparent;")
         footer.addWidget(self._footer_status)
@@ -4174,12 +4182,12 @@ class InlineChatWorkspace(QFrame):
         if hasattr(self, "_footer_status") and self._footer_status:
             status_text = {
                 "listening": "Listening to your voice...",
-                "speaking": "Brahma Evo is speaking...",
+                "speaking": "Stella is speaking...",
                 "thinking": "Synthesizing response...",
                 "executing": "Executing task...",
                 "working": "Processing request...",
                 "muted": "Microphone muted",
-            }.get((state or "").lower(), "Brahma Evo is ready")
+            }.get((state or "").lower(), "Stella is ready")
             self._footer_status.setText(status_text)
 
     def _build_history_tab(self) -> QWidget:
@@ -4192,7 +4200,7 @@ class InlineChatWorkspace(QFrame):
         self._search.setPlaceholderText("Search conversations...")
         self._search.setFont(QFont("Segoe UI", 10))
         self._search.setFixedHeight(38)
-        self._search.setStyleSheet("QLineEdit { background: rgba(10,11,14,205); color: #FFFFFF; border: 1px solid rgba(0, 229, 255,100); border-radius: 12px; padding: 0 12px; }")
+        self._search.setStyleSheet("QLineEdit { background: rgba(10,11,14,205); color: #FFFFFF; border: 1px solid rgba(124, 110, 230,100); border-radius: 12px; padding: 0 12px; }")
         self._search.textChanged.connect(self._refresh_history)
         lay.addWidget(self._search)
         self._history_scroll = QScrollArea()
@@ -4304,7 +4312,7 @@ class InlineChatWorkspace(QFrame):
             self._show_memories(self._store.search_memories(text))
         elif role == "assistant":
             self._store.record_chat("assistant", text, conversation_id=convo_id, attachments=attachments)
-            self._feed.add_message("assistant", "Brahma Evo", text, stamp, attachments=attachments)
+            self._feed.add_message("assistant", "Stella", text, stamp, attachments=attachments)
             self._hide_memories()
         elif role == "system":
             self._store.record_chat("system", text, conversation_id=convo_id, attachments=attachments)
@@ -4474,8 +4482,8 @@ class LauncherControlPanel(QDialog):
         self._startup_btn = mk_btn("Show Workspace On Startup", checkable=True, checked=bool(startup_workspace))
         self._show_icon_btn = mk_btn("Show Floating Icon")
         self._hide_icon_btn = mk_btn("Hide Floating Icon")
-        self._restart_btn = mk_btn("Restart Brahma Evo")
-        self._quit_btn = mk_btn("Quit Brahma Evo")
+        self._restart_btn = mk_btn("Restart Stella")
+        self._quit_btn = mk_btn("Quit Stella")
         self._open_app_btn = mk_btn("Open App")
         self._open_dev_btn = mk_btn("Open Developer Mode")
 
@@ -4518,7 +4526,7 @@ class LauncherControlPanel(QDialog):
         flay = QVBoxLayout(frame)
         flay.setContentsMargins(18, 16, 18, 16)
         flay.setSpacing(10)
-        lbl = QLabel("Hide Brahma Evo icon?")
+        lbl = QLabel("Hide Stella icon?")
         lbl.setStyleSheet("color: #FFFFFF; background: transparent; font: 700 11pt 'Segoe UI';")
         sub = QLabel("You can restore it from the system tray.")
         sub.setStyleSheet("color: rgba(255,255,255,0.65); background: transparent;")
@@ -4594,8 +4602,8 @@ class BrahmaTelemetryWing(QFrame):
         self._total_duration_ms = 10000
         self._remaining_ms = 10000
         self._sources_list = []
-        self._theme_pri = "#00e5ff"
-        self._theme_rgb = (0, 229, 255)
+        self._theme_pri = "#7C6EE6"
+        self._theme_rgb = (124, 110, 230)
 
         lay = QVBoxLayout(self)
         lay.setContentsMargins(18, 16, 18, 14)
@@ -4699,14 +4707,14 @@ class BrahmaTelemetryWing(QFrame):
         self.hide()
 
     def apply_theme(self):
-        pri = getattr(C, "PRI", "#00e5ff") or "#00e5ff"
+        pri = getattr(C, "PRI", "#7C6EE6") or "#7C6EE6"
         try:
             r = int(pri[1:3], 16)
             g = int(pri[3:5], 16)
             b = int(pri[5:7], 16)
         except Exception:
-            pri = "#00e5ff"
-            r, g, b = 0, 229, 255
+            pri = "#7C6EE6"
+            r, g, b = 124, 110, 230
 
         self._theme_pri = pri
         self._theme_rgb = (r, g, b)
@@ -4908,8 +4916,8 @@ class BrahmaResultWing(QFrame):
         self._total_duration_ms = 10000
         self._remaining_ms = 10000
         self._active_file_path = None
-        self._theme_pri = "#00e5ff"
-        self._theme_rgb = (0, 229, 255)
+        self._theme_pri = "#7C6EE6"
+        self._theme_rgb = (124, 110, 230)
 
         lay = QVBoxLayout(self)
         lay.setContentsMargins(18, 16, 18, 14)
@@ -5037,14 +5045,14 @@ class BrahmaResultWing(QFrame):
         self.hide()
 
     def apply_theme(self):
-        pri = getattr(C, "PRI", "#00e5ff") or "#00e5ff"
+        pri = getattr(C, "PRI", "#7C6EE6") or "#7C6EE6"
         try:
             r = int(pri[1:3], 16)
             g = int(pri[3:5], 16)
             b = int(pri[5:7], 16)
         except Exception:
-            pri = "#00e5ff"
-            r, g, b = 0, 229, 255
+            pri = "#7C6EE6"
+            r, g, b = 124, 110, 230
 
         self._theme_pri = pri
         self._theme_rgb = (r, g, b)
@@ -5393,9 +5401,9 @@ class LogWidget(QScrollArea):
         if tl.startswith("you:"):
             return "user", "You", raw[4:].strip()
         if tl.startswith("brahma evo:"):
-            return "assistant", "Brahma Evo", raw[len("Brahma Evo:"):].strip()
+            return "assistant", "Stella", raw[len("Stella:"):].strip()
         if tl.startswith("brahma evo:"):
-            return "assistant", "Brahma Evo", raw[len("Brahma Evo:"):].strip()
+            return "assistant", "Stella", raw[len("Stella:"):].strip()
         if tl.startswith("file:"):
             return "file", "File", raw[5:].strip()
         if tl.startswith("err:"):
@@ -5500,7 +5508,7 @@ class FileDropZone(QWidget):
 
     def _browse(self):
         path, _ = QFileDialog.getOpenFileName(
-            self, "Select a file for Brahma Evo", str(Path.home()),
+            self, "Select a file for Stella", str(Path.home()),
             "All Files (*.*);;"
             "Images (*.jpg *.jpeg *.png *.gif *.webp *.bmp *.svg);;"
             "Documents (*.pdf *.docx *.txt *.md *.pptx);;"
@@ -5665,7 +5673,7 @@ class SetupOverlay(QWidget):
         ring_grad = QRadialGradient(cx, cy, 320.0)
         ring_grad.setColorAt(0.0, QColor(0, 0, 0, 0))
         ring_grad.setColorAt(0.7, QColor(0, 0, 0, 0))
-        ring_grad.setColorAt(0.85, QColor(0, 229, 255, 12))
+        ring_grad.setColorAt(0.85, QColor(124, 110, 230, 12))
         ring_grad.setColorAt(1.0, QColor(0, 0, 0, 0))
         painter.setBrush(QBrush(ring_grad))
         painter.setPen(Qt.PenStyle.NoPen)
@@ -5696,7 +5704,7 @@ class SetupOverlay(QWidget):
         self._s1_container.setStyleSheet("""
             QFrame {
                 background: rgba(5, 8, 12, 180);
-                border: 1px solid rgba(0, 229, 255, 0.08);
+                border: 1px solid rgba(124, 110, 230, 0.08);
                 border-radius: 16px;
             }
         """)
@@ -5708,7 +5716,7 @@ class SetupOverlay(QWidget):
         self._s1_lbl = QLabel("")
         self._s1_lbl.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self._s1_lbl.setFont(QFont("Consolas", 12))
-        self._s1_lbl.setStyleSheet("color: rgba(0, 229, 255, 0.9); background: transparent; border: none;")
+        self._s1_lbl.setStyleSheet("color: rgba(124, 110, 230, 0.9); background: transparent; border: none;")
         self._s1_lbl.setWordWrap(True)
         clay.addWidget(self._s1_lbl)
 
@@ -5718,11 +5726,11 @@ class SetupOverlay(QWidget):
 
     def _start_stage1(self):
         self._s1_lines = [
-            ("Scanning local configuration...", "#00e5ff", False),
+            ("Scanning local configuration...", "#7C6EE6", False),
             ("✓  " + self._detected.capitalize() + " detected", "#37ff5f", False),
             ("✓  GPU acceleration enabled", "#37ff5f", False),
             ("✓  Network online", "#37ff5f", False),
-            ("Looking for AI provider...", "#00e5ff", False),
+            ("Looking for AI provider...", "#7C6EE6", False),
             ("✕  No provider configured", "#ff3b30", True),
             ("", "", False),
             ("One final step is required\nbefore I can think.", "#ffffff", True),
@@ -5817,7 +5825,7 @@ class SetupOverlay(QWidget):
 
     def _save_identity_and_next(self):
         identity.set_assistant_name(self._inp_ast.text().strip() or "Brahma")
-        identity.set_application_name(self._inp_app.text().strip() or "Brahma Evo")
+        identity.set_application_name(self._inp_app.text().strip() or "Stella")
         self._stack.setCurrentIndex(2)
 
     # ── STAGE 1.2: Owner Profile ────────────────────────────────
@@ -5992,13 +6000,13 @@ class SetupOverlay(QWidget):
         gem_card.setFixedSize(260, 160)
         gem_card.setStyleSheet("""
             QFrame {
-                background: rgba(0, 229, 255, 0.06);
-                border: 1px solid rgba(0, 229, 255, 0.25);
+                background: rgba(124, 110, 230, 0.06);
+                border: 1px solid rgba(124, 110, 230, 0.25);
                 border-radius: 16px;
             }
             QFrame:hover {
-                background: rgba(0, 229, 255, 0.12);
-                border: 1px solid rgba(0, 229, 255, 0.5);
+                background: rgba(124, 110, 230, 0.12);
+                border: 1px solid rgba(124, 110, 230, 0.5);
             }
         """)
         gem_card.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -6008,12 +6016,12 @@ class SetupOverlay(QWidget):
 
         gt = QLabel("Google Gemini")
         gt.setFont(QFont("Segoe UI", 15, QFont.Weight.Bold))
-        gt.setStyleSheet("color: #00e5ff; background: transparent; border: none;")
+        gt.setStyleSheet("color: #7C6EE6; background: transparent; border: none;")
         glay.addWidget(gt)
 
         gs = QLabel("★★★★★  Recommended")
         gs.setFont(QFont("Segoe UI", 9))
-        gs.setStyleSheet("color: rgba(0, 229, 255,0.7); background: transparent; border: none;")
+        gs.setStyleSheet("color: rgba(124, 110, 230,0.7); background: transparent; border: none;")
         glay.addWidget(gs)
 
         gd = QLabel("Primary Intelligence")
@@ -6025,7 +6033,7 @@ class SetupOverlay(QWidget):
 
         gc = QLabel("Connect →")
         gc.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
-        gc.setStyleSheet("color: #00e5ff; background: transparent; border: none;")
+        gc.setStyleSheet("color: #7C6EE6; background: transparent; border: none;")
         glay.addWidget(gc)
 
         # Make the whole card clickable via a transparent button overlay
@@ -6103,7 +6111,7 @@ class SetupOverlay(QWidget):
         self._s3_box.setStyleSheet("""
             QFrame {
                 background: rgba(8, 10, 16, 220);
-                border: 1px solid rgba(0, 229, 255, 0.2);
+                border: 1px solid rgba(124, 110, 230, 0.2);
                 border-radius: 20px;
             }
         """)
@@ -6113,7 +6121,7 @@ class SetupOverlay(QWidget):
 
         self._s3_title = QLabel("Google Gemini")
         self._s3_title.setFont(QFont("Segoe UI", 18, QFont.Weight.Bold))
-        self._s3_title.setStyleSheet("color: #00e5ff; background: transparent; border: none;")
+        self._s3_title.setStyleSheet("color: #7C6EE6; background: transparent; border: none;")
         blay.addWidget(self._s3_title)
 
         self._s3_sub = QLabel("Paste your Neural Key")
@@ -6132,17 +6140,17 @@ class SetupOverlay(QWidget):
         self._key_input.setFixedHeight(48)
         self._key_input.setStyleSheet("""
             QLineEdit {
-                background: rgba(0, 229, 255, 0.04);
-                color: #00e5ff;
-                border: 1px solid rgba(0, 229, 255, 0.25);
+                background: rgba(124, 110, 230, 0.04);
+                color: #7C6EE6;
+                border: 1px solid rgba(124, 110, 230, 0.25);
                 border-radius: 12px;
                 padding: 0 16px;
                 letter-spacing: 1px;
-                selection-background-color: rgba(0, 229, 255, 0.3);
+                selection-background-color: rgba(124, 110, 230, 0.3);
             }
             QLineEdit:focus {
-                border: 1px solid rgba(0, 229, 255, 0.6);
-                background: rgba(0, 229, 255, 0.06);
+                border: 1px solid rgba(124, 110, 230, 0.6);
+                background: rgba(124, 110, 230, 0.06);
             }
         """)
         self._key_input.setText((self._defaults.get("gemini_api_key") or "").strip())
@@ -6152,7 +6160,7 @@ class SetupOverlay(QWidget):
         toggle_pw = QPushButton("👁")
         toggle_pw.setCursor(Qt.CursorShape.PointingHandCursor)
         toggle_pw.setFixedSize(36, 48)
-        toggle_pw.setStyleSheet("QPushButton { background: transparent; border: none; color: rgba(255,255,255,0.3); font-size: 16px; } QPushButton:hover { color: #00e5ff; }")
+        toggle_pw.setStyleSheet("QPushButton { background: transparent; border: none; color: rgba(255,255,255,0.3); font-size: 16px; } QPushButton:hover { color: #7C6EE6; }")
         def _toggle():
             if self._key_input.echoMode() == QLineEdit.EchoMode.Password:
                 self._key_input.setEchoMode(QLineEdit.EchoMode.Normal)
@@ -6166,12 +6174,12 @@ class SetupOverlay(QWidget):
         status_row = QHBoxLayout()
         self._s3_status = QLabel("")
         self._s3_status.setFont(QFont("Consolas", 10))
-        self._s3_status.setStyleSheet("color: #00e5ff; background: transparent; border: none;")
+        self._s3_status.setStyleSheet("color: #7C6EE6; background: transparent; border: none;")
         status_row.addWidget(self._s3_status)
 
         status_row.addStretch()
 
-        hint = QLabel("<a href='https://aistudio.google.com/app/apikey' style='color: rgba(0, 229, 255,0.5); text-decoration: none; font-size: 10px;'>Get API Key →</a>")
+        hint = QLabel("<a href='https://aistudio.google.com/app/apikey' style='color: rgba(124, 110, 230,0.5); text-decoration: none; font-size: 10px;'>Get API Key →</a>")
         hint.setOpenExternalLinks(True)
         hint.setStyleSheet("background: transparent; border: none;")
         status_row.addWidget(hint)
@@ -6190,12 +6198,12 @@ class SetupOverlay(QWidget):
         intro_lay.setSpacing(12)
 
         self._intro_lines = []
-        for txt in ["Identity confirmed.", "Hello.", "I'm Brahma Evo.", "Ready whenever you are."]:
+        for txt in ["Identity confirmed.", "Hello.", "I'm Stella.", "Ready whenever you are."]:
             lbl = QLabel(txt)
             lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            if txt == "I'm Brahma Evo.":
+            if txt == "I'm Stella.":
                 lbl.setFont(QFont("Segoe UI", 24, QFont.Weight.Bold))
-                lbl.setStyleSheet("color: #00e5ff; background: transparent; border: none;")
+                lbl.setStyleSheet("color: #7C6EE6; background: transparent; border: none;")
             else:
                 lbl.setFont(QFont("Segoe UI", 14))
                 lbl.setStyleSheet("color: rgba(255,255,255,0.6); background: transparent; border: none;")
@@ -6205,20 +6213,20 @@ class SetupOverlay(QWidget):
 
         intro_lay.addSpacing(20)
 
-        self._launch_btn = QPushButton("Launch Brahma Evo →")
+        self._launch_btn = QPushButton("Launch Stella →")
         self._launch_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._launch_btn.setFixedSize(220, 48)
         self._launch_btn.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
         self._launch_btn.setStyleSheet("""
             QPushButton {
-                background: rgba(0, 229, 255, 0.1);
-                color: #00e5ff;
-                border: 1px solid rgba(0, 229, 255, 0.4);
+                background: rgba(124, 110, 230, 0.1);
+                color: #7C6EE6;
+                border: 1px solid rgba(124, 110, 230, 0.4);
                 border-radius: 24px;
             }
             QPushButton:hover {
-                background: rgba(0, 229, 255, 0.25);
-                border: 1px solid #00e5ff;
+                background: rgba(124, 110, 230, 0.25);
+                border: 1px solid #7C6EE6;
             }
         """)
         self._launch_btn.hide()
@@ -6232,7 +6240,7 @@ class SetupOverlay(QWidget):
             self._authenticating = True
             self._key_input.setReadOnly(True)
             self._s3_sub.setText("Authenticating...")
-            self._s3_sub.setStyleSheet("color: #00e5ff; background: transparent; border: none;")
+            self._s3_sub.setStyleSheet("color: #7C6EE6; background: transparent; border: none;")
             self._auth_step = 0
             self._auth_timer = QTimer(self)
             self._auth_timer.timeout.connect(self._auth_tick)
@@ -6289,7 +6297,7 @@ class SetupOverlay(QWidget):
         self._or_prompt_widget.setStyleSheet("""
             QFrame {
                 background: rgba(8, 10, 16, 220);
-                border: 1px solid rgba(0, 229, 255, 0.15);
+                border: 1px solid rgba(124, 110, 230, 0.15);
                 border-radius: 20px;
             }
         """)
@@ -6339,15 +6347,15 @@ class SetupOverlay(QWidget):
         yes_btn.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
         yes_btn.setStyleSheet("""
             QPushButton {
-                background: rgba(0, 229, 255, 0.1);
-                color: #00e5ff;
-                border: 1px solid rgba(0, 229, 255, 0.35);
+                background: rgba(124, 110, 230, 0.1);
+                color: #7C6EE6;
+                border: 1px solid rgba(124, 110, 230, 0.35);
                 border-radius: 12px;
                 padding: 0 24px;
             }
             QPushButton:hover {
-                background: rgba(0, 229, 255, 0.2);
-                border: 1px solid rgba(0, 229, 255, 0.6);
+                background: rgba(124, 110, 230, 0.2);
+                border: 1px solid rgba(124, 110, 230, 0.6);
             }
         """)
         yes_btn.clicked.connect(self._show_or_input)
@@ -6374,7 +6382,7 @@ class SetupOverlay(QWidget):
         self._or_box.setStyleSheet("""
             QFrame {
                 background: rgba(8, 10, 16, 220);
-                border: 1px solid rgba(0, 229, 255, 0.2);
+                border: 1px solid rgba(124, 110, 230, 0.2);
                 border-radius: 20px;
             }
         """)
@@ -6409,7 +6417,7 @@ class SetupOverlay(QWidget):
                 letter-spacing: 1px;
             }
             QLineEdit:focus {
-                border: 1px solid rgba(0, 229, 255, 0.5);
+                border: 1px solid rgba(124, 110, 230, 0.5);
             }
         """)
         self._or_input.setText((self._defaults.get("openrouter_api_key") or "").strip())
@@ -6435,15 +6443,15 @@ class SetupOverlay(QWidget):
         or_save.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
         or_save.setStyleSheet("""
             QPushButton {
-                background: rgba(0, 229, 255, 0.1);
-                color: #00e5ff;
-                border: 1px solid rgba(0, 229, 255, 0.35);
+                background: rgba(124, 110, 230, 0.1);
+                color: #7C6EE6;
+                border: 1px solid rgba(124, 110, 230, 0.35);
                 border-radius: 12px;
                 padding: 0 24px;
             }
             QPushButton:hover {
-                background: rgba(0, 229, 255, 0.2);
-                border: 1px solid rgba(0, 229, 255, 0.6);
+                background: rgba(124, 110, 230, 0.2);
+                border: 1px solid rgba(124, 110, 230, 0.6);
             }
         """)
         or_save.clicked.connect(self._save_or_key)
@@ -6468,7 +6476,7 @@ class SetupOverlay(QWidget):
         self._color_box.setStyleSheet("""
             QFrame {
                 background: rgba(8, 10, 16, 220);
-                border: 1px solid rgba(0, 229, 255, 0.2);
+                border: 1px solid rgba(124, 110, 230, 0.2);
                 border-radius: 20px;
             }
         """)
@@ -6512,15 +6520,15 @@ class SetupOverlay(QWidget):
         c_continue.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
         c_continue.setStyleSheet("""
             QPushButton {
-                background: rgba(0, 229, 255, 0.1);
-                color: #00e5ff;
-                border: 1px solid rgba(0, 229, 255, 0.35);
+                background: rgba(124, 110, 230, 0.1);
+                color: #7C6EE6;
+                border: 1px solid rgba(124, 110, 230, 0.35);
                 border-radius: 12px;
                 padding: 0 24px;
             }
             QPushButton:hover {
-                background: rgba(0, 229, 255, 0.2);
-                border: 1px solid rgba(0, 229, 255, 0.6);
+                background: rgba(124, 110, 230, 0.2);
+                border: 1px solid rgba(124, 110, 230, 0.6);
             }
         """)
         c_continue.clicked.connect(self._finish_color_stage)
@@ -6552,7 +6560,7 @@ class SetupOverlay(QWidget):
         self._show_intro_final()
 
     def _show_intro_final(self):
-        """Show the Brahma Evo intro sequence."""
+        """Show the Stella intro sequence."""
         page = self._stack.widget(6)
         lay = page.layout()
         self._intro_widget.setParent(None)
@@ -6599,7 +6607,7 @@ class SetupOverlay(QWidget):
         self._s4_container.setStyleSheet("""
             QFrame {
                 background: rgba(5, 8, 12, 180);
-                border: 1px solid rgba(0, 229, 255, 0.12);
+                border: 1px solid rgba(124, 110, 230, 0.12);
                 border-radius: 16px;
             }
         """)
@@ -6610,7 +6618,7 @@ class SetupOverlay(QWidget):
         self._s4_title = QLabel("ESTABLISHING NEURAL LINK")
         self._s4_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._s4_title.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
-        self._s4_title.setStyleSheet("color: rgba(0, 229, 255,0.7); background: transparent; border: none; letter-spacing: 3px;")
+        self._s4_title.setStyleSheet("color: rgba(124, 110, 230,0.7); background: transparent; border: none; letter-spacing: 3px;")
         c4lay.addWidget(self._s4_title)
         c4lay.addSpacing(12)
 
@@ -6625,7 +6633,7 @@ class SetupOverlay(QWidget):
 
             bar_lbl = QLabel("░░░░░░░░░░")
             bar_lbl.setFont(QFont("Consolas", 11))
-            bar_lbl.setStyleSheet("color: rgba(0, 229, 255,0.15); background: transparent; border: none;")
+            bar_lbl.setStyleSheet("color: rgba(124, 110, 230,0.15); background: transparent; border: none;")
             row.addWidget(bar_lbl)
             row.addStretch()
 
@@ -6650,9 +6658,9 @@ class SetupOverlay(QWidget):
         if self._ignite_step < len(self._module_order):
             mod = self._module_order[self._ignite_step]
             name_lbl, bar_lbl = self._module_labels[mod]
-            name_lbl.setStyleSheet("color: #00e5ff; background: transparent; border: none; font-weight: bold;")
+            name_lbl.setStyleSheet("color: #7C6EE6; background: transparent; border: none; font-weight: bold;")
             bar_lbl.setText("██████████")
-            bar_lbl.setStyleSheet("color: #00e5ff; background: transparent; border: none;")
+            bar_lbl.setStyleSheet("color: #7C6EE6; background: transparent; border: none;")
             self._call_js(f"if(window.setReactorSpeed) window.setReactorSpeed({5.0 + self._ignite_step * 4});")
             self._call_js("if(window.triggerPulse) window.triggerPulse();")
             self._ignite_step += 1
@@ -6708,7 +6716,7 @@ class CommandBar(QWidget):
                     stop:0.3 rgba(12, 11, 16, 252),
                     stop:0.7 rgba(12, 11, 16, 252),
                     stop:1 rgba(6, 6, 10, 252));
-                border: 1px solid rgba(0, 229, 255, 0.22);
+                border: 1px solid rgba(124, 110, 230, 0.22);
                 border-radius: 20px;
             }}
         """)
@@ -6716,13 +6724,13 @@ class CommandBar(QWidget):
         lay.setContentsMargins(6, 4, 6, 4)
         lay.setSpacing(6)
 
-        # Brahma Evo mini logo
+        # Stella mini logo
         logo_frame = QFrame()
         logo_frame.setFixedSize(32, 32)
         logo_frame.setStyleSheet("""
             QFrame {
-                background: rgba(0, 229, 255, 0.06);
-                border: 1px solid rgba(0, 229, 255, 0.25);
+                background: rgba(124, 110, 230, 0.06);
+                border: 1px solid rgba(124, 110, 230, 0.25);
                 border-radius: 16px;
             }
         """)
@@ -6731,13 +6739,13 @@ class CommandBar(QWidget):
         logo_lbl = QLabel("\u092C\u094D\u0930")  # ब्र (short Hindi)
         logo_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         logo_lbl.setFont(QFont("Nirmala UI", 9, QFont.Weight.Bold))
-        logo_lbl.setStyleSheet("color: #00e5ff; background: transparent; border: none;")
+        logo_lbl.setStyleSheet("color: #7C6EE6; background: transparent; border: none;")
         logo_lay.addWidget(logo_lbl)
         lay.addWidget(logo_frame)
 
         # Input field
         self._input = QLineEdit()
-        self._input.setPlaceholderText("Tell Brahma Evo what to do...")
+        self._input.setPlaceholderText("Tell Stella what to do...")
         self._input.setFont(QFont("Segoe UI", 9))
         self._input.setFixedHeight(32)
         self._input.setStyleSheet(f"""
@@ -6747,11 +6755,11 @@ class CommandBar(QWidget):
                 border: 1px solid rgba(255, 255, 255, 0.06);
                 border-radius: 16px;
                 padding: 0 14px;
-                selection-background-color: rgba(0, 229, 255, 0.25);
+                selection-background-color: rgba(124, 110, 230, 0.25);
             }}
             QLineEdit:focus {{
-                border: 1px solid rgba(0, 229, 255, 0.45);
-                background: rgba(0, 229, 255, 0.03);
+                border: 1px solid rgba(124, 110, 230, 0.45);
+                background: rgba(124, 110, 230, 0.03);
             }}
         """)
         self._input.returnPressed.connect(self._submit)
@@ -6767,9 +6775,9 @@ class CommandBar(QWidget):
                 border-radius: 14px;
             }}
             QPushButton:hover {{
-                background: rgba(0, 229, 255, 0.12);
-                color: #00e5ff;
-                border: 1px solid rgba(0, 229, 255, 0.4);
+                background: rgba(124, 110, 230, 0.12);
+                color: #7C6EE6;
+                border: 1px solid rgba(124, 110, 230, 0.4);
             }}
         """
 
@@ -6799,17 +6807,17 @@ class CommandBar(QWidget):
         dev.setToolTip("Developer mode")
         dev.setStyleSheet(f"""
             QPushButton {{
-                background: rgba(0, 229, 255, 0.06);
-                color: rgba(0, 229, 255, 0.7);
-                border: 1px solid rgba(0, 229, 255, 0.25);
+                background: rgba(124, 110, 230, 0.06);
+                color: rgba(124, 110, 230, 0.7);
+                border: 1px solid rgba(124, 110, 230, 0.25);
                 border-radius: 14px;
                 font: 700 8px 'Segoe UI';
                 letter-spacing: 0.5px;
             }}
             QPushButton:hover {{
-                background: rgba(0, 229, 255, 0.15);
-                color: #00e5ff;
-                border: 1px solid rgba(0, 229, 255, 0.5);
+                background: rgba(124, 110, 230, 0.15);
+                color: #7C6EE6;
+                border: 1px solid rgba(124, 110, 230, 0.5);
             }}
         """)
         dev.clicked.connect(self.developer_clicked.emit)
@@ -6824,14 +6832,14 @@ class CommandBar(QWidget):
         send.setIconSize(QSize(14, 14))
         send.setStyleSheet(f"""
             QPushButton {{
-                background: rgba(0, 229, 255, 0.12);
-                color: #00e5ff;
-                border: 1px solid rgba(0, 229, 255, 0.35);
+                background: rgba(124, 110, 230, 0.12);
+                color: #7C6EE6;
+                border: 1px solid rgba(124, 110, 230, 0.35);
                 border-radius: 19px;
             }}
             QPushButton:hover {{
-                background: rgba(0, 229, 255, 0.25);
-                border: 1px solid #00e5ff;
+                background: rgba(124, 110, 230, 0.25);
+                border: 1px solid #7C6EE6;
             }}
         """)
         send.clicked.connect(self._submit)
@@ -6918,7 +6926,7 @@ class DeveloperModeDialog(QDialog):
         title.setStyleSheet(f"color: {C.PRI};")
         root.addWidget(title)
 
-        desc = QLabel("Pick a workspace folder Brahma Evo should use when building websites or other workspace-based tasks.")
+        desc = QLabel("Pick a workspace folder Stella should use when building websites or other workspace-based tasks.")
         desc.setWordWrap(True)
         desc.setStyleSheet(f"color: {C.TEXT_DIM};")
         root.addWidget(desc)
@@ -6998,7 +7006,7 @@ class ScanningOverlay(QWidget):
         self._boxes = [] 
         self._context_lines = []
         
-        self.GOLD = QColor("#00E5FF")
+        self.GOLD = QColor("#7C6EE6")
 
     def set_message(self, text: str, sub: str | None = None):
         self._text = (text or "SCANNING SCREEN").upper()
@@ -7205,7 +7213,7 @@ class ScanningOverlay(QWidget):
                 y = y + (cy - y) * e * 0.8
                 
             alpha = int(100 + math.sin(part['life']) * 50)
-            p.setBrush(QColor(0, 229, 255, alpha))
+            p.setBrush(QColor(124, 110, 230, alpha))
             size = 1.5 + math.sin(part['life']) * 1.0
             p.drawEllipse(QRectF(x - size, y - size, size * 2, size * 2))
             
@@ -7214,15 +7222,15 @@ class ScanningOverlay(QWidget):
         e = _ease_out_expo(progress)
         y = e * H
         grad = QLinearGradient(0, y - 50, 0, y + 50)
-        grad.setColorAt(0.0, QColor(0, 229, 255, 0))
-        grad.setColorAt(0.5, QColor(0, 229, 255, 150))
-        grad.setColorAt(1.0, QColor(0, 229, 255, 0))
+        grad.setColorAt(0.0, QColor(124, 110, 230, 0))
+        grad.setColorAt(0.5, QColor(124, 110, 230, 150))
+        grad.setColorAt(1.0, QColor(124, 110, 230, 0))
         p.fillRect(QRectF(0, y - 50, W, 100), grad)
         x = e * W
         grad2 = QLinearGradient(x - 50, 0, x + 50, 0)
-        grad2.setColorAt(0.0, QColor(0, 229, 255, 0))
-        grad2.setColorAt(0.5, QColor(0, 229, 255, 150))
-        grad2.setColorAt(1.0, QColor(0, 229, 255, 0))
+        grad2.setColorAt(0.0, QColor(124, 110, 230, 0))
+        grad2.setColorAt(0.5, QColor(124, 110, 230, 150))
+        grad2.setColorAt(1.0, QColor(124, 110, 230, 0))
         p.fillRect(QRectF(x - 50, 0, 100, H), grad2)
         
     def _draw_all_boxes(self, p):
@@ -7246,7 +7254,7 @@ class ScanningOverlay(QWidget):
             # Styles based on category
             if cat == "OCR":
                 br = (w / 4) * e
-                p.setPen(QPen(QColor(0, 229, 255, int(150 * alpha_mult)), 1))
+                p.setPen(QPen(QColor(124, 110, 230, int(150 * alpha_mult)), 1))
                 if prog < 0.5:
                     p.drawLine(QPointF(x, y), QPointF(x + br, y))
                     p.drawLine(QPointF(x, y), QPointF(x, y + br))
@@ -7261,7 +7269,7 @@ class ScanningOverlay(QWidget):
                     
             elif cat == "WINDOW":
                 br = 30 * e
-                p.setPen(QPen(QColor(0, 229, 255, int(200 * alpha_mult)), 2))
+                p.setPen(QPen(QColor(124, 110, 230, int(200 * alpha_mult)), 2))
                 p.drawLine(QPointF(x, y), QPointF(x + br, y))
                 p.drawLine(QPointF(x, y), QPointF(x, y + br))
                 p.drawLine(QPointF(x + w, y), QPointF(x + w - br, y))
@@ -7272,13 +7280,13 @@ class ScanningOverlay(QWidget):
                 p.drawLine(QPointF(x + w, y + h), QPointF(x + w, y + h - br))
                 
             elif cat == "BUTTON":
-                p.setPen(QPen(QColor(0, 229, 255, int(100 * e * alpha_mult)), 1))
-                p.setBrush(QColor(0, 229, 255, int(20 * e * alpha_mult)))
+                p.setPen(QPen(QColor(124, 110, 230, int(100 * e * alpha_mult)), 1))
+                p.setBrush(QColor(124, 110, 230, int(20 * e * alpha_mult)))
                 p.drawRoundedRect(QRectF(x, y, w, h), 6, 6)
                 p.setBrush(Qt.BrushStyle.NoBrush)
                 
             elif cat == "ICON":
-                p.setPen(QPen(QColor(0, 229, 255, int(200 * e * alpha_mult)), 1))
+                p.setPen(QPen(QColor(124, 110, 230, int(200 * e * alpha_mult)), 1))
                 p.drawEllipse(QRectF(x + w/2 - 4*e, y + h/2 - 4*e, 8*e, 8*e))
                 
             if dt > 0.8:
@@ -7290,7 +7298,7 @@ class ScanningOverlay(QWidget):
                 if conf < 75: label = f"Possible {label}"
                 
                 p.setFont(QFont("Inter", 8, QFont.Weight.Bold))
-                p.setPen(QColor(0, 229, 255, int(255 * te * alpha_mult)))
+                p.setPen(QColor(124, 110, 230, int(255 * te * alpha_mult)))
                 ly = y - 6 + (1.0 - te) * 10
                 p.drawText(QRectF(x, ly - 10, 200, 12), Qt.AlignmentFlag.AlignLeft, f"{label} {conf}%")
 
@@ -7301,10 +7309,10 @@ class ScanningOverlay(QWidget):
                 cx, cy = x + w + 20, y + 20
                 cw, ch = 220, 90
                 
-                p.setPen(QPen(QColor(0, 229, 255, int(150 * ce * alpha_mult)), 1, Qt.PenStyle.DashLine))
+                p.setPen(QPen(QColor(124, 110, 230, int(150 * ce * alpha_mult)), 1, Qt.PenStyle.DashLine))
                 p.drawLine(QPointF(x + w, y + 40), QPointF(cx, cy + ch/2))
                 
-                p.setPen(QPen(QColor(0, 229, 255, int(100 * ce * alpha_mult)), 1))
+                p.setPen(QPen(QColor(124, 110, 230, int(100 * ce * alpha_mult)), 1))
                 p.setBrush(QColor(10, 10, 5, int(220 * ce * alpha_mult)))
                 p.drawRoundedRect(QRectF(cx, cy, cw, ch), 6, 6)
                 p.setBrush(Qt.BrushStyle.NoBrush)
@@ -7314,7 +7322,7 @@ class ScanningOverlay(QWidget):
                     p.setFont(QFont("Inter", 10, QFont.Weight.Bold))
                     p.drawText(QRectF(cx + 12, cy + 10, cw, 20), Qt.AlignmentFlag.AlignLeft, "Detected Interface")
                     
-                    p.setPen(QColor(0, 229, 255, int(255 * alpha_mult)))
+                    p.setPen(QColor(124, 110, 230, int(255 * alpha_mult)))
                     p.setFont(QFont("Inter", 8))
                     p.drawText(QRectF(cx + 12, cy + 32, cw, 20), Qt.AlignmentFlag.AlignLeft, f"{label} Verified")
 
@@ -7324,7 +7332,7 @@ class ScanningOverlay(QWidget):
         alpha_mult = max(0.0, 1.0 - out_dt) if out_dt > 0 else 1.0
         if alpha_mult <= 0: return
         prog = min(1.0, dt / 1.0)
-        p.setPen(QPen(QColor(0, 229, 255, int(100 * prog * alpha_mult)), 1, Qt.PenStyle.DotLine))
+        p.setPen(QPen(QColor(124, 110, 230, int(100 * prog * alpha_mult)), 1, Qt.PenStyle.DotLine))
         for i, j in self._context_lines:
             b1 = self._boxes[i]
             b2 = self._boxes[j]
@@ -7340,12 +7348,12 @@ class ScanningOverlay(QWidget):
         e = _ease_out_expo(progress)
         r = 80 * e
         grad = QLinearGradient(cx - r, cy - r, cx + r, cy + r)
-        grad.setColorAt(0.0, QColor(0, 229, 255, 150))
-        grad.setColorAt(1.0, QColor(0, 229, 255, 0))
+        grad.setColorAt(0.0, QColor(124, 110, 230, 150))
+        grad.setColorAt(1.0, QColor(124, 110, 230, 0))
         p.setPen(Qt.PenStyle.NoPen)
         p.setBrush(grad)
         p.drawEllipse(QRectF(cx - r*1.5, cy - r*1.5, r*3, r*3))
-        p.setPen(QPen(QColor(0, 229, 255, int(200 * e)), 1))
+        p.setPen(QPen(QColor(124, 110, 230, int(200 * e)), 1))
         num_nodes = 8
         time_rot = self._time * 0.5
         nodes = []
@@ -7355,7 +7363,7 @@ class ScanningOverlay(QWidget):
             nx = cx + math.cos(angle) * orbit_r * e
             ny = cy + math.sin(angle) * orbit_r * e
             nodes.append((nx, ny))
-            p.setBrush(QColor(0, 229, 255, 255))
+            p.setBrush(QColor(124, 110, 230, 255))
             p.drawEllipse(QRectF(nx - 3, ny - 3, 6, 6))
         for i in range(num_nodes):
             n1 = nodes[i]
@@ -7372,7 +7380,7 @@ class ScanningOverlay(QWidget):
             prog = min(1.0, dt / 0.5)
             e = _ease_out_expo(prog)
             pw, ph = 400, 120
-            p.setPen(QPen(QColor(0, 229, 255, int(150 * e)), 1))
+            p.setPen(QPen(QColor(124, 110, 230, int(150 * e)), 1))
             p.setBrush(QColor(10, 10, 5, int(230 * e)))
             p.drawRoundedRect(QRectF(cx - pw/2, cy - ph/2, pw, ph), 8, 8)
             if prog > 0.8:
@@ -7382,7 +7390,7 @@ class ScanningOverlay(QWidget):
                 if len(lines) > 0:
                     p.drawText(QRectF(cx - pw/2, cy - 20, pw, 24), Qt.AlignmentFlag.AlignCenter, lines[0])
                 if len(lines) > 1:
-                    p.setPen(QColor(0, 229, 255, 255))
+                    p.setPen(QColor(124, 110, 230, 255))
                     p.setFont(QFont("Inter", 10))
                     p.drawText(QRectF(cx - pw/2, cy + 10, pw, 20), Qt.AlignmentFlag.AlignCenter, lines[1])
         else:
@@ -7985,7 +7993,7 @@ class MeetingOverlay(QWidget):
         self._speech.setStyleSheet(f"color: {C.WHITE}; background: transparent;")
         lay.addWidget(self._speech)
 
-        self._answer = QLabel("Brahma Evo will show the live answer here.")
+        self._answer = QLabel("Stella will show the live answer here.")
         self._answer.setWordWrap(True)
         self._answer.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
         self._answer.setStyleSheet(f"color: {C.WHITE}; background: transparent;")
@@ -8026,12 +8034,12 @@ class FloatingLauncher(QWidget):
 
     _STATE_THEMES = {
         "idle": (255, 255, 255),       # Luminous Pure White
-        "listening": (0, 229, 255),    # Electric Ice Cyan
+        "listening": (124, 110, 230),    # Electric Ice Cyan
         "thinking": (160, 230, 255),   # Frost Blue
         "speaking": (255, 255, 255),   # Brilliant White
-        "executing": (0, 229, 255),    # Dynamic Ice Cyan
-        "processing": (0, 229, 255),   # Dynamic Ice Cyan
-        "working": (0, 229, 255),      # Dynamic Ice Cyan
+        "executing": (124, 110, 230),    # Dynamic Ice Cyan
+        "processing": (124, 110, 230),   # Dynamic Ice Cyan
+        "working": (124, 110, 230),      # Dynamic Ice Cyan
         "muted": (160, 160, 160),      # Cool Silver
         "error": (255, 82, 82),        # Alert Crimson
     }
@@ -8166,7 +8174,7 @@ class FloatingLauncher(QWidget):
         if self._audio_lvl > 0.05:
             shock_r = 38.0 + breath * 4.0 + self._audio_lvl * 20.0
             shock_alpha = int(min(220, self._audio_lvl * 240))
-            shock_pen = QPen(QColor(0, 229, 255, shock_alpha), 1.8)
+            shock_pen = QPen(QColor(124, 110, 230, shock_alpha), 1.8)
             painter.setPen(shock_pen)
             painter.setBrush(Qt.BrushStyle.NoBrush)
             painter.drawEllipse(QPointF(cx, cy), shock_r, shock_r)
@@ -8315,7 +8323,7 @@ class FloatingLauncher(QWidget):
 
     def _apply_state_style(self):
         self.setToolTip(
-            f"Brahma Evo ({self._status_line})\n"
+            f"Stella ({self._status_line})\n"
             "• Single-click: Chat Workspace\n"
             "• Double-click: Open Full App\n"
             "• Drag: Move (Spring Snap)"
@@ -8328,7 +8336,7 @@ class FloatingLauncher(QWidget):
             QMenu {{
                 background: rgba(14, 16, 22, 248);
                 color: #FFFFFF;
-                border: 1px solid rgba(0, 229, 255, 0.45);
+                border: 1px solid rgba(124, 110, 230, 0.45);
                 border-radius: 12px;
                 padding: 6px;
                 font-family: 'Segoe UI';
@@ -8339,8 +8347,8 @@ class FloatingLauncher(QWidget):
                 border-radius: 6px;
             }}
             QMenu::item:selected {{
-                background: rgba(0, 229, 255, 0.20);
-                color: #00e5ff;
+                background: rgba(124, 110, 230, 0.20);
+                color: #7C6EE6;
             }}
             QMenu::separator {{
                 height: 1px;
@@ -8349,7 +8357,7 @@ class FloatingLauncher(QWidget):
             }}
         """)
 
-        open_full = QAction("Open Brahma Evo (Full App)", self)
+        open_full = QAction("Open Stella (Full App)", self)
         open_full.triggered.connect(lambda: self.action_requested.emit("open_app"))
         menu.addAction(open_full)
 
@@ -8474,8 +8482,8 @@ class FloatingGestureCard(QWidget):
         self.btn.setFixedSize(100, 36)
         self.btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn.setStyleSheet(
-            "QPushButton { background: #0c0e12; color: #ffffff; border: 1px solid rgba(0, 229, 255, 0.20); border-radius: 8px; font-weight: bold; }"
-            "QPushButton:hover { color: #00e5ff; border: 1px solid #00e5ff; }"
+            "QPushButton { background: #0c0e12; color: #ffffff; border: 1px solid rgba(124, 110, 230, 0.20); border-radius: 8px; font-weight: bold; }"
+            "QPushButton:hover { color: #7C6EE6; border: 1px solid #7C6EE6; }"
         )
         self.btn.clicked.connect(self.toggle_preview)
         
@@ -8495,15 +8503,15 @@ class FloatingGestureCard(QWidget):
             self.preview.hide()
             self.preview._stop_camera()
             self.btn.setStyleSheet(
-                "QPushButton { background: #0c0e12; color: #ffffff; border: 1px solid rgba(0, 229, 255, 0.20); border-radius: 8px; font-weight: bold; }"
-                "QPushButton:hover { color: #00e5ff; border: 1px solid #00e5ff; }"
+                "QPushButton { background: #0c0e12; color: #ffffff; border: 1px solid rgba(124, 110, 230, 0.20); border-radius: 8px; font-weight: bold; }"
+                "QPushButton:hover { color: #7C6EE6; border: 1px solid #7C6EE6; }"
             )
         else:
             self.preview.show()
             self.preview._start_camera()
             self.btn.setStyleSheet(
-                "QPushButton { background: rgba(0, 229, 255, 0.15); color: #00e5ff; border: 1px solid #00e5ff; border-radius: 8px; font-weight: bold; }"
-                "QPushButton:hover { background: rgba(0, 229, 255, 0.25); }"
+                "QPushButton { background: rgba(124, 110, 230, 0.15); color: #7C6EE6; border: 1px solid #7C6EE6; border-radius: 8px; font-weight: bold; }"
+                "QPushButton:hover { background: rgba(124, 110, 230, 0.25); }"
             )
         self.adjustSize()
         if self.window() and hasattr(self.window(), 'resizeEvent'):
@@ -8540,7 +8548,7 @@ class MainWindow(QMainWindow):
         self.setWindowFlag(Qt.WindowType.Tool, False)
         self.setWindowFlag(Qt.WindowType.Window, True)
         self.setWindowIcon(self._make_window_icon())
-        self.setWindowTitle("Brahma Evo")
+        self.setWindowTitle("Stella")
         self.setMinimumSize(_MIN_W, _MIN_H)
         self.resize(_DEFAULT_W, _DEFAULT_H)
 
@@ -8904,10 +8912,10 @@ class MainWindow(QMainWindow):
                 winreg.KEY_READ | winreg.KEY_WRITE,
             ) as key:
                 try:
-                    value, _ = winreg.QueryValueEx(key, "Brahma Evo")
+                    value, _ = winreg.QueryValueEx(key, "Stella")
                     run_value = _startup_run_value()
                     if value != run_value:
-                        winreg.SetValueEx(key, "Brahma Evo", 0, winreg.REG_SZ, run_value)
+                        winreg.SetValueEx(key, "Stella", 0, winreg.REG_SZ, run_value)
                     return bool(value)
                 except FileNotFoundError:
                     return False
@@ -8921,10 +8929,10 @@ class MainWindow(QMainWindow):
         try:
             with winreg.CreateKey(winreg.HKEY_CURRENT_USER, _startup_registry_key()) as key:
                 if enabled:
-                    winreg.SetValueEx(key, "Brahma Evo", 0, winreg.REG_SZ, run_value)
+                    winreg.SetValueEx(key, "Stella", 0, winreg.REG_SZ, run_value)
                 else:
                     try:
-                        winreg.DeleteValue(key, "Brahma Evo")
+                        winreg.DeleteValue(key, "Stella")
                     except FileNotFoundError:
                         pass
             return True
@@ -8985,7 +8993,7 @@ class MainWindow(QMainWindow):
         if hasattr(self, "_btn_chat"):
             if not getattr(self, "_right_collapsed", False):
                 self._btn_chat.setStyleSheet(
-                    f"QPushButton {{ background: rgba(0, 229, 255, 0.18); color: {C.PRI}; border: 1px solid {C.PRI}; border-radius: 8px; padding: 5px 15px; font-weight: bold; font-family: 'Segoe UI'; font-size: 13px; }}"
+                    f"QPushButton {{ background: rgba(124, 110, 230, 0.18); color: {C.PRI}; border: 1px solid {C.PRI}; border-radius: 8px; padding: 5px 15px; font-weight: bold; font-family: 'Segoe UI'; font-size: 13px; }}"
                 )
             else:
                 self._btn_chat.setStyleSheet(
@@ -9010,7 +9018,7 @@ class MainWindow(QMainWindow):
         if hasattr(self, "_btn_dashboard"):
             if cur_idx == 0:
                 self._btn_dashboard.setStyleSheet(
-                    f"QPushButton {{ background: rgba(0, 229, 255, 0.18); color: {C.PRI}; border: 1px solid {C.PRI}; border-radius: 8px; padding: 5px 15px; font-weight: bold; font-family: 'Segoe UI'; font-size: 13px; }}"
+                    f"QPushButton {{ background: rgba(124, 110, 230, 0.18); color: {C.PRI}; border: 1px solid {C.PRI}; border-radius: 8px; padding: 5px 15px; font-weight: bold; font-family: 'Segoe UI'; font-size: 13px; }}"
                 )
             else:
                 self._btn_dashboard.setStyleSheet(
@@ -9019,7 +9027,7 @@ class MainWindow(QMainWindow):
         if hasattr(self, "_btn_settings"):
             if cur_idx in (3, 4):
                 self._btn_settings.setStyleSheet(
-                    f"QPushButton {{ background: rgba(0, 229, 255, 0.18); color: {C.PRI}; border: 1px solid {C.PRI}; border-radius: 8px; padding: 5px 15px; font-weight: bold; font-family: 'Segoe UI'; font-size: 13px; }}"
+                    f"QPushButton {{ background: rgba(124, 110, 230, 0.18); color: {C.PRI}; border: 1px solid {C.PRI}; border-radius: 8px; padding: 5px 15px; font-weight: bold; font-family: 'Segoe UI'; font-size: 13px; }}"
                 )
             else:
                 self._btn_settings.setStyleSheet(
@@ -9214,7 +9222,7 @@ class MainWindow(QMainWindow):
 
     def _browse_attachment(self):
         path, _ = QFileDialog.getOpenFileName(
-            self, "Attach a file to Brahma Evo", str(Path.home()),
+            self, "Attach a file to Stella", str(Path.home()),
             "All Files (*.*);;"
             "Images (*.jpg *.jpeg *.png *.gif *.webp *.bmp *.svg);;"
             "Documents (*.pdf *.docx *.txt *.md *.pptx);;"
@@ -9520,7 +9528,7 @@ class MainWindow(QMainWindow):
             self._call_screening_dialog.close()
 
         dialog = QDialog(self)
-        dialog.setWindowTitle("Brahma Evo Call Screening")
+        dialog.setWindowTitle("Stella Call Screening")
         dialog.setModal(False)
         dialog.setMinimumWidth(380)
         layout = QVBoxLayout(dialog)
@@ -9664,7 +9672,7 @@ class MainWindow(QMainWindow):
     def notify_phone_connected(self):
         if self._remote_overlay is not None:
             self._remote_overlay.mark_connected()
-        self._log_sig.emit("SYS: Phone connected to Brahma Evo remote.")
+        self._log_sig.emit("SYS: Phone connected to Stella remote.")
 
     def mouseMoveEvent(self, event):
         super().mouseMoveEvent(event)
@@ -9712,8 +9720,8 @@ class MainWindow(QMainWindow):
         # Update top taskbar status badge
         if hasattr(self, "_status_badge"):
             badge_map = {
-                "LISTENING":  ("◉ LISTENING",  "#00e5ff", "rgba(0, 229, 255, 0.4)",  "rgba(0, 229, 255, 0.08)"),
-                "SPEAKING":   ("◈ SPEAKING",   "#00e5ff", "rgba(0, 229, 255, 0.5)",  "rgba(0, 229, 255, 0.12)"),
+                "LISTENING":  ("◉ LISTENING",  "#7C6EE6", "rgba(124, 110, 230, 0.4)",  "rgba(124, 110, 230, 0.08)"),
+                "SPEAKING":   ("◈ SPEAKING",   "#7C6EE6", "rgba(124, 110, 230, 0.5)",  "rgba(124, 110, 230, 0.12)"),
                 "THINKING":   ("◒ THINKING",   "#ff9100", "rgba(255, 145, 0, 0.45)", "rgba(255, 145, 0, 0.08)"),
                 "PROCESSING": ("◒ PROCESSING", "#ff9100", "rgba(255, 145, 0, 0.45)", "rgba(255, 145, 0, 0.08)"),
                 "EXECUTING":  ("⚡ EXECUTING",  "#7c4dff", "rgba(124, 77, 255, 0.45)","rgba(124, 77, 255, 0.08)"),
@@ -9721,7 +9729,7 @@ class MainWindow(QMainWindow):
                 "MUTED":      ("⊗ MUTED",      "#ff3b30", "rgba(255, 59, 48, 0.45)", "rgba(255, 59, 48, 0.08)"),
                 "SCANNING":   ("◓ SCANNING",   "#37ff5f", "rgba(55, 255, 95, 0.45)", "rgba(55, 255, 95, 0.08)"),
             }
-            lbl_txt, col, border, bg = badge_map.get(state, ("● ONLINE", "#00e5ff", "rgba(0, 229, 255, 0.25)", "rgba(12,14,18,220)"))
+            lbl_txt, col, border, bg = badge_map.get(state, ("● ONLINE", "#7C6EE6", "rgba(124, 110, 230, 0.25)", "rgba(12,14,18,220)"))
             self._status_badge.setText(lbl_txt)
             self._status_badge.setStyleSheet(
                 f"color: {col}; background: {bg}; border: 1px solid {border}; border-radius: 8px; padding: 5px 12px;"
@@ -9731,7 +9739,7 @@ class MainWindow(QMainWindow):
         if hasattr(self, "_input"):
             ph_map = {
                 "LISTENING": "Listening... (or type your command)",
-                "SPEAKING": "Brahma Evo is responding...",
+                "SPEAKING": "Stella is responding...",
                 "THINKING": "Brahma is thinking...",
                 "PROCESSING": "Processing request...",
                 "EXECUTING": "Executing action...",
@@ -9739,7 +9747,7 @@ class MainWindow(QMainWindow):
                 "MUTED": "Microphone muted — type command here...",
                 "SCANNING": "Scanning display...",
             }
-            self._input.setPlaceholderText(ph_map.get(state, "Ask Brahma Evo anything..."))
+            self._input.setPlaceholderText(ph_map.get(state, "Ask Stella anything..."))
 
         # Update chat workspace footer status
         if hasattr(self, "_inline_workspace") and hasattr(self._inline_workspace, "_footer_status"):
@@ -9753,7 +9761,7 @@ class MainWindow(QMainWindow):
                 "MUTED": "● Voice input muted",
                 "SCANNING": "● Vision system active",
             }
-            self._inline_workspace._footer_status.setText(foot_map.get(state, "Brahma Evo is online"))
+            self._inline_workspace._footer_status.setText(foot_map.get(state, "Stella is online"))
 
         if hasattr(self, "_status_chip"):
             chip_text = {
@@ -9779,13 +9787,13 @@ class MainWindow(QMainWindow):
             )
         if hasattr(self, "_task_card"):
             if state in ("THINKING", "PROCESSING", "EXECUTING", "WORKING"):
-                self._task_card.set_task("Working on it...", "Brahma Evo is processing your request.", 72)
+                self._task_card.set_task("Working on it...", "Stella is processing your request.", 72)
             elif state == "SPEAKING":
-                self._task_card.set_task("Responding...", "Brahma Evo is speaking now.", 100)
+                self._task_card.set_task("Responding...", "Stella is speaking now.", 100)
             elif state == "MUTED":
                 self._task_card.set_task("Microphone muted", "Voice input is paused.", 0)
             else:
-                self._task_card.set_task("Ready", "Brahma Evo is idle and ready.", 0)
+                self._task_card.set_task("Ready", "Stella is idle and ready.", 0)
         if hasattr(self, "_result_card"):
             if state in ("THINKING", "PROCESSING", "EXECUTING", "WORKING"):
                 self._result_card.set_body("Action pending")
@@ -10037,7 +10045,7 @@ class MainWindow(QMainWindow):
                 self._floating_gesture_card.show()
             self.showNormal()
             self._apply_state("LISTENING")
-            self._log.append_log(f"SYS: Initialised. OS={os_name.upper()}. Brahma Evo online.")
+            self._log.append_log(f"SYS: Initialised. OS={os_name.upper()}. Stella online.")
         except Exception as e:
             self._log.append_log(f"ERR: setup failed: {e}")
             traceback.print_exc()
@@ -10145,7 +10153,7 @@ class MainWindow(QMainWindow):
         w.setStyleSheet(
             f"QWidget#ModularRightSidebar {{ "
             f"  background: rgba(8, 10, 15, 0.22); "
-            f"  border-left: 1px solid rgba(0, 229, 255, 0.25); "
+            f"  border-left: 1px solid rgba(124, 110, 230, 0.25); "
             f"}}"
         )
         root_lay = QVBoxLayout(w)
@@ -10175,8 +10183,8 @@ class MainWindow(QMainWindow):
         self._new_chat_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._new_chat_btn.setToolTip("Start a new chat session")
         self._new_chat_btn.setStyleSheet(
-            f"QPushButton {{ background: rgba(0, 229, 255, 0.10); color: {C.PRI}; border: 1px solid rgba(0, 229, 255, 0.30); border-radius: 6px; padding: 2px 6px; }}"
-            f"QPushButton:hover {{ background: rgba(0, 229, 255, 0.22); color: #FFFFFF; border-color: {C.PRI}; }}"
+            f"QPushButton {{ background: rgba(124, 110, 230, 0.10); color: {C.PRI}; border: 1px solid rgba(124, 110, 230, 0.30); border-radius: 6px; padding: 2px 6px; }}"
+            f"QPushButton:hover {{ background: rgba(124, 110, 230, 0.22); color: #FFFFFF; border-color: {C.PRI}; }}"
         )
         self._new_chat_btn.clicked.connect(lambda: self._inline_workspace.new_conversation() if hasattr(self, "_inline_workspace") else None)
         header_bar.addWidget(self._new_chat_btn)
@@ -10188,7 +10196,7 @@ class MainWindow(QMainWindow):
         self._right_toggle_btn.setToolTip("Collapse Chat Sidebar")
         self._right_toggle_btn.setStyleSheet(
             f"QPushButton {{ background: rgba(255,255,255,0.06); color: {C.WHITE}; border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; }}"
-            f"QPushButton:hover {{ color: {C.PRI}; border-color: {C.PRI}; background: rgba(0, 229, 255,0.12); }}"
+            f"QPushButton:hover {{ color: {C.PRI}; border-color: {C.PRI}; background: rgba(124, 110, 230,0.12); }}"
         )
         self._right_toggle_btn.clicked.connect(self._toggle_right_sidebar)
         header_bar.addWidget(self._right_toggle_btn)
@@ -10234,7 +10242,7 @@ class MainWindow(QMainWindow):
             f"""
             QFrame {{
                 background: rgba(255, 255, 255, 0.05);
-                border: 1px solid rgba(0, 229, 255, 0.20);
+                border: 1px solid rgba(124, 110, 230, 0.20);
                 border-radius: 35px;
             }}
             """
@@ -10242,7 +10250,7 @@ class MainWindow(QMainWindow):
         try:
             shadow = QGraphicsDropShadowEffect(bar)
             shadow.setBlurRadius(24)
-            shadow.setColor(QColor(0, 229, 255, 45))
+            shadow.setColor(QColor(124, 110, 230, 45))
             shadow.setOffset(0, 0)
             bar.setGraphicsEffect(shadow)
         except Exception:
@@ -10252,7 +10260,7 @@ class MainWindow(QMainWindow):
         row.setSpacing(12)
 
         self._input = QLineEdit()
-        self._input.setPlaceholderText("Ask Brahma Evo anything...")
+        self._input.setPlaceholderText("Ask Stella anything...")
         self._input.setFont(QFont("Segoe UI", 10))
         self._input.setFixedHeight(50)
         self._input.setStyleSheet(f"""
@@ -10261,7 +10269,7 @@ class MainWindow(QMainWindow):
                 color: {C.WHITE};
                 border: none;
                 padding: 0 14px;
-                selection-background-color: rgba(0, 229, 255, 0.25);
+                selection-background-color: rgba(124, 110, 230, 0.25);
             }}
         """)
         self._input.returnPressed.connect(self._send)
@@ -10276,11 +10284,11 @@ class MainWindow(QMainWindow):
                 border-radius: 22px;
             }}
             QPushButton:hover {{
-                background: rgba(0, 229, 255, 0.15);
+                background: rgba(124, 110, 230, 0.15);
                 color: {C.PRI};
             }}
             QPushButton:pressed {{
-                background: rgba(0, 229, 255, 0.30);
+                background: rgba(124, 110, 230, 0.30);
             }}
         """
 
@@ -10302,17 +10310,17 @@ class MainWindow(QMainWindow):
         mic.setIconSize(QSize(20, 20))
         mic.setStyleSheet(f"""
             QPushButton {{
-                background: rgba(0, 229, 255, 0.10);
+                background: rgba(124, 110, 230, 0.10);
                 color: {C.PRI};
-                border: 1px solid rgba(0, 229, 255, 0.30);
+                border: 1px solid rgba(124, 110, 230, 0.30);
                 border-radius: 22px;
             }}
             QPushButton:hover {{
-                background: rgba(0, 229, 255, 0.25);
-                border: 1px solid rgba(0, 229, 255, 0.60);
+                background: rgba(124, 110, 230, 0.25);
+                border: 1px solid rgba(124, 110, 230, 0.60);
             }}
             QPushButton:pressed {{
-                background: rgba(0, 229, 255, 0.40);
+                background: rgba(124, 110, 230, 0.40);
             }}
         """)
         mic.clicked.connect(self._toggle_mute)
@@ -10339,8 +10347,8 @@ class SystemConnectivitySidebar(QFrame):
         self.setStyleSheet(
             f"""
             QFrame#SystemConnectivitySidebar {{
-                background: rgba(0, 229, 255, 0.03);
-                border: 1px solid rgba(0, 229, 255, 0.6);
+                background: rgba(124, 110, 230, 0.03);
+                border: 1px solid rgba(124, 110, 230, 0.6);
                 border-radius: 22px;
             }}
             QLabel {{
@@ -10355,15 +10363,15 @@ class SystemConnectivitySidebar(QFrame):
                 padding: 10px 12px;
             }}
             QPushButton:hover {{
-                background: rgba(0, 229, 255, 0.10);
-                border: 1px solid rgba(0, 229, 255, 0.3);
+                background: rgba(124, 110, 230, 0.10);
+                border: 1px solid rgba(124, 110, 230, 0.3);
             }}
             """
         )
         try:
             shadow = QGraphicsDropShadowEffect(self)
             shadow.setBlurRadius(20)
-            shadow.setColor(QColor(0, 229, 255, 80))
+            shadow.setColor(QColor(124, 110, 230, 80))
             shadow.setOffset(0, 0)
             self.setGraphicsEffect(shadow)
         except: pass
@@ -10417,7 +10425,7 @@ class SystemConnectivitySidebar(QFrame):
         self._quick_actions = QVBoxLayout()
         self._quick_actions.setSpacing(10)
         lay.addLayout(self._quick_actions)
-        self._mk_quick_action("Γå╗ Restart Brahma Evo", QStyle.StandardPixmap.SP_BrowserReload, self._restart)
+        self._mk_quick_action("Γå╗ Restart Stella", QStyle.StandardPixmap.SP_BrowserReload, self._restart)
         self._mk_quick_action("Γƒ│ Reload Configuration", QStyle.StandardPixmap.SP_BrowserReload, self._reload)
         self._mk_quick_action("≡ƒôü Open Data Folder", QStyle.StandardPixmap.SP_DirOpenIcon, self._open_data_folder)
         self._mk_quick_action("≡ƒôä View Logs", QStyle.StandardPixmap.SP_FileDialogDetailedView, self._view_logs)
@@ -10516,7 +10524,7 @@ class SettingsHubPage(QWidget):
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         lay.addWidget(title)
 
-        subtitle = QLabel("Select a section below to configure your Brahma Evo environment.")
+        subtitle = QLabel("Select a section below to configure your Stella environment.")
         subtitle.setFont(QFont("Segoe UI", 12))
         subtitle.setStyleSheet(f"color: {C.TEXT_DIM};")
         subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -10527,7 +10535,7 @@ class SettingsHubPage(QWidget):
         cards_lay.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         cards_data = [
-            ("Brahma Evo Home", "Configure smart home integrations", "🏠", 1),
+            ("Stella Home", "Configure smart home integrations", "🏠", 1),
             ("Devices", "Manage and control connected hardware", "🔌", 2),
             ("System & Connect", "Configure providers and api preferences", "⚙️", 3)
         ]
@@ -10539,7 +10547,7 @@ class SettingsHubPage(QWidget):
             card.setStyleSheet(
                 f"QFrame {{ "
                 f"  background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(16, 18, 26, 0.75), stop:1 rgba(8, 10, 15, 0.85)); "
-                f"  border: 1px solid rgba(0, 229, 255, 0.18); "
+                f"  border: 1px solid rgba(124, 110, 230, 0.18); "
                 f"  border-radius: 18px; "
                 f"}} "
                 f"QFrame:hover {{ "
@@ -10589,11 +10597,11 @@ class SystemConnectivityPage(QWidget):
             }}
             QFrame#SettingsCard {{
                 background: rgba(10, 12, 18, 160);
-                border: 1.5px solid rgba(0, 229, 255, 0.15);
+                border: 1.5px solid rgba(124, 110, 230, 0.15);
                 border-radius: 18px;
             }}
             QFrame#SettingsCard:hover {{
-                border: 1.5px solid rgba(0, 229, 255, 0.35);
+                border: 1.5px solid rgba(124, 110, 230, 0.35);
                 background: rgba(20, 16, 12, 200);
             }}
             QLabel {{
@@ -10607,8 +10615,8 @@ class SystemConnectivityPage(QWidget):
                 padding: 10px 12px;
             }}
             QPushButton:hover {{
-                background: rgba(0, 229, 255, 0.12);
-                border: 1px solid rgba(0, 229, 255, 0.45);
+                background: rgba(124, 110, 230, 0.12);
+                border: 1px solid rgba(124, 110, 230, 0.45);
             }}
             QLineEdit, QComboBox {{
                 background: rgba(13, 15, 19, 240);
@@ -10620,7 +10628,7 @@ class SystemConnectivityPage(QWidget):
             }}
             QLineEdit:focus, QComboBox:focus {{
                 border: 1px solid {C.PRI};
-                background: rgba(0, 229, 255, 0.02);
+                background: rgba(124, 110, 230, 0.02);
             }}
         """)
         root = QVBoxLayout(self)
@@ -10704,11 +10712,11 @@ class SystemConnectivityPage(QWidget):
                 padding: 12px 14px;
             }}
             QPushButton:checked {{
-                background: rgba(0, 229, 255,0.12);
+                background: rgba(124, 110, 230,0.12);
                 border: 1px solid {C.PRI};
             }}
             QPushButton:hover {{
-                background: rgba(0, 229, 255,0.08);
+                background: rgba(124, 110, 230,0.08);
             }}
             """
         )
@@ -10727,7 +10735,7 @@ class SystemConnectivityPage(QWidget):
         if key:
             row.setStyleSheet("QFrame { background: rgba(55, 255, 95, 0.02); border: 1px solid rgba(55, 255, 95, 0.1); border-radius: 14px; } QFrame:hover { background: rgba(55, 255, 95, 0.05); border: 1px solid rgba(55, 255, 95, 0.25); }")
         else:
-            row.setStyleSheet("QFrame { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 14px; } QFrame:hover { background: rgba(0, 229, 255, 0.04); border: 1px solid rgba(0, 229, 255, 0.3); }")
+            row.setStyleSheet("QFrame { background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 14px; } QFrame:hover { background: rgba(124, 110, 230, 0.04); border: 1px solid rgba(124, 110, 230, 0.3); }")
         r = QHBoxLayout(row)
         r.setContentsMargins(14, 12, 14, 12)
         r.setSpacing(12)
@@ -10738,7 +10746,7 @@ class SystemConnectivityPage(QWidget):
         if key:
             icon.setStyleSheet(f"background: rgba(55, 255, 95, 0.12); color: {C.GREEN}; border: 1px solid rgba(55, 255, 95, 0.3); border-radius: 21px;")
         else:
-            icon.setStyleSheet(f"background: rgba(0, 229, 255, 0.12); color: {C.WHITE}; border: 1px solid rgba(0, 229, 255, 0.38); border-radius: 21px;")
+            icon.setStyleSheet(f"background: rgba(124, 110, 230, 0.12); color: {C.WHITE}; border: 1px solid rgba(124, 110, 230, 0.38); border-radius: 21px;")
         r.addWidget(icon)
         meta = QVBoxLayout()
         title = QLabel(name)
@@ -10767,16 +10775,16 @@ class SystemConnectivityPage(QWidget):
             edit = QPushButton("Add API Key")
             edit.setStyleSheet("""
                 QPushButton {
-                    background: rgba(0, 229, 255, 0.1);
-                    color: #00e5ff;
-                    border: 1px solid rgba(0, 229, 255, 0.3);
+                    background: rgba(124, 110, 230, 0.1);
+                    color: #7C6EE6;
+                    border: 1px solid rgba(124, 110, 230, 0.3);
                     border-radius: 12px;
                     padding: 10px 12px;
                     font-weight: bold;
                 }
                 QPushButton:hover {
-                    background: rgba(0, 229, 255, 0.2);
-                    border: 1px solid rgba(0, 229, 255, 0.5);
+                    background: rgba(124, 110, 230, 0.2);
+                    border: 1px solid rgba(124, 110, 230, 0.5);
                 }
             """)
         edit.clicked.connect(lambda: self._open_api_keys())
@@ -10823,7 +10831,7 @@ class SystemConnectivityPage(QWidget):
         redir_lbl = QLabel("Redirect URI:")
         redir_lbl.setStyleSheet(f"color: {C.TEXT_MED}; font-size: 11px;")
         redir_val = QLabel("http://127.0.0.1:8888/callback")
-        redir_val.setStyleSheet("color: #00e5ff; font-size: 11px; font-family: monospace; font-weight: bold;")
+        redir_val.setStyleSheet("color: #7C6EE6; font-size: 11px; font-family: monospace; font-weight: bold;")
         copy_btn = QPushButton("Copy URI")
         copy_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         copy_btn.setStyleSheet("padding: 4px 10px; font-size: 10px;")
@@ -10844,16 +10852,16 @@ class SystemConnectivityPage(QWidget):
         self._spotify_auth_btn = QPushButton("🔗 Authenticate in Browser")
         self._spotify_auth_btn.setStyleSheet(f"""
             QPushButton {{
-                background: rgba(0, 229, 255, 0.12);
-                color: #00e5ff;
-                border: 1px solid rgba(0, 229, 255, 0.45);
+                background: rgba(124, 110, 230, 0.12);
+                color: #7C6EE6;
+                border: 1px solid rgba(124, 110, 230, 0.45);
                 font-weight: bold;
                 border-radius: 12px;
                 padding: 10px 14px;
             }}
             QPushButton:hover {{
-                background: rgba(0, 229, 255, 0.25);
-                border: 1px solid #00e5ff;
+                background: rgba(124, 110, 230, 0.25);
+                border: 1px solid #7C6EE6;
             }}
         """)
         self._spotify_auth_btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -10891,7 +10899,7 @@ class SystemConnectivityPage(QWidget):
 
 
         # Instagram Connect
-        ig_card = self._card("Instagram Connect", "Connect your personal Instagram account to allow Brahma Evo to manage your DMs.")
+        ig_card = self._card("Instagram Connect", "Connect your personal Instagram account to allow Stella to manage your DMs.")
         ig_lay = ig_card.layout()
 
         self._ig_status_lbl = QLabel("Status: Checking...")
@@ -11038,7 +11046,7 @@ class SystemConnectivityPage(QWidget):
         app_row = QHBoxLayout()
         app_row.addWidget(QLabel("Application Name"))
         self._set_app_name = QLineEdit(identity.get_application_name())
-        self._set_app_name.textChanged.connect(lambda t: identity.set_application_name(t.strip() or "Brahma Evo"))
+        self._set_app_name.textChanged.connect(lambda t: identity.set_application_name(t.strip() or "Stella"))
         app_row.addWidget(self._set_app_name)
         ilay.addLayout(app_row)
 
@@ -11097,7 +11105,16 @@ class SystemConnectivityPage(QWidget):
         controls = QHBoxLayout()
         controls.setSpacing(12)
         self._default_provider = QComboBox()
-        self._default_provider.addItems(["Groq", "K2 Horizon", "Google Gemini", "OpenRouter", "Local"])
+        self._default_provider.addItems(["Groq", "Google Gemini", "OpenRouter", "Local"])
+        try:
+            import importlib.util
+            if importlib.util.find_spec("core.k2_server") is not None:
+                self._default_provider.addItem("K2 Horizon")
+                self._k2_available = True
+            else:
+                self._k2_available = False
+        except Exception:
+            self._k2_available = False
         
         current_provider = self._load_app_settings().get("default_ai_provider", "Gemini")
         if current_provider in {"Gemini", "Google Gemini"}:
@@ -11107,7 +11124,10 @@ class SystemConnectivityPage(QWidget):
         elif current_provider == "Groq":
             self._default_provider.setCurrentText("Groq")
         elif current_provider == "K2":
-            self._default_provider.setCurrentText("K2 Horizon")
+            if getattr(self, "_k2_available", False):
+                self._default_provider.setCurrentText("K2 Horizon")
+            else:
+                self._default_provider.setCurrentText("Groq")
         else:
             self._default_provider.setCurrentText("OpenRouter")
             
@@ -11211,7 +11231,7 @@ class SystemConnectivityPage(QWidget):
         action_row.addWidget(btn_replace)
         btn_browse = QPushButton("📂 Browse")
         btn_browse.setFixedWidth(85)
-        btn_browse.setStyleSheet("background: rgba(0, 229, 255, 0.10); color: #00e5ff; border: 1px solid #00e5ff; border-radius: 4px; padding: 6px;")
+        btn_browse.setStyleSheet("background: rgba(124, 110, 230, 0.10); color: #7C6EE6; border: 1px solid #7C6EE6; border-radius: 4px; padding: 6px;")
         btn_browse.clicked.connect(self._browse_local_model)
         action_row.addWidget(btn_browse)
         local_lay.addLayout(action_row)
@@ -11286,13 +11306,13 @@ class SystemConnectivityPage(QWidget):
         smtp_row.addWidget(self._feedback_smtp, 1)
         fl.addLayout(smtp_row)
         btn_fb = QPushButton("📨 Request upgrade / Send feedback")
-        btn_fb.setStyleSheet("background: rgba(0, 229, 255, 0.15); color: #00e5ff; border: 1px solid #00e5ff; border-radius: 4px; padding: 6px;")
+        btn_fb.setStyleSheet("background: rgba(124, 110, 230, 0.15); color: #7C6EE6; border: 1px solid #7C6EE6; border-radius: 4px; padding: 6px;")
         btn_fb.clicked.connect(self._open_feedback_dialog)
         fl.addWidget(btn_fb)
         lay.addWidget(fb)
 
         # Mobile connect
-        mobile = self._card("Mobile Connect", "Connect your phone and control Brahma Evo remotely.")
+        mobile = self._card("Mobile Connect", "Connect your phone and control Stella remotely.")
         ml = mobile.layout()
         self._mobile_status = QLabel("Connection Status: Ready")
         self._mobile_phone = QLabel("Phone Name: Not connected")
@@ -11331,9 +11351,9 @@ class SystemConnectivityPage(QWidget):
         lay.addWidget(attention)
 
         # Startup
-        startup = self._card("Startup", "Use Brahma Evo with Windows startup preferences.")
+        startup = self._card("Startup", "Use Stella with Windows startup preferences.")
         sl = startup.layout()
-        self._startup_launch_btn = self._mk_toggle("Launch Brahma Evo when Windows starts", bool(self._load_app_settings().get("show_workspace_on_startup", False)), self._toggle_startup_from_page)
+        self._startup_launch_btn = self._mk_toggle("Launch Stella when Windows starts", bool(self._load_app_settings().get("show_workspace_on_startup", False)), self._toggle_startup_from_page)
         self._startup_minimized_btn = self._mk_toggle("Launch Minimized", bool(self._load_app_settings().get("launch_minimized", False)), self._toggle_launch_minimized)
         self._startup_updates_btn = self._mk_toggle("Check for updates on startup", bool(self._load_app_settings().get("check_updates_on_startup", True)), self._toggle_update_check)
         sl.addWidget(self._startup_launch_btn)
@@ -11342,7 +11362,7 @@ class SystemConnectivityPage(QWidget):
         lay.addWidget(startup)
 
         # Shortcuts & Pinning
-        shortcuts = self._card("Shortcuts & Pinning", "Create shortcuts and pin Brahma Evo to your Windows system.")
+        shortcuts = self._card("Shortcuts & Pinning", "Create shortcuts and pin Stella to your Windows system.")
         shl = shortcuts.layout()
         
         btn_row = QHBoxLayout()
@@ -11359,7 +11379,7 @@ class SystemConnectivityPage(QWidget):
         lay.addWidget(shortcuts)
 
         # App Theme
-        theme_card = self._card("App Theme", "Select the primary color theme for Brahma Evo.")
+        theme_card = self._card("App Theme", "Select the primary color theme for Stella.")
         tl = theme_card.layout()
         theme_row = QHBoxLayout()
         theme_row.addWidget(QLabel("Primary Color:"))
@@ -11403,11 +11423,11 @@ class SystemConnectivityPage(QWidget):
         self._preview_progress.setValue(0)
         self._preview_progress.setTextVisible(False)
         self._preview_progress.setFixedHeight(8)
-        self._preview_progress.setStyleSheet("QProgressBar { background: rgba(255,255,255,0.05); border: none; border-radius: 4px; } QProgressBar::chunk { background: #00e5ff; border-radius: 4px; }")
+        self._preview_progress.setStyleSheet("QProgressBar { background: rgba(255,255,255,0.05); border: none; border-radius: 4px; } QProgressBar::chunk { background: #7C6EE6; border-radius: 4px; }")
         al.addWidget(self._preview_progress)
         lay.addWidget(anim)
         # Discord bot
-        discord = self._card("Discord Bot", "Mirror Brahma Evo between the app and your server.")
+        discord = self._card("Discord Bot", "Mirror Stella between the app and your server.")
         dl = discord.layout()
         self._discord_defaults = self._load_discord_settings()
         self._discord_status = QLabel("Bot Status: Offline")
@@ -11442,7 +11462,7 @@ class SystemConnectivityPage(QWidget):
         dl.addWidget(self._discord_msg)
         lay.addWidget(discord)
 
-        about = self._card("About Brahma Evo", "Brahma Evo information only.")
+        about = self._card("About Stella", "Stella information only.")
         ab = about.layout()
         about_grid = QGridLayout()
         about_grid.setHorizontalSpacing(22)
@@ -12168,7 +12188,7 @@ class SystemConnectivityPage(QWidget):
             clipboard.setText("http://127.0.0.1:8888/callback")
             if hasattr(self, "_spotify_status_lbl"):
                 self._spotify_status_lbl.setText("Status: 📋 Redirect URI copied to clipboard!")
-                self._spotify_status_lbl.setStyleSheet("color: #00e5ff; font-size: 11px; font-weight: bold; margin-bottom: 4px;")
+                self._spotify_status_lbl.setStyleSheet("color: #7C6EE6; font-size: 11px; font-weight: bold; margin-bottom: 4px;")
                 QTimer.singleShot(2500, self._update_spotify_status)
         except Exception:
             pass
@@ -12228,7 +12248,7 @@ class SystemConnectivityPage(QWidget):
             "Steps to complete:\n"
             "1. Log in to Spotify in the browser window.\n"
             "2. Click 'Agree' to grant playback permissions.\n"
-            "3. Once redirected to callback, Brahma Evo will automatically detect authorization!"
+            "3. Once redirected to callback, Stella will automatically detect authorization!"
         )
 
     def _poll_spotify_auth_status(self):
@@ -12506,7 +12526,7 @@ class SystemConnectivityPage(QWidget):
         box = self._card("Quick Actions", "")
         lay = box.layout()
         actions = [
-            ("Restart Brahma Evo", QStyle.StandardPixmap.SP_BrowserReload, self._restart_app),
+            ("Restart Stella", QStyle.StandardPixmap.SP_BrowserReload, self._restart_app),
             ("Reload Configuration", QStyle.StandardPixmap.SP_BrowserReload, self._reload_config),
             ("Open Data Folder", QStyle.StandardPixmap.SP_DirOpenIcon, self._open_data_folder),
             ("View Logs", QStyle.StandardPixmap.SP_FileDialogDetailedView, self._view_logs),
@@ -12756,6 +12776,13 @@ class SystemConnectivityPage(QWidget):
             t = t[: -len("(file)")].strip()
         self._set_setting("local_ai_model", t)
 
+    def _disk_free_gb(self, path) -> float:
+        try:
+            import shutil
+            return round(shutil.disk_usage(str(path)).free / 1024 ** 3, 2)
+        except Exception:
+            return -1.0
+
     def _browse_local_model(self):
         log = self._ctrl().write_log if self._ctrl() and hasattr(self._ctrl(), "write_log") else print
         path, _ = QFileDialog.getOpenFileName(self, "Select GGUF model",
@@ -12766,6 +12793,19 @@ class SystemConnectivityPage(QWidget):
         dest_dir = Path(__file__).resolve().parent / "models"
         try:
             dest_dir.mkdir(parents=True, exist_ok=True)
+        except Exception:
+            pass
+        # Never delete the source on import. If space is tight, alert first.
+        try:
+            need = round(src.stat().st_size / 1024 ** 3, 2)
+            free = self._disk_free_gb(dest_dir)
+            if free >= 0 and free < need + 0.5:
+                ans = QMessageBox.warning(self, "Low disk space",
+                    f"Only {free} GB free, need ~{need} GB to load '{src.name}'.\n\n"
+                    "Continue anyway? (Nothing will be deleted without your confirmation.)",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+                if ans != QMessageBox.StandardButton.Yes:
+                    return
         except Exception:
             pass
         def _work():
@@ -12861,23 +12901,73 @@ class SystemConnectivityPage(QWidget):
         new = (new or "").strip()
         if not ok or not new or new == old:
             return
+        # Space check BEFORE touching anything. Sources are never deleted on
+        # import — the old model is only removed with explicit confirmation,
+        # and only when space actually requires it.
+        try:
+            dest_dir = Path(__file__).resolve().parent / "models"
+            free = self._disk_free_gb(dest_dir)
+            if "::" in new:
+                est_need, _size_known = 1.0, False
+            else:
+                p = Path(new)
+                est_need, _size_known = (round(p.stat().st_size / 1024 ** 3, 2), True) if p.exists() else (1.0, False)
+            if free >= 0 and free < est_need + 0.5:
+                ans = QMessageBox.warning(self, "Low disk space",
+                    f"Only {free} GB free. Proceed with replacement?\n\n"
+                    f"If space runs out you will be asked before anything is deleted.",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+                if ans != QMessageBox.StandardButton.Yes:
+                    return
+        except Exception:
+            pass
         log = self._ctrl().write_log if self._ctrl() and hasattr(self._ctrl(), "write_log") else print
         log(f"SYS: Replacing '{old}' with '{new}' in background...")
         def _work():
             try:
                 import sys
                 sys.path.insert(0, str(Path(__file__).resolve().parent / "scripts"))
-                from stella_model_manager import replace_model
+                from stella_model_manager import remove_model, download_file
+                new_path = None
                 if "::" in new:
                     repo, fname = [p.strip() for p in new.split("::", 1)]
-                    info = replace_model(old, repo, fname)
+                    dest = Path(__file__).resolve().parent / "models" / fname
+                    log(f"SYS: Downloading '{fname}' (old model kept)...")
+                    download_file(f"https://huggingface.co/{repo}/resolve/main/{fname}", dest,
+                                  progress=lambda d, t: None)
+                    new_path = dest
                     self._set_setting("local_ai_model", fname)
-                    log(f"SYS: Replacement complete → {info.get('new')} (freed {info.get('freed_gb', 0)}GB)")
+                    log(f"SYS: Replacement ready → {dest}")
                 else:
-                    from stella_model_manager import remove_model
-                    info = remove_model(old)
-                    log(f"SYS: Removed '{old}' (freed {info.get('freed_gb', 0)}GB). Point Local mode at: {new}")
-                    self._set_setting("local_ai_model", new)
+                    from pathlib import Path as _P
+                    src = _P(new)
+                    dest_dir = Path(__file__).resolve().parent / "models"
+                    dest_dir.mkdir(parents=True, exist_ok=True)
+                    dest = dest_dir / src.name if src.exists() else src
+                    if src.exists() and src.resolve() != dest.resolve():
+                        import shutil
+                        log(f"SYS: Loading '{src.name}' into app models (source kept)...")
+                        shutil.copy2(str(src), str(dest))
+                    new_path = dest if dest.exists() else src
+                    self._set_setting("local_ai_model", new_path.name)
+                    log(f"SYS: Active local model → {new_path.name}")
+                # Post-check: only suggest removing the old model if space is low.
+                try:
+                    from PyQt6.QtCore import QTimer
+                    free = self._disk_free_gb(Path(__file__).resolve().parent / "models")
+                    if free >= 0 and free < 1.0 and old:
+                        def _ask():
+                            ans = QMessageBox.question(self, "Space low",
+                                f"Only {free} GB free. Delete old model '{old}' to free space?",
+                                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+                            if ans == QMessageBox.StandardButton.Yes:
+                                info = remove_model(old)
+                                log(f"SYS: Removed '{old}' (freed {info.get('freed_gb', 0)}GB)")
+                            else:
+                                log("SYS: Old model kept. Both models are available.")
+                        QTimer.singleShot(0, _ask)
+                except Exception:
+                    pass
             except Exception as e:
                 log(f"ERR: Replace failed: {e}")
         threading.Thread(target=_work, daemon=True).start()
@@ -13028,7 +13118,7 @@ class SystemConnectivityPage(QWidget):
             self._ctrl()._win._start_discord_bot()
             self._ctrl()._win._stop_discord_bot()
             self._discord_status.setText("Bot Status: Test sent")
-            self._discord_msg.setText("Connected as Brahma Evo#9649" if self._discord_token.text().strip() else "Bot Offline")
+            self._discord_msg.setText("Connected as Stella#9649" if self._discord_token.text().strip() else "Bot Offline")
 
     def _restart_discord_from_page(self):
         if self._ctrl() and hasattr(self._ctrl(), "_win"):
@@ -13106,7 +13196,7 @@ class SystemConnectivityPage(QWidget):
                 disp_prov = "OpenRouter"
             elif prov == "Groq":
                 disp_prov = "Groq"
-            elif prov == "K2":
+            elif prov == "K2" and getattr(self, "_k2_available", False):
                 disp_prov = "K2 Horizon"
             else:
                 disp_prov = "Google Gemini"
@@ -13167,7 +13257,7 @@ class SystemConnectivityPage(QWidget):
         token = (discord.get("bot_token") or "").strip()
         if enabled and token:
             self._discord_status.setText("Bot Status: Online")
-            self._discord_msg.setText("Connected as Brahma Evo#9649")
+            self._discord_msg.setText("Connected as Stella#9649")
         elif token:
             self._discord_status.setText("Bot Status: Offline")
             self._discord_msg.setText("Bot Offline")
@@ -13224,7 +13314,7 @@ class SystemConnectivityPage(QWidget):
                 desktop_dir = Path(os.path.expanduser("~")) / "Desktop"
                 
             desktop_dir.mkdir(parents=True, exist_ok=True)
-            shortcut_path = desktop_dir / "Brahma Evo - Premium.lnk"
+            shortcut_path = desktop_dir / "Stella - Premium.lnk"
             
             # Base variables
             base_dir = Path(os.path.abspath("."))
@@ -13254,7 +13344,7 @@ class SystemConnectivityPage(QWidget):
                 f"$Shortcut.Arguments = '{_ps_escape(shortcut_args)}'",
                 f"$Shortcut.WorkingDirectory = '{_ps_escape(str(base_dir))}'",
                 "$Shortcut.WindowStyle = 7",
-                "$Shortcut.Description = 'Launch Brahma Evo - Premium'",
+                "$Shortcut.Description = 'Launch Stella - Premium'",
                 f"if ('{_ps_escape(icon_value)}') {{ $Shortcut.IconLocation = '{_ps_escape(icon_value)},0' }}",
                 "$Shortcut.Save()",
             ])
@@ -13314,9 +13404,9 @@ class SystemConnectivityPage(QWidget):
             )
             
             if res.returncode == 0:
-                return True, "Brahma Evo has been pinned to your Taskbar!"
+                return True, "Stella has been pinned to your Taskbar!"
             else:
-                return False, "Windows restricts programmatic taskbar pinning. Please right-click the 'Brahma Evo - Premium.lnk' shortcut on your Desktop and select 'Pin to taskbar', or drag it directly onto your taskbar."
+                return False, "Windows restricts programmatic taskbar pinning. Please right-click the 'Stella - Premium.lnk' shortcut on your Desktop and select 'Pin to taskbar', or drag it directly onto your taskbar."
         except Exception as e:
             return False, f"Error pinning to taskbar: {e}"
 
@@ -13378,7 +13468,7 @@ class SmartDevicesSection(QFrame):
                 border-radius: 9px;
             }}
             QPushButton:hover {{
-                background: rgba(0, 229, 255,0.08);
+                background: rgba(124, 110, 230,0.08);
                 border: 1px solid {C.PRI};
             }}
         """)
@@ -13389,7 +13479,7 @@ class SmartDevicesSection(QFrame):
         self._open_home_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._open_home_btn.setStyleSheet(f"""
             QPushButton {{
-                background: rgba(0, 229, 255,0.10);
+                background: rgba(124, 110, 230,0.10);
                 color: {C.WHITE};
                 border: 1px solid {C.PRI};
                 border-radius: 9px;
@@ -13397,7 +13487,7 @@ class SmartDevicesSection(QFrame):
                 min-height: 32px;
             }}
             QPushButton:hover {{
-                background: rgba(0, 229, 255,0.16);
+                background: rgba(124, 110, 230,0.16);
             }}
         """)
         self._open_home_btn.clicked.connect(self._open_brahma_home)
@@ -13418,19 +13508,19 @@ class SmartDevicesSection(QFrame):
         empty_desc.setAlignment(Qt.AlignmentFlag.AlignCenter)
         empty_desc.setFont(QFont("Segoe UI", 8))
         empty_desc.setStyleSheet(f"color: {C.TEXT_DIM};")
-        empty_btn = QPushButton("Open Brahma Evo Home")
+        empty_btn = QPushButton("Open Stella Home")
         empty_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         empty_btn.setFixedWidth(160)
         empty_btn.setStyleSheet(f"""
             QPushButton {{
-                background: rgba(0, 229, 255,0.12);
+                background: rgba(124, 110, 230,0.12);
                 color: {C.WHITE};
                 border: 1px solid {C.PRI};
                 border-radius: 10px;
                 min-height: 34px;
             }}
             QPushButton:hover {{
-                background: rgba(0, 229, 255,0.18);
+                background: rgba(124, 110, 230,0.18);
             }}
         """)
         empty_btn.clicked.connect(self._open_brahma_home)
@@ -13487,7 +13577,7 @@ class SmartDevicesSection(QFrame):
                 padding: 0 10px;
             }}
             QPushButton:hover {{
-                background: rgba(0, 229, 255,0.08);
+                background: rgba(124, 110, 230,0.08);
                 border: 1px solid {C.PRI};
             }}
         """)
@@ -13858,8 +13948,8 @@ class _ConnectDeviceCard(QFrame):
                 padding: 0 10px;
             }
             QPushButton:hover {
-                background: rgba(0, 229, 255,0.12);
-                color: #00e5ff;
+                background: rgba(124, 110, 230,0.12);
+                color: #7C6EE6;
             }
         """)
 
@@ -13924,7 +14014,7 @@ class _ConnectDeviceCard(QFrame):
             self.setStyleSheet("""
                 QFrame#ConnectDeviceCard {
                     background: rgba(255,255,255,0.06);
-                    border: 1px solid rgba(0, 229, 255,0.25);
+                    border: 1px solid rgba(124, 110, 230,0.25);
                     border-radius: 18px;
                 }
                 QLabel {
@@ -13939,8 +14029,8 @@ class _ConnectDeviceCard(QFrame):
                     padding: 0 10px;
                 }
                 QPushButton:hover {
-                    background: rgba(0, 229, 255,0.16);
-                    color: #00e5ff;
+                    background: rgba(124, 110, 230,0.16);
+                    color: #7C6EE6;
                 }
             """)
         else:
@@ -13962,8 +14052,8 @@ class _ConnectDeviceCard(QFrame):
                     padding: 0 10px;
                 }
                 QPushButton:hover {
-                    background: rgba(0, 229, 255,0.12);
-                    color: #00e5ff;
+                    background: rgba(124, 110, 230,0.12);
+                    color: #7C6EE6;
                 }
             """)
 
@@ -14028,15 +14118,15 @@ class BrahmaConnectDevicesPage(QFrame):
         self._add_btn.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
         self._add_btn.setStyleSheet("""
             QPushButton {
-                background: rgba(0, 229, 255, 0.10);
+                background: rgba(124, 110, 230, 0.10);
                 color: #ffffff;
-                border: 1px solid rgba(0, 229, 255, 0.25);
+                border: 1px solid rgba(124, 110, 230, 0.25);
                 border-radius: 12px;
                 padding: 0 14px;
             }
             QPushButton:hover {
-                background: rgba(0, 229, 255, 0.16);
-                border: 1px solid rgba(0, 229, 255, 0.40);
+                background: rgba(124, 110, 230, 0.16);
+                border: 1px solid rgba(124, 110, 230, 0.40);
             }
         """)
         self._add_btn.clicked.connect(self._trigger_add_device)
@@ -14100,14 +14190,14 @@ class BrahmaConnectDevicesPage(QFrame):
         empty_btn.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
         empty_btn.setStyleSheet("""
             QPushButton {
-                background: rgba(0, 229, 255, 0.10);
-                color: #00e5ff;
-                border: 1px solid rgba(0, 229, 255, 0.25);
+                background: rgba(124, 110, 230, 0.10);
+                color: #7C6EE6;
+                border: 1px solid rgba(124, 110, 230, 0.25);
                 border-radius: 20px;
             }
             QPushButton:hover {
-                background: rgba(0, 229, 255, 0.20);
-                border: 1px solid rgba(0, 229, 255, 0.50);
+                background: rgba(124, 110, 230, 0.20);
+                border: 1px solid rgba(124, 110, 230, 0.50);
             }
         """)
         empty_btn.clicked.connect(self._trigger_add_device)
@@ -14132,7 +14222,7 @@ class BrahmaConnectDevicesPage(QFrame):
         back_btn.setFont(QFont("Segoe UI", 9))
         back_btn.setStyleSheet("""
             QPushButton { background: transparent; color: rgba(255,255,255,0.7); border: none; text-align: left; }
-            QPushButton:hover { color: #00e5ff; }
+            QPushButton:hover { color: #7C6EE6; }
         """)
         back_btn.clicked.connect(self._close_detail)
         det_lay.addWidget(back_btn)
@@ -14142,7 +14232,7 @@ class BrahmaConnectDevicesPage(QFrame):
         self._detail_icon.setFixedSize(48, 48)
         self._detail_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._detail_icon.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
-        self._detail_icon.setStyleSheet("background: rgba(0, 229, 255, 0.10); color: #00e5ff; border: 1px solid rgba(0, 229, 255,0.22); border-radius: 12px;")
+        self._detail_icon.setStyleSheet("background: rgba(124, 110, 230, 0.10); color: #7C6EE6; border: 1px solid rgba(124, 110, 230,0.22); border-radius: 12px;")
         self._detail_header.addWidget(self._detail_icon)
         
         det_titles = QVBoxLayout()
@@ -14209,7 +14299,7 @@ class BrahmaConnectDevicesPage(QFrame):
             if b != self._btn_forget:
                 b.setStyleSheet("""
                     QPushButton { background: rgba(255,255,255,0.03); color: #ffffff; border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; }
-                    QPushButton:hover { background: rgba(0, 229, 255,0.08); border: 1px solid rgba(0, 229, 255,0.22); color: #00e5ff; }
+                    QPushButton:hover { background: rgba(124, 110, 230,0.08); border: 1px solid rgba(124, 110, 230,0.22); color: #7C6EE6; }
                 """)
             else:
                 b.setStyleSheet("""
@@ -14239,7 +14329,7 @@ class BrahmaConnectDevicesPage(QFrame):
         add_back_btn.setFont(QFont("Segoe UI", 9))
         add_back_btn.setStyleSheet("""
             QPushButton { background: transparent; color: rgba(255,255,255,0.7); border: none; text-align: left; }
-            QPushButton:hover { color: #00e5ff; }
+            QPushButton:hover { color: #7C6EE6; }
         """)
         add_back_btn.clicked.connect(self._close_detail)
         add_lay.addWidget(add_back_btn)
@@ -14266,7 +14356,7 @@ class BrahmaConnectDevicesPage(QFrame):
         self._cs_android_btn.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
         self._cs_android_btn.setStyleSheet("""
             QPushButton { background: rgba(10, 12, 18, 220); color: rgba(255,255,255,0.9); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; }
-            QPushButton:hover { color: #00e5ff; border: 1px solid rgba(0, 229, 255,0.6); background: rgba(0, 229, 255,0.1); }
+            QPushButton:hover { color: #7C6EE6; border: 1px solid rgba(124, 110, 230,0.6); background: rgba(124, 110, 230,0.1); }
         """)
         self._cs_android_btn.clicked.connect(self._cinema_select_android)
         w0_row.addWidget(self._cs_android_btn)
@@ -14307,7 +14397,7 @@ class BrahmaConnectDevicesPage(QFrame):
         self._onb_code_lbl = QLabel("------")
         self._onb_code_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._onb_code_lbl.setFont(QFont("Consolas", 18, QFont.Weight.Black))
-        self._onb_code_lbl.setStyleSheet("color: #00e5ff; letter-spacing: 6px;")
+        self._onb_code_lbl.setStyleSheet("color: #7C6EE6; letter-spacing: 6px;")
         w1_lay.addWidget(self._onb_code_lbl)
         
         self._onb_status_lbl = QLabel("WAITING FOR CONNECTION")
@@ -14622,7 +14712,7 @@ class BrahmaUI:
         self._app = QApplication.instance() or QApplication(sys.argv)
         self._app.setStyle("Fusion")
         self._app.setQuitOnLastWindowClosed(False)
-        self._app.setApplicationDisplayName("Brahma Evo")
+        self._app.setApplicationDisplayName("Stella")
         self._app.setWindowIcon(self._make_app_icon())
         try:
             current_store = workspace_store()
@@ -14679,7 +14769,7 @@ class BrahmaUI:
         except Exception:
             pass
         self._tray = QSystemTrayIcon(self._make_app_icon(), self._app)
-        self._tray.setToolTip("Brahma Evo")
+        self._tray.setToolTip("Stella")
         self._tray.activated.connect(self._on_tray_activated)
         self._tray.setContextMenu(self._build_tray_menu())
         self._tray.show()

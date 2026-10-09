@@ -120,7 +120,7 @@ def get_base_dir():
 BASE_DIR        = get_base_dir()
 API_CONFIG_PATH = get_user_data_dir() / "config" / "api_keys.json"
 PROMPT_PATH     = BASE_DIR / "core" / "prompt.txt"
-STARTUP_LOG     = Path(os.environ.get("LOCALAPPDATA", str(BASE_DIR))) / "Brahma Evo" / "startup.log"
+STARTUP_LOG     = Path(os.environ.get("LOCALAPPDATA", str(BASE_DIR))) / "Stella" / "startup.log"
 LIVE_MODEL          = "models/gemini-2.5-flash-native-audio-preview-12-2025"
 CHANNELS            = 1
 SEND_SAMPLE_RATE    = 16000
@@ -168,7 +168,7 @@ def _ensure_desktop_shortcut() -> None:
             desktop_dir = Path(os.path.expanduser("~")) / "Desktop"
             
         desktop_dir.mkdir(parents=True, exist_ok=True)
-        shortcut_path = desktop_dir / "Brahma Evo.lnk"
+        shortcut_path = desktop_dir / "Stella.lnk"
         script_path = BASE_DIR / "main.py"
         icon_path = BASE_DIR / "assets" / "Brahma_Lite_Logo.ico"
 
@@ -201,7 +201,7 @@ def _ensure_desktop_shortcut() -> None:
             f"$Shortcut.Arguments = '{_ps_escape(shortcut_args)}'",
             f"$Shortcut.WorkingDirectory = '{_ps_escape(str(BASE_DIR))}'",
             "$Shortcut.WindowStyle = 1",
-            "$Shortcut.Description = 'Launch Brahma Evo'",
+            "$Shortcut.Description = 'Launch Stella'",
             f"if ('{_ps_escape(icon_value)}') {{ $Shortcut.IconLocation = '{_ps_escape(icon_value)},0' }}",
             "$Shortcut.Save()",
         ])
@@ -224,7 +224,7 @@ def _load_system_prompt() -> str:
         base_prompt = PROMPT_PATH.read_text(encoding="utf-8")
     except Exception:
         base_prompt = (
-            "You are Brahma Evo, a calm, direct, and professional AI assistant. "
+            "You are Stella, a calm, direct, and professional AI assistant. "
             "Be concise, direct, and always use the provided tools to complete tasks. "
             "Never simulate or guess results — always call the appropriate tool. "
             "If the user asks to create, build, launch, or open a website, always use the selected workspace folder."
@@ -232,7 +232,7 @@ def _load_system_prompt() -> str:
         
     try:
         from core.identity import identity
-        ast_name = identity.get_assistant_name() or "Brahma Evo"
+        ast_name = identity.get_assistant_name() or "Stella"
         own_name = identity.get_owner_name() or "the user"
         role = identity.get_owner_role()
         mode = identity.get_behavior_mode()
@@ -277,7 +277,7 @@ def _speak_daily_briefing(ui=None, speak=None) -> None:
         data, narrative = compile_unified_briefing()
         if ui:
             ui.show_daily_briefing(data)
-            ui.write_log(f"Brahma Evo: {narrative}")
+            ui.write_log(f"Stella: {narrative}")
         (speak or speak_native)(narrative)
     except Exception as e:
         print(f"[DailyBriefing] Error: {e}")
@@ -312,7 +312,7 @@ def _gemini_text_reply(prompt: str) -> str:
         http_options={"api_version": "v1beta"},
     )
     system_prompt = (
-        "You are Brahma Evo, a concise, helpful desktop assistant. "
+        "You are Stella, a concise, helpful desktop assistant. "
         "Reply naturally and briefly. Do not mention internal implementation details."
     )
     response = client.models.generate_content(
@@ -325,7 +325,7 @@ def _gemini_text_reply(prompt: str) -> str:
 
 def _ig_gemini_reply(username: str, text: str) -> str:
     system_prompt = (
-        "You are Brahma Evo, an AI personal assistant acting on behalf of your user. "
+        "You are Stella, an AI personal assistant acting on behalf of your user. "
         "You have taken over their Instagram chat with the user's permission. "
         "Reply naturally, briefly, and conversationally to the incoming message. "
         "Do not sound like a bot. Keep your replies under 2 sentences."
@@ -358,7 +358,7 @@ def _ig_gemini_reply(username: str, text: str) -> str:
 
 def _clipboard_gemini_reply(text: str) -> str:
     system_prompt = (
-        "You are Brahma Evo, a witty and helpful AI assistant. "
+        "You are Stella, a witty and helpful AI assistant. "
         "The user just copied the following text to their clipboard. "
         "Make a very short, interesting, or helpful 1-sentence comment or question about it. "
         "Do not offer to 'help' or ask 'how can I help'. Just make a standalone witty observation or summary."
@@ -1446,7 +1446,7 @@ TOOL_DECLARATIONS = [
         "name": "presentation_builder",
         "description": (
             "Creates editable PowerPoint presentations (.pptx) from a structured slide outline. "
-            "Brahma Evo automatically infers the best visual style from the topic, searches for a matching online template when available, "
+            "Stella automatically infers the best visual style from the topic, searches for a matching online template when available, "
             "reuses cached templates, and falls back to the built-in designer if no suitable template is found. "
             "Use when the user asks for a deck, slideshow, presentation, pitch deck, or report slides."
         ),
@@ -1457,7 +1457,7 @@ TOOL_DECLARATIONS = [
                 "subtitle": {"type": "STRING", "description": "Optional subtitle or audience line"},
                 "theme": {
                     "type": "STRING",
-                    "description": "Optional presentation theme or visual direction such as neon, corporate, luxury, academic, sunset, or creative. If omitted, Brahma Evo infers the best style automatically."
+                    "description": "Optional presentation theme or visual direction such as neon, corporate, luxury, academic, sunset, or creative. If omitted, Stella infers the best style automatically."
                 },
                 "outline": {
                     "type": "STRING",
@@ -1617,7 +1617,7 @@ TOOL_DECLARATIONS = [
         "description": (
             "Shuts down the assistant completely. "
         "Call this when the user expresses intent to end the conversation, "
-        "close the assistant, say goodbye, or stop Brahma Evo. "
+        "close the assistant, say goodbye, or stop Stella. "
         "The user can say this in ANY language."
     ),
     "parameters": {
@@ -2247,7 +2247,7 @@ class BrahmaLive:
         if skill_goal is not None:
             if not skill_goal:
                 prompt = "What should the new skill or feature do?"
-                self.ui.write_log(f"Brahma Evo: {prompt}")
+                self.ui.write_log(f"Stella: {prompt}")
                 self.speak(prompt)
                 return
 
@@ -2284,7 +2284,7 @@ class BrahmaLive:
                             out_text = str(res.get("summary") or res.get("output") or res.get("text") or res).strip()
                         else:
                             out_text = str(res).strip()
-                        self.ui.write_log(f"Brahma Evo [{skill_name}]:\n{out_text}")
+                        self.ui.write_log(f"Stella [{skill_name}]:\n{out_text}")
                         if hasattr(self.ui, "finish_task_workspace"):
                             self.ui.finish_task_workspace(out_text, f"{skill_name} completed.", 100)
                         if hasattr(self.ui, "show_hud_deliverable"):
@@ -2339,7 +2339,7 @@ class BrahmaLive:
             if not recipient:
                 self._email_step = 0
                 prompt = "Who would you like to send the email to?"
-                self.ui.write_log(f"Brahma Evo: {prompt}")
+                self.ui.write_log(f"Stella: {prompt}")
                 self.speak(prompt)
                 try:
                     self.ui.update_task_workspace(
@@ -2352,7 +2352,7 @@ class BrahmaLive:
             else:
                 self._email_step = 1
                 prompt = "Which email app would you like to use? (Gmail, default mail app, etc.)"
-                self.ui.write_log(f"Brahma Evo: {prompt}")
+                self.ui.write_log(f"Stella: {prompt}")
                 self.speak(prompt)
                 try:
                     self.ui.update_task_workspace(
@@ -2783,7 +2783,7 @@ class BrahmaLive:
             try:
                 self.ui.update_task_workspace(
                     status="Scanning screen",
-                    output="Brahma Evo is inspecting the screen for what you asked about.",
+                    output="Stella is inspecting the screen for what you asked about.",
                     percent=40,
                 )
             except Exception:
@@ -2900,7 +2900,7 @@ class BrahmaLive:
                 percent=100,
                 source=source,
             )
-            self.ui.write_log(f"Brahma Evo: {detail}")
+            self.ui.write_log(f"Stella: {detail}")
             self.speak(detail)
             if not self.ui.muted:
                 self.ui.set_state("LISTENING")
@@ -3088,7 +3088,7 @@ class BrahmaLive:
                     percent=100,
                     source=source,
                 )
-                self.ui.write_log(f"Brahma Evo: {detail}")
+                self.ui.write_log(f"Stella: {detail}")
                 self.speak(detail)
                 if not self.ui.muted:
                     self.ui.set_state("LISTENING")
@@ -3160,7 +3160,7 @@ class BrahmaLive:
 
     def _announce_attention(self, event: dict):
         msg = self._attention_message(event)
-        self.ui.write_log(f"Brahma Evo: {msg}")
+        self.ui.write_log(f"Stella: {msg}")
         if self.session and self._loop:
             self.speak(msg)
         else:
@@ -3233,7 +3233,7 @@ class BrahmaLive:
         if summary:
             self.ui.write_log(f"[Meeting] {summary}")
         if answer:
-            self.ui.write_log(f"Brahma Evo: {answer}")
+            self.ui.write_log(f"Stella: {answer}")
 
     def _on_meeting_state(self, state: str):
         if state == "LISTENING":
@@ -3254,7 +3254,7 @@ class BrahmaLive:
             self._reply_mode = True
 
         message = "What would you like to say in reply?"
-        self.ui.write_log(f"Brahma Evo: {message}")
+        self.ui.write_log(f"Stella: {message}")
         if self.session and self._loop:
             self.speak(message)
         else:
@@ -3415,7 +3415,7 @@ class BrahmaLive:
             if intent == "CANCEL":
                 self._ig_reply_mode = False
                 msg = "Instagram reply cancelled."
-                self.ui.write_log(f"Brahma Evo: {msg}")
+                self.ui.write_log(f"Stella: {msg}")
                 self.speak(msg)
                 self._ig_pending_thread = None
                 return True
@@ -3459,7 +3459,7 @@ class BrahmaLive:
             self._email_step = 0
             self._email_profiles = {}
             msg = "Email sending cancelled, sir."
-            self.ui.write_log(f"Brahma Evo: {msg}")
+            self.ui.write_log(f"Stella: {msg}")
             self.speak(msg)
             try:
                 self.ui.finish_task_workspace("Email sending cancelled.", "Cancelled", 100)
@@ -3472,7 +3472,7 @@ class BrahmaLive:
             self._email_recipient = text.strip()
             self._email_step = 1
             prompt = "Which email app would you like to use? (Gmail, default mail app, etc.)"
-            self.ui.write_log(f"Brahma Evo: {prompt}")
+            self.ui.write_log(f"Stella: {prompt}")
             self.speak(prompt)
             try:
                 self.ui.update_task_workspace(
@@ -3490,7 +3490,7 @@ class BrahmaLive:
             self._email_step = 2
             
             prompt = "What is the message you'd like to send?"
-            self.ui.write_log(f"Brahma Evo: {prompt}")
+            self.ui.write_log(f"Stella: {prompt}")
             self.speak(prompt)
             try:
                 self.ui.update_task_workspace(
@@ -3510,7 +3510,7 @@ class BrahmaLive:
             
             # Now let's execute composing!
             msg = f"Opening {self._email_app} and composing email to {self._email_recipient}..."
-            self.ui.write_log(f"Brahma Evo: {msg}")
+            self.ui.write_log(f"Stella: {msg}")
             self.speak(msg)
             try:
                 self.ui.update_task_workspace(
@@ -3524,7 +3524,7 @@ class BrahmaLive:
             try:
                 import urllib.parse
                 import webbrowser
-                subject = "Message from Brahma Evo"
+                subject = "Message from Stella"
                 quoted_recipient = urllib.parse.quote(self._email_recipient)
                 quoted_subject = urllib.parse.quote(subject)
                 quoted_body = urllib.parse.quote(self._email_message)
@@ -3539,7 +3539,7 @@ class BrahmaLive:
                 if "gmail" in app_lower or "chrome" in app_lower:
                     import urllib.parse
                     quoted_recipient = urllib.parse.quote(self._email_recipient)
-                    quoted_subject = urllib.parse.quote("Message from Brahma Evo")
+                    quoted_subject = urllib.parse.quote("Message from Stella")
                     quoted_body = urllib.parse.quote(self._email_message)
                     url = f"https://mail.google.com/mail/?view=cm&fs=1&to={quoted_recipient}&su={quoted_subject}&body={quoted_body}"
                     
@@ -3584,7 +3584,7 @@ class BrahmaLive:
                 return self._prompt_message_reply(event)
             if self._attention_matches(lower, ("hear", "read", "what is it", "tell me", "show it", "open it")):
                 preview = read_event_preview(event)
-                self.ui.write_log(f"Brahma Evo: {preview}")
+                self.ui.write_log(f"Stella: {preview}")
                 threading.Thread(target=speak_native, args=(preview,), daemon=True).start()
                 with self._attention_lock:
                     self._pending_attention = None
@@ -3634,7 +3634,7 @@ class BrahmaLive:
         if kind == "message":
             if decision == "hear":
                 preview = read_event_preview(event)
-                self.ui.write_log(f"Brahma Evo: {preview}")
+                self.ui.write_log(f"Stella: {preview}")
                 threading.Thread(target=speak_native, args=(preview,), daemon=True).start()
             elif decision == "reply":
                 self._prompt_message_reply(event)
@@ -3691,7 +3691,7 @@ class BrahmaLive:
             try:
                 self.ui.update_task_workspace(
                     status="Thinking",
-                    output="Brahma Evo is drafting a direct reply.",
+                    output="Stella is drafting a direct reply.",
                     percent=35,
                 )
             except Exception:
@@ -3734,7 +3734,7 @@ class BrahmaLive:
                     reply = openrouter_client.chat(
                         request_text,
                         system=(
-                            "You are Brahma Evo, a concise, helpful desktop assistant. "
+                            "You are Stella, a concise, helpful desktop assistant. "
                             "Reply naturally and briefly. Do not mention internal implementation details."
                         ),
                     )
@@ -3757,7 +3757,7 @@ class BrahmaLive:
                     except Exception:
                         pass
                     if not prompt_txt:
-                        prompt_txt = "You are Brahma Evo, the autonomous desktop operating system."
+                        prompt_txt = "You are Stella, the autonomous desktop operating system."
 
                     system_prompt = (
                         f"{prompt_txt}\n\n"
@@ -3845,7 +3845,7 @@ class BrahmaLive:
             if not reply and local_brain.is_available():
                 try:
                     res = local_brain.chat_complete([
-                        {"role": "system", "content": "You are Brahma Evo, the autonomous desktop operating system. You control this PC. Never claim you cannot do automations."},
+                        {"role": "system", "content": "You are Stella, the autonomous desktop operating system. You control this PC. Never claim you cannot do automations."},
                         {"role": "user", "content": request_text}
                     ], model=local_model_target, tools=TOOL_DECLARATIONS, focus_core=True)
                     msg_net = res.get("choices", [{}])[0].get("message", {})
@@ -3870,7 +3870,7 @@ class BrahmaLive:
             reply = (reply or "").strip()
             if not reply:
                 reply = "I’m ready, sir."
-            self.ui.write_log(f"Brahma Evo: {reply}")
+            self.ui.write_log(f"Stella: {reply}")
             if not getattr(self.ui, "muted", False):
                 self.speak(reply, proactive=True)
             try:
@@ -4013,7 +4013,7 @@ class BrahmaLive:
             except Exception:
                 pass
             try:
-                self.ui.write_log(f"Brahma Evo: {announcement}")
+                self.ui.write_log(f"Stella: {announcement}")
                 if execution_output:
                     self.ui.write_log(f"Result:\n{execution_output}")
             except Exception:
@@ -4074,7 +4074,7 @@ class BrahmaLive:
             parts.append(mem_str)
         parts.append(sys_prompt)
         parts.append(
-            "Wake-word mode: if the microphone is muted, still listen for the words 'Brahma Evo', 'hey', 'hi', and 'hello'. "
+            "Wake-word mode: if the microphone is muted, still listen for the words 'Stella', 'hey', 'hi', and 'hello'. "
             "When you hear one of these activation cues, keep the session friendly and concise, "
             "and wait for the user's next command. "
             "IMPORTANT: Do NOT speak an unprompted generic greeting (like 'Thank you, how can I help you?') upon connecting. "
@@ -4374,7 +4374,7 @@ class BrahmaLive:
                     if recipient:
                         if action == "take_over":
                             add_auto_thread(thread_id or recipient)
-                            result = f"Successfully took over the chat with @{recipient}. Brahma Evo will now automatically reply."
+                            result = f"Successfully took over the chat with @{recipient}. Stella will now automatically reply."
                         else:
                             res = InstagramService.instance().send_dm(recipient, reply_text, open_in_browser=True)
                             result = f"Sent reply to @{recipient}: '{reply_text}'. Thread opened in browser."
@@ -4597,7 +4597,7 @@ class BrahmaLive:
                     from core.confirm import request
                     result = request(
                         "start-call-screening",
-                        "Answer this call as Brahma Evo",
+                        "Answer this call as Stella",
                         f"Brahma will answer {event['title']} in {event['app']}, listen to the caller, and prepare a transcript and summary.",
                         lambda: (start_call_proxy(event, ui=self.ui, speak_fn=self.speak) and "Call screening started.")
                     )
@@ -4646,7 +4646,7 @@ class BrahmaLive:
                             out_text = str(run_res.get("summary") or run_res.get("output") or run_res.get("text") or run_res).strip()
                         else:
                             out_text = str(run_res).strip()
-                        self.ui.write_log(f"Brahma Evo [{skill_name}]:\n{out_text}")
+                        self.ui.write_log(f"Stella [{skill_name}]:\n{out_text}")
                         result = out_text
                 else:
                     result = "Choose list or run."
@@ -4661,7 +4661,7 @@ class BrahmaLive:
                         out_text = str(run_res.get("summary") or run_res.get("output") or run_res.get("text") or run_res).strip()
                     else:
                         out_text = str(run_res).strip()
-                    self.ui.write_log(f"Brahma Evo [{name}]:\n{out_text}")
+                    self.ui.write_log(f"Stella [{name}]:\n{out_text}")
                     result = out_text
                 else:
                     result = f"Unknown tool: {name}"
@@ -4803,7 +4803,7 @@ class BrahmaLive:
         tool_voice = self._connect_tool_voice(name, result)
         if tool_voice:
             try:
-                self.ui.write_log(f"Brahma Evo: {tool_voice}")
+                self.ui.write_log(f"Stella: {tool_voice}")
             except Exception:
                 pass
             try:
@@ -5035,7 +5035,7 @@ class BrahmaLive:
 
                             full_out = " ".join(out_buf).strip()
                             if full_out:
-                                self.ui.write_log(f"Brahma Evo: {full_out}")
+                                self.ui.write_log(f"Stella: {full_out}")
                             out_buf = []
 
                             if full_in and len(full_in) > 5:
@@ -5159,7 +5159,7 @@ class BrahmaLive:
                         except Exception:
                             pass
                         self.ui.set_state("LISTENING")
-                        self.ui.write_log("SYS: Brahma Evo online.")
+                        self.ui.write_log("SYS: Stella online.")
 
                         tg.create_task(self._send_realtime())
                         tg.create_task(self._listen_audio())
@@ -5219,7 +5219,7 @@ def main():
     if DashboardServer is not None and not dashboard_enabled:
         _startup_log("dashboard disabled: port 8000 already in use")
         try:
-            ui.write_log("SYS: Mobile Connect is already running in another Brahma Evo instance.")
+            ui.write_log("SYS: Mobile Connect is already running in another Stella instance.")
         except Exception:
             pass
     if dashboard_enabled:
@@ -5381,7 +5381,7 @@ def main():
                     snippet = f": '{clean_text[:75]}...'" if len(clean_text) > 75 else (f": '{clean_text}'" if clean_text else "")
                     msg = f"You received a new Instagram message from {username}{snippet}. What should I reply, or should I take over the chat?"
                     ui.write_log(f"📱 Insta (@{username}): {clean_text or '[Media/Attachment]'}")
-                    ui.write_log(f"Brahma Evo: {msg}")
+                    ui.write_log(f"Stella: {msg}")
                     brahma_evo.speak(msg)
                     return None
                 
@@ -5402,14 +5402,14 @@ def main():
                     subj_preview = f"'{clean_subj[:70]}...'" if len(clean_subj) > 70 else f"'{clean_subj}'"
                     msg = f"You received a new email from {sender} with subject: {subj_preview}."
                     ui.write_log(f"📧 Email ({sender}): {clean_subj}")
-                    ui.write_log(f"Brahma Evo: {msg}")
+                    ui.write_log(f"Stella: {msg}")
                     brahma_evo.speak(msg)
 
                 set_email_prompt_callback(_email_handler)
                 start_email_daemon(poll_interval=25)
-                print("[Brahma Evo] Background email watcher started.")
+                print("[Stella] Background email watcher started.")
         except Exception as e:
-            print(f"[Brahma Evo] Email daemon initialization notice: {e}")
+            print(f"[Stella] Email daemon initialization notice: {e}")
 
         def _clipboard_monitor():
             try:
@@ -5426,7 +5426,7 @@ def main():
                         text = (curr_clip or "").strip()
                         if text and len(text) > 3:
                             reply = _clipboard_gemini_reply(text[:1000])
-                            ui.write_log(f"Brahma Evo (Clipboard): {reply}")
+                            ui.write_log(f"Stella (Clipboard): {reply}")
                             brahma_evo.speak(reply)
                 except Exception:
                     pass

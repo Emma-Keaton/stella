@@ -1,6 +1,6 @@
 from core.user_paths import get_user_data_dir
 """
-Brahma AI — Workout & Exercise Tracker.
+Stella AI — Workout & Exercise Tracker.
 
 Tracks repetitions, posture, pace, and caloric burn for pushups, squats,
 and other bodyweight exercises. Uses computer vision (MediaPipe pose tracking
