@@ -11300,9 +11300,19 @@ class SystemConnectivityPage(QWidget):
         self._feedback_channel = QComboBox()
         self._feedback_channel.addItems(_channels)
         self._feedback_channel.setCurrentText(self._load_app_settings().get("feedback_channel", "local"))
-        self._feedback_channel.currentTextChanged.connect(lambda t: self._set_setting("feedback_channel", t))
+        self._feedback_channel.currentTextChanged.connect(self._on_feedback_channel_changed)
         ch_row.addWidget(self._feedback_channel, 1)
         fl.addLayout(ch_row)
+
+        # Honest availability note. Right now only the repo (GitHub issue) route
+        # is wired up. Email/webhook become usable the moment the creator sets a
+        # destination in the fields below — until then we say so plainly instead
+        # of letting a user pick a channel that will fail.
+        self._feedback_status = QLabel("")
+        self._feedback_status.setWordWrap(True)
+        self._feedback_status.setStyleSheet(f"color: {C.TEXT_DIM};")
+        fl.addWidget(self._feedback_status)
+
         cd_row = QHBoxLayout()
         cd_row.addWidget(QLabel("Contact detail"))
         self._feedback_contact = QLineEdit(self._load_app_settings().get("feedback_contact", ""))
@@ -11314,9 +11324,13 @@ class SystemConnectivityPage(QWidget):
         smtp_row.addWidget(QLabel("SMTP (email channel)"))
         self._feedback_smtp = QLineEdit(self._load_app_settings().get("feedback_smtp_host", ""))
         self._feedback_smtp.setPlaceholderText("host:port:user  (pass prompted at send time, never stored)")
-        self._feedback_smtp.textChanged.connect(lambda t: self._set_setting("feedback_smtp_host", t))
+        self._feedback_smtp.textChanged.connect(self._on_feedback_smtp_changed)
         smtp_row.addWidget(self._feedback_smtp, 1)
         fl.addLayout(smtp_row)
+
+        # Refresh availability now that all fields exist.
+        self._refresh_feedback_availability()
+
         btn_fb = QPushButton("📨 Request upgrade / Send feedback")
         btn_fb.setStyleSheet("background: rgba(124, 110, 230, 0.15); color: #7C6EE6; border: 1px solid #7C6EE6; border-radius: 4px; padding: 6px;")
         btn_fb.clicked.connect(self._open_feedback_dialog)
@@ -13022,6 +13036,62 @@ class SystemConnectivityPage(QWidget):
             self._set_setting("feedback_github_repo", t)
         elif ch == "webhook":
             self._set_setting("feedback_webhook_url", t)
+        self._refresh_feedback_availability()
+
+    def _on_feedback_smtp_changed(self, text: str):
+        # Accept host, host:port, or host:port:user. Parsed here so a single
+        # field configures the whole SMTP route; the password is never stored.
+        raw = (text or "").strip()
+        self._set_setting("feedback_smtp_host", raw)
+        parts = raw.split(":")
+        if parts and parts[0]:
+            self._set_setting("feedback_smtp_host", parts[0])
+        if len(parts) > 1 and parts[1].isdigit():
+            self._set_setting("feedback_smtp_port", int(parts[1]))
+        if len(parts) > 2 and parts[2]:
+            self._set_setting("feedback_smtp_user", parts[2])
+        self._refresh_feedback_availability()
+
+    def _on_feedback_channel_changed(self, channel: str):
+        self._set_setting("feedback_channel", channel)
+        self._refresh_feedback_availability()
+
+    def _refresh_feedback_availability(self):
+        """Update the honest 'what works right now' note under the channel.
+
+        Only the repo route is wired up out of the box. Email/webhook light up
+        automatically once the creator supplies a destination, so a user is
+        never offered a channel that would fail on send.
+        """
+        try:
+            from core import feedback as _fb
+            avail = _fb.channels_available()
+        except Exception:
+            avail = {"github": True, "email": False, "webhook": False}
+        ready, soon = [], []
+        if avail.get("github"):
+            ready.append("GitHub issue (repo)")
+        if avail.get("email"):
+            ready.append("Email")
+        else:
+            soon.append("Email")
+        if avail.get("webhook"):
+            ready.append("Webhook")
+        else:
+            soon.append("Webhook")
+        ready.insert(0, "Local file (always)")
+        note = "Available now: " + ", ".join(ready) + "."
+        if soon:
+            note += ("  Coming soon once a destination is set: " + ", ".join(soon)
+                     + ". Add the address/URL above to enable.")
+        self._feedback_status.setText(note)
+
+        # Grey the SMTP field when email isn't configured yet, so the state is
+        # visible at a glance rather than only after a failed send.
+        try:
+            self._feedback_smtp.setEnabled(bool(avail.get("email")))
+        except Exception:
+            pass
 
     def _open_feedback_dialog(self):
         dlg = QDialog(self)

@@ -62,11 +62,39 @@ def _settings() -> dict:
 
 
 def _version() -> str:
+    """App version, robust to version.txt being a VSVersionInfo blob.
+
+    version.txt is a PyInstaller version-resource struct, not a bare '1.2.3',
+    so regex out the first semver token. A plain '1.2.3' file still works.
+    """
     try:
-        return (Path(__file__).resolve().parent.parent / "version.txt").read_text(
-            encoding="utf-8").strip()
+        txt = (Path(__file__).resolve().parent.parent / "version.txt").read_text(
+            encoding="utf-8", errors="ignore")
+        m = re.search(r"(\d+\.\d+\.\d+)", txt)
+        return m.group(1) if m else txt.strip().splitlines()[0][:40]
     except Exception:
         return "unknown"
+
+
+def channels_available(cfg: dict | None = None) -> dict:
+    """Which feedback routes are actually usable right now, for the UI.
+
+    The GitHub issue route only needs a repo (always configured). The email and
+    webhook routes need the destination to be set by the creator first, so the
+    settings UI can show them as 'coming soon' until then instead of letting the
+    user pick one that will fail.
+    """
+    cfg = cfg or _settings()
+    # Fall back to the built-in repo: a migrated/legacy user config predates the
+    # feedback fields, and the GitHub route only needs a repo (always present in
+    # the app defaults), so the "available now" claim should hold regardless.
+    repo = (cfg.get("feedback_github_repo") or "").strip() or _DEFAULT_REPO
+    return {
+        "github": bool(repo),
+        "email": bool((cfg.get("feedback_email_to") or "").strip()
+                      and (cfg.get("feedback_smtp_host") or "").strip()),
+        "webhook": bool((cfg.get("feedback_webhook_url") or "").strip()),
+    }
 
 
 def build_report(encountered: str, did: str, how: str, need: str,
@@ -221,5 +249,9 @@ def send_report(report: dict, cfg: dict | None = None) -> dict:
         return _post_webhook(report, cfg)
     return _save_local(report)
 
+
+# Built-in feedback destination. The GitHub-issue route needs nothing but a
+# repo, so it is the one channel that works out of the box on every install.
+_DEFAULT_REPO = "Emma-Keaton/stella"
 
 CHANNELS = ["local", "email", "github", "webhook", "off"]

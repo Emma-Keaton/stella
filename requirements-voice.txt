@@ -1,0 +1,4 @@
+sounddevice
+pycaw
+comtypes
+piper-tts

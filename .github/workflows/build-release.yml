@@ -1,0 +1,103 @@
+name: Build & Release
+
+# One tag -> every platform's installable + a manifest.json, published to
+# GitHub Releases. The in-app updater (scripts/stella_update.py) then pulls that
+# manifest and self-updates every install on next launch. This is the "we just
+# push a tag and the world updates" pipeline.
+
+on:
+  push:
+    tags:
+      - "v*"          # e.g. git tag v1.2.0 && git push --tags
+  workflow_dispatch:
+    inputs:
+      edition:
+        description: "Edition to build"
+        default: "core"
+        required: true
+        type: choice
+        options: [lite, core, full]
+
+permissions:
+  contents: write      # needed to create/upload the GitHub Release
+
+jobs:
+  desktop:
+    name: ${{ matrix.os }} / ${{ matrix.edition }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+        edition: [lite, core, full]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install runtime deps + packager
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip
+          # Core requirements are needed for the edition's imports to resolve
+          # at build time; pyinstaller does the freezing.
+          pip install -r requirements.txt pyinstaller || true
+
+      - name: Build edition (${{ matrix.edition }}) for ${{ matrix.os }}
+        shell: bash
+        run: |
+          python scripts/stella_build.py \
+            --edition "${{ matrix.edition }}" \
+            --os "${{ matrix.os == 'windows-latest' && 'windows' || (matrix.os == 'macos-latest' && 'macos' || 'linux') }}" \
+            --release
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: stella-${{ matrix.os }}-${{ matrix.edition }}
+          path: |
+            dist/*.zip
+            dist/manifest.json
+          if-no-files-found: warn
+
+  android:
+    name: android / apk
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - name: Build APK via Gradle wrapper
+        working-directory: stella-connect-android
+        run: |
+          chmod +x gradlew || true
+          ./gradlew assembleRelease
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: stella-android
+          path: stella-connect-android/app/build/outputs/apk/**/*.apk
+          if-no-files-found: warn
+
+  release:
+    name: Publish GitHub Release
+    needs: [desktop, android]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - name: Publish
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/*.zip
+            artifacts/*.apk
+            artifacts/manifest.json
+          generate_release_notes: true
