@@ -150,11 +150,14 @@ def _host_os() -> str:
 
 
 def _venv_pyinstaller() -> list[str] | None:
-    """Command that runs PyInstaller from the project venv.
+    """Command that runs PyInstaller.
 
-    Prefers the console-script shim, but a venv can have the PyInstaller
-    package installed while the .exe shim is missing (seen in practice), so
-    fall back to `python -m PyInstaller`, which needs no shim at all.
+    Order of preference:
+      1. The .venv console-script shim (local dev).
+      2. `python -m PyInstaller` from the .venv interpreter (shim missing but
+         the package present — seen in practice).
+      3. The interpreter running this script — GitHub Actions pip-installs
+         PyInstaller into its system Python, and there is no .venv there.
     Returns the argv prefix, or None when PyInstaller is not installed.
     """
     interp = REPO / ".venv" / ("Scripts/python.exe" if os.name == "nt"
@@ -163,12 +166,18 @@ def _venv_pyinstaller() -> list[str] | None:
         p = REPO / ".venv" / sub
         if p.exists():
             return [str(p)]
-    if interp.exists():
-        probe = subprocess.run(
-            [str(interp), "-c", "import PyInstaller"],
-            capture_output=True, timeout=60)
+    candidates = [str(interp)] if interp.exists() else []
+    if sys.executable:
+        candidates.append(sys.executable)
+    for py in dict.fromkeys(candidates):        # dedupe, keep order
+        try:
+            probe = subprocess.run(
+                [py, "-c", "import PyInstaller"],
+                capture_output=True, timeout=60)
+        except Exception:
+            continue
         if probe.returncode == 0:
-            return [str(interp), "-m", "PyInstaller"]
+            return [py, "-m", "PyInstaller"]
     return None
 
 
