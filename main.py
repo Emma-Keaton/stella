@@ -5008,6 +5008,11 @@ class StellaLive:
                             txt = sc.output_transcription.text.strip()
                             if txt:
                                 out_buf.append(txt)
+                                # Real-time render: show the token as it lands.
+                                try:
+                                    self.ui.stream_reply_chunk(txt)
+                                except Exception:
+                                    pass
 
                         if sc.input_transcription and sc.input_transcription.text:
                             txt = sc.input_transcription.text.strip()
@@ -5034,6 +5039,12 @@ class StellaLive:
                             in_buf = []
 
                             full_out = " ".join(out_buf).strip()
+                            # Retire the live bubble; the persisted reply below
+                            # takes its place with the entrance animation.
+                            try:
+                                self.ui.stream_reply_end(full_out)
+                            except Exception:
+                                pass
                             if full_out:
                                 self.ui.write_log(f"Stella: {full_out}")
                             out_buf = []

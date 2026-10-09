@@ -437,7 +437,7 @@ def cmd_build(edition: str, target: str, release: bool) -> int:
         return 0
 
     if target == "ios":
-        print("iOS: no Xcode project in this repo yet.")
+        print("iOS: no Xcode project in this repo yet (see docs/IOS_BUILD.md).")
         print("Next steps: add a SwiftUI shell in stella-connect-ios/, then wire")
         print("  'xcodebuild -scheme Stella archive' into _build_ios() here.")
         return 2

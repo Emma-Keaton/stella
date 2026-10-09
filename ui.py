@@ -2849,18 +2849,25 @@ class ArtifactCard(QFrame):
 
 
 class ChatBubble(QFrame):
-    def __init__(self, role: str, name: str, text: str, stamp: str, attachments: list[dict] | None = None, parent=None, animate: bool = False):
+    def __init__(self, role: str, name: str, text: str, stamp: str, attachments: list[dict] | None = None, parent=None, animate: bool = False, live: bool = False):
         super().__init__(parent)
         self._role = role
         self._full_text = text or ""
         self._typing_index = 0
         self._typing_timer: QTimer | None = None
+        # Live token-stream state: a blinking caret while the LLM renders and
+        # a breathing pulse dot beside Stella's name (core/hud_theme.PulseDot).
+        self._live = bool(live)
+        self._caret_on = True
+        self._caret_timer: QTimer | None = None
+        self._pulse = None
         self.setObjectName("ChatBubble")
         self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
         self.setMinimumHeight(1)
         max_w = 340
         if parent and hasattr(parent, "viewport"):
-            max_w = max(200, int(parent.viewport().width() * 0.84))
+            _vw = parent.viewport().width()
+            max_w = max(200, int(_vw * _chat_measure(_vw)))
         self.setMaximumWidth(max_w)
         if role == "user":
             self.setMinimumWidth(120)
@@ -2887,6 +2894,14 @@ class ChatBubble(QFrame):
             name_lbl.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
             name_lbl.setStyleSheet("color: #ffffff; background: transparent;")
             head.addWidget(name_lbl)
+            if live:
+                # Breathing live indicator while tokens stream in.
+                try:
+                    from core.hud_theme import PulseDot
+                    self._pulse = PulseDot()
+                    head.addWidget(self._pulse)
+                except Exception:
+                    self._pulse = None
         elif role != "user":
             name_lbl = QLabel(name)
             name_lbl.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
@@ -2951,6 +2966,59 @@ class ChatBubble(QFrame):
                 pass
             self._render_text(self._full_text, final=True)
 
+    # ---- live token streaming (LLM renders -> we render) -----------------
+    def set_live(self, text: str):
+        """Update the bubble while the model is still producing tokens.
+
+        Renders the accumulated text with a blinking caret so it reads as a
+        live terminal feed instead of a frozen block.
+        """
+        self._full_text = text or ""
+        self._start_caret()
+        self._caret_on = True
+        self._render_live()
+
+    def _start_caret(self):
+        if self._caret_timer is None:
+            self._caret_timer = QTimer(self)
+            self._caret_timer.setInterval(480)
+            self._caret_timer.timeout.connect(self._tick_caret)
+            self._caret_timer.start()
+
+    def _tick_caret(self):
+        if not self._live:
+            return
+        self._caret_on = not self._caret_on
+        self._render_live()
+
+    def _render_live(self):
+        caret = "▋" if self._caret_on else " "
+        try:
+            self._browser.setText(_markdown_to_html(self._full_text + caret, self._role))
+        except Exception:
+            self._browser.setText((self._full_text or "") + caret)
+
+    def end_live(self):
+        """Stop caret + pulse. The final text is rendered by the caller."""
+        self._live = False
+        for t in (self._caret_timer, self._typing_timer):
+            if t is not None:
+                try:
+                    t.stop()
+                except Exception:
+                    pass
+        self._caret_timer = None
+        if self._pulse is not None:
+            try:
+                self._pulse._anim.stop()
+                self._pulse.hide()
+            except Exception:
+                pass
+        try:
+            self._browser.setText(_markdown_to_html(self._full_text or "", self._role))
+        except Exception:
+            self._browser.setText(self._full_text or "")
+
 
 class HistoryConversationItem(QFrame):
     clicked = pyqtSignal(str)
@@ -3011,6 +3079,18 @@ class HistoryConversationItem(QFrame):
             self.clicked.emit(self._conversation_id)
 
 
+def _chat_measure(vw: int) -> float:
+    """Responsive chat width ratio (compact ~full width, ultrawide tighter).
+
+    Falls back to the historical 0.84 when the design system is unavailable.
+    """
+    try:
+        from core.hud_theme import measure_ratio
+        return measure_ratio(vw)
+    except Exception:
+        return 0.84
+
+
 class ConversationFeed(QScrollArea):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -3042,6 +3122,10 @@ class ConversationFeed(QScrollArea):
         self.setWidget(self._content)
         self._empty_widget: QWidget | None = None
         self._message_count = 0
+        # Live reply stream: one ephemeral bubble that grows as tokens arrive;
+        # it is removed when the persisted reply lands through append_log.
+        self._live_bubble = None
+        self._live_text = ""
 
     def _ensure_empty_widget(self):
         if self._empty_widget is not None:
@@ -3106,6 +3190,7 @@ class ConversationFeed(QScrollArea):
             root.command_submitted.emit(text)
 
     def clear_messages(self):
+        self.end_live_reply()
         while self._layout.count():
             item = self._layout.takeAt(0)
             widget = item.widget()
@@ -3139,6 +3224,62 @@ class ConversationFeed(QScrollArea):
         self._message_count += 1
         self._sync_empty_state()
         QTimer.singleShot(0, self.scroll_to_bottom)
+
+    # ---- live token streaming -------------------------------------------
+    def begin_live_reply(self):
+        """Create the ephemeral assistant bubble for an in-flight reply."""
+        if self._live_bubble is not None:
+            return
+        if self._layout.count() and self._layout.itemAt(self._layout.count() - 1).spacerItem() is not None:
+            self._layout.takeAt(self._layout.count() - 1)
+        vw = self.viewport().width()
+        if hasattr(self, "_content") and self._content is not None and vw > 20:
+            self._content.setFixedWidth(vw)
+        bubble = ChatBubble("assistant", "Stella", "", "", parent=self, live=True)
+        if vw > 20:
+            bubble.setMaximumWidth(max(180, int(vw * _chat_measure(vw))))
+        self._live_bubble = bubble
+        self._live_text = ""
+        self._layout.addWidget(bubble, alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop)
+        self._layout.addStretch(1)
+        self._sync_empty_state()
+        QTimer.singleShot(0, self.scroll_to_bottom)
+
+    def append_live_reply(self, chunk: str):
+        """Accumulate one model token/chunk into the live bubble."""
+        if not chunk:
+            return
+        if self._live_bubble is None:
+            self.begin_live_reply()
+        if self._live_bubble is None:
+            return
+        self._live_text = (self._live_text or "") + chunk
+        try:
+            self._live_bubble.set_live(self._live_text)
+        except Exception:
+            pass
+        QTimer.singleShot(0, self.scroll_to_bottom)
+
+    def end_live_reply(self, final: str = ""):
+        """Stream finished — retire the live bubble.
+
+        The persisted reply then arrives through the normal log path within
+        the same event-loop tick, so this swap is invisible in practice.
+        """
+        bubble = self._live_bubble
+        if bubble is None:
+            return
+        self._live_bubble = None
+        try:
+            bubble.end_live()
+        except Exception:
+            pass
+        idx = self._layout.indexOf(bubble)
+        if idx != -1:
+            self._layout.takeAt(idx)
+        bubble.deleteLater()
+        # Re-show the empty state only if no real message follows shortly.
+        QTimer.singleShot(700, self._sync_empty_state)
 
     def _build_event_card(self, text: str, stamp: str, event_type: str | None = None) -> QWidget:
         low = (event_type or text or "").lower()
@@ -3215,7 +3356,7 @@ class ConversationFeed(QScrollArea):
             for i in range(self._layout.count()):
                 w = self._layout.itemAt(i).widget()
                 if w and isinstance(w, ChatBubble):
-                    max_w = max(180, int(vw * 0.84))
+                    max_w = max(180, int(vw * _chat_measure(vw)))
                     w.setMaximumWidth(max_w)
                 elif w and hasattr(w, "_fit_to_content"):
                     w._fit_to_content()
@@ -3247,8 +3388,12 @@ class TaskDock(QFrame):
         header = QHBoxLayout()
         header.setSpacing(8)
         self._title = QLabel("TASK WORKSPACE")
-        self._title.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
-        self._title.setStyleSheet(f"color: {C.PRI}; background: transparent; letter-spacing: 1px;")
+        try:
+            from core.hud_theme import mono_font
+            self._title.setFont(mono_font(13, True))
+        except Exception:
+            self._title.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
+        self._title.setStyleSheet(f"color: {C.PRI}; background: transparent; letter-spacing: 2px;")
         header.addWidget(self._title)
         header.addStretch()
 
@@ -3877,7 +4022,7 @@ class WorkspaceSidebar(QWidget):
         if not raw:
             return
         low = raw.lower()
-        if low.startswith(("you:", "stella evo:")):
+        if low.startswith(("you:", "stella evo:", "stella:")):
             return
         if low.startswith("sys:"):
             self.record_chat_event({"role": "system", "text": raw.split(":", 1)[1].strip(), "source": "local"})
@@ -4329,7 +4474,7 @@ class InlineChatWorkspace(QFrame):
         low = raw.lower()
         if low.startswith("you:"):
             self.record_chat_event({"role": "user", "text": raw.split(":", 1)[1].strip()})
-        elif low.startswith("stella evo:"):
+        elif low.startswith(("stella evo:", "stella:")):
             self.record_chat_event({"role": "assistant", "text": raw.split(":", 1)[1].strip()})
         elif low.startswith("sys:"):
             self.record_chat_event({"role": "system", "text": raw.split(":", 1)[1].strip()})
@@ -5401,8 +5546,8 @@ class LogWidget(QScrollArea):
         if tl.startswith("you:"):
             return "user", "You", raw[4:].strip()
         if tl.startswith("stella evo:"):
-            return "assistant", "Stella", raw[len("Stella:"):].strip()
-        if tl.startswith("stella evo:"):
+            return "assistant", "Stella", raw[len("Stella Evo:"):].strip()
+        if tl.startswith("stella:"):
             return "assistant", "Stella", raw[len("Stella:"):].strip()
         if tl.startswith("file:"):
             return "file", "File", raw[5:].strip()
@@ -8520,6 +8665,10 @@ class FloatingGestureCard(QWidget):
 
 class MainWindow(QMainWindow):
     _log_sig   = pyqtSignal(str)
+    # Live token streaming: the model loop emits chunks as the LLM renders;
+    # the chat shows them in an ephemeral bubble with a blinking caret.
+    _stream_chunk_sig = pyqtSignal(str)
+    _stream_end_sig = pyqtSignal(str)
     _state_sig = pyqtSignal(str)
     _scan_sig  = pyqtSignal(bool, str)
     _briefing_sig = pyqtSignal(object)
@@ -9324,7 +9473,7 @@ class MainWindow(QMainWindow):
                     self.on_chat_event({"role": "user", "text": user_msg, "source": source})
                 except Exception:
                     pass
-        if hasattr(self, "_result_card") and low.startswith("stella evo:"):
+        if hasattr(self, "_result_card") and low.startswith(("stella evo:", "stella:")):
             reply = raw.split(":", 1)[1].strip()
             self._result_card.set_body(reply[:80] + ("…" if len(reply) > 80 else ""))
             self._result_card.hide()
@@ -10216,6 +10365,9 @@ class MainWindow(QMainWindow):
         self._inline_workspace.mic_requested.connect(self._toggle_mute)
         self._inline_workspace.command_submitted.connect(self._send)
         self._log = self._inline_workspace
+        # Wire real-time token streaming into the visible chat surface.
+        self._stream_chunk_sig.connect(self._inline_workspace.append_live_reply)
+        self._stream_end_sig.connect(self._inline_workspace.end_live_reply)
         chat_lay.addWidget(self._inline_workspace, stretch=1)
 
         self._settings_sidebar = SystemConnectivitySidebar()
@@ -14862,6 +15014,12 @@ class StellaUI:
         self._app.setQuitOnLastWindowClosed(False)
         self._app.setApplicationDisplayName("Stella")
         self._app.setWindowIcon(self._make_app_icon())
+        # Install the HUD design system (tokens/type/motion — core/hud_theme).
+        try:
+            from core.hud_theme import install as _install_hud
+            _install_hud(self._app)
+        except Exception:
+            pass
         try:
             current_store = workspace_store()
             current_store.rollover_active_conversation_on_startup()
@@ -15512,6 +15670,23 @@ class StellaUI:
 
     def write_log(self, text: str):
         self._win._log_sig.emit(text)
+
+    def stream_reply_chunk(self, chunk: str):
+        """Called from the model loop as the LLM renders each token."""
+        if not chunk:
+            return
+        try:
+            self._win._stream_chunk_sig.emit(chunk)
+        except Exception:
+            pass
+
+    def stream_reply_end(self, final: str = ""):
+        """Turn complete — retire the live bubble; the persisted reply (the
+        normal write_log path) lands right after with its entrance animation."""
+        try:
+            self._win._stream_end_sig.emit(final or "")
+        except Exception:
+            pass
 
     def show_confirm(self, title: str, detail: str = ""):
         self.w.show_confirm(title, detail)
