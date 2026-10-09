@@ -1,12 +1,12 @@
 """
-core/audio_devices.py — pick which microphone and which speakers Brahma uses.
+core/audio_devices.py — pick which microphone and which speakers Stella uses.
 
 WHY
     Both audio streams in main.py were opened without a `device=` argument, so
     they always took whatever the operating system called "default". On a laptop
     with a built-in mic, a webcam mic and a headset that is a coin toss — and on
     Windows the default *moves on its own* the moment you plug a headset in.
-    "Brahma can't hear me" almost always means "Brahma is listening to the
+    "Stella can't hear me" almost always means "Stella is listening to the
     monitor's microphone".
 
 WHY NAMES, NOT INDICES

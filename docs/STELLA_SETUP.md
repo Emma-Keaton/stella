@@ -17,7 +17,7 @@ Repo: **https://github.com/Emma-Keaton/stella**
 git clone https://github.com/Emma-Keaton/stella.git
 cd stella
 python setup.py            # pip packages + Playwright + Piper voices
-python main.py             # or start_brahma.bat on Windows
+python main.py             # or start_stella.bat on Windows
 ```
 
 First launch opens the **setup wizard**: voice pick → device scan → model
@@ -45,7 +45,7 @@ Path A — **Termux** (no root): install Termux + `python`, clone the repo,
 `python setup.py`, run `main.py` with `--no-gui` headless + dashboard, open
 the dashboard URL in Chrome → Add to Home screen.
 
-Path B — **native APK**: `brahma-connect-android/` holds the companion app
+Path B — **native APK**: `stella-connect-android/` holds the companion app
 (ChatScreen talks to the same backend). Build with Android Studio → APK.
 
 Models live in the app's `models/` dir; the manager script picks quants that

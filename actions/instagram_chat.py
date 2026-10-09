@@ -3,7 +3,7 @@ from core.user_paths import get_user_data_dir
 """
 Instagram Chat Integration for Stella AI.
 
-Listens for incoming DMs on Instagram and replies using Brahma's core generation.
+Listens for incoming DMs on Instagram and replies using Stella's core generation.
 """
 
 import threading

@@ -57,7 +57,7 @@ except Exception:
 from discord_bot import DiscordBotService
 from gesture_utils import estimate_gesture_state, GestureTracker
 from smart_home import SmartHomeService
-from smart_home_page_new import BrahmaHomePage, _DeviceTile
+from smart_home_page_new import StellaHomePage, _DeviceTile
 from core.local_brain import local_brain
 from core import voice_gate
 from workspace_store import store as workspace_store
@@ -74,8 +74,8 @@ CONFIG_DIR = get_user_data_dir() / "config"
 API_FILE   = CONFIG_DIR / "api_keys.json"
 APP_SETTINGS_FILE = CONFIG_DIR / "app_settings.json"
 DISCORD_SETTINGS_FILE = CONFIG_DIR / "discord_bot.json"
-LOGO_FILE  = BASE_DIR / "assets" / "Brahma_Lite_Logo.png"
-LOGO_ICO   = BASE_DIR / "assets" / "Brahma_Lite_Logo.ico"
+LOGO_FILE  = BASE_DIR / "assets" / "stella_logo.png"
+LOGO_ICO   = BASE_DIR / "assets" / "stella_logo.ico"
 BACKGROUND_IMAGE_FILE = BASE_DIR / "assets" / "background.png"
 MODEL_DOWNLOAD_URL = "https://storage.googleapis.com/mediapipe-assets/hand_landmarker.task"
 
@@ -327,7 +327,7 @@ class BackgroundWidget(QWidget):
                 st = (state or "IDLE").strip().replace("'", "\\'")
                 page = self._web_view.page()
                 if page:
-                    page.runJavaScript(f"if(window.setBrahmaState) window.setBrahmaState('{st}');")
+                    page.runJavaScript(f"if(window.setStellaState) window.setStellaState('{st}');")
             except Exception:
                 pass
 
@@ -694,7 +694,7 @@ class DailyBriefingOverlay(QWidget):
         hdr_info = QVBoxLayout()
         hdr_info.setSpacing(2)
 
-        title_lbl = QLabel("⚡ BRAHMA INTELLIGENCE // UNIFIED MORNING BRIEFING")
+        title_lbl = QLabel("⚡ STELLA INTELLIGENCE // UNIFIED MORNING BRIEFING")
         title_lbl.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
         title_lbl.setStyleSheet(f"color: {C.PRI}; letter-spacing: 1.5px; background: transparent; border: none;")
         hdr_info.addWidget(title_lbl)
@@ -1177,7 +1177,7 @@ class MemoryInspectorOverlay(QWidget):
 
         from memory.memory_manager import all_entries_for_ui
 
-        hdr = QLabel("🧠  WHAT BRAHMA REMEMBERS")
+        hdr = QLabel("🧠  WHAT STELLA REMEMBERS")
         hdr.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
         hdr.setStyleSheet(f"color: {C.PRI}; background: transparent; letter-spacing: 0.5px;")
         self._lay.addWidget(hdr)
@@ -1193,7 +1193,7 @@ class MemoryInspectorOverlay(QWidget):
 
         cap = QLabel(
             f"{len(rows)} stored memory entries. Stored locally in memory/long_term.json. "
-            f"Brahma recalls these during relevant conversations."
+            f"Stella recalls these during relevant conversations."
         )
         cap.setWordWrap(True)
         cap.setFont(QFont("Segoe UI", 8))
@@ -3380,7 +3380,7 @@ class WorkspaceSidebar(QWidget):
 
         header = QHBoxLayout()
         header.setSpacing(10)
-        self._title = QLabel("BRAHMA EVO WORKSPACE")
+        self._title = QLabel("STELLA EVO WORKSPACE")
         self._title.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
         self._title.setStyleSheet("color: #FFFFFF; background: transparent; letter-spacing: 1px;")
         header.addWidget(self._title)
@@ -3877,7 +3877,7 @@ class WorkspaceSidebar(QWidget):
         if not raw:
             return
         low = raw.lower()
-        if low.startswith(("you:", "brahma evo:")):
+        if low.startswith(("you:", "stella evo:")):
             return
         if low.startswith("sys:"):
             self.record_chat_event({"role": "system", "text": raw.split(":", 1)[1].strip(), "source": "local"})
@@ -4329,7 +4329,7 @@ class InlineChatWorkspace(QFrame):
         low = raw.lower()
         if low.startswith("you:"):
             self.record_chat_event({"role": "user", "text": raw.split(":", 1)[1].strip()})
-        elif low.startswith("brahma evo:"):
+        elif low.startswith("stella evo:"):
             self.record_chat_event({"role": "assistant", "text": raw.split(":", 1)[1].strip()})
         elif low.startswith("sys:"):
             self.record_chat_event({"role": "system", "text": raw.split(":", 1)[1].strip()})
@@ -4440,7 +4440,7 @@ class LauncherControlPanel(QDialog):
         lay.setContentsMargins(18, 16, 18, 16)
         lay.setSpacing(10)
 
-        title = QLabel("BRAHMA EVO CONTROL")
+        title = QLabel("STELLA EVO CONTROL")
         title.setFont(QFont("Segoe UI", 13, QFont.Weight.Bold))
         title.setStyleSheet("color: #FFFFFF; background: transparent; letter-spacing: 1px;")
         lay.addWidget(title)
@@ -4584,15 +4584,15 @@ class SmallPanelCard(QFrame):
         self._body_lbl.setStyleSheet(f"color: {accent}; background: transparent;")
         lay.addWidget(self._body_lbl)
 
-class BrahmaTelemetryWing(QFrame):
+class StellaTelemetryWing(QFrame):
     """
-    Brahma Right Wing: Live Operations, Research Streams, and Sources.
+    Stella Right Wing: Live Operations, Research Streams, and Sources.
     Auto-dismisses in 10 seconds unless pinned or hovered.
     Adapts dynamically to the active theme color (Amber Gold by default).
     """
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setObjectName("BrahmaTelemetryWing")
+        self.setObjectName("StellaTelemetryWing")
         self.setFixedWidth(310)
         self.setMinimumHeight(320)
         self.setMaximumHeight(520)
@@ -4720,7 +4720,7 @@ class BrahmaTelemetryWing(QFrame):
         self._theme_rgb = (r, g, b)
 
         self.setStyleSheet(f"""
-            QFrame#BrahmaTelemetryWing {{
+            QFrame#StellaTelemetryWing {{
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
                     stop:0 rgba(10, 15, 24, 238),
                     stop:0.6 rgba(6, 10, 18, 222),
@@ -4897,16 +4897,16 @@ class BrahmaTelemetryWing(QFrame):
         self._anim.start()
 
 
-class BrahmaResultWing(QFrame):
+class StellaResultWing(QFrame):
     """
-    Brahma Left Wing: Final Results, Generated Deliverables (PDF/Word/Media/Code),
+    Stella Left Wing: Final Results, Generated Deliverables (PDF/Word/Media/Code),
     Executive Summary Bullets, and Quick Action Buttons.
     Auto-dismisses in 10 seconds unless pinned or hovered.
     Adapts dynamically to the active theme color (Amber Gold by default).
     """
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setObjectName("BrahmaResultWing")
+        self.setObjectName("StellaResultWing")
         self.setFixedWidth(310)
         self.setMinimumHeight(320)
         self.setMaximumHeight(540)
@@ -5058,7 +5058,7 @@ class BrahmaResultWing(QFrame):
         self._theme_rgb = (r, g, b)
 
         self.setStyleSheet(f"""
-            QFrame#BrahmaResultWing {{
+            QFrame#StellaResultWing {{
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
                     stop:0 rgba(14, 18, 26, 240),
                     stop:0.6 rgba(9, 13, 20, 225),
@@ -5254,7 +5254,7 @@ class BrahmaResultWing(QFrame):
                         import subprocess
                         subprocess.Popen(["xdg-open", str(p)])
                 except Exception as e:
-                    print(f"[BrahmaResultWing] Open file error: {e}")
+                    print(f"[StellaResultWing] Open file error: {e}")
 
     def _on_reveal_clicked(self):
         if self._active_file_path:
@@ -5269,7 +5269,7 @@ class BrahmaResultWing(QFrame):
                 else:
                     subprocess.Popen(["xdg-open", str(p.parent)])
             except Exception as e:
-                print(f"[BrahmaResultWing] Reveal error: {e}")
+                print(f"[StellaResultWing] Reveal error: {e}")
 
     def set_body(self, text: str):
         if hasattr(self, "_summary_lbl") and text:
@@ -5400,9 +5400,9 @@ class LogWidget(QScrollArea):
         tl = raw.lower()
         if tl.startswith("you:"):
             return "user", "You", raw[4:].strip()
-        if tl.startswith("brahma evo:"):
+        if tl.startswith("stella evo:"):
             return "assistant", "Stella", raw[len("Stella:"):].strip()
-        if tl.startswith("brahma evo:"):
+        if tl.startswith("stella evo:"):
             return "assistant", "Stella", raw[len("Stella:"):].strip()
         if tl.startswith("file:"):
             return "file", "File", raw[5:].strip()
@@ -5824,7 +5824,7 @@ class SetupOverlay(QWidget):
         self._stack.addWidget(page)
 
     def _save_identity_and_next(self):
-        identity.set_assistant_name(self._inp_ast.text().strip() or "Brahma")
+        identity.set_assistant_name(self._inp_ast.text().strip() or "Stella")
         identity.set_application_name(self._inp_app.text().strip() or "Stella")
         self._stack.setCurrentIndex(2)
 
@@ -7653,7 +7653,7 @@ class BootSequenceOverlay(QWidget):
                     painter.drawEllipse(QPointF(s['x'], s['y']), s['size'], s['size'])
 
             # -------------------------------------------------------------
-            # 3. DRAW "BRAHMA" TEXT & TYPOGRAPHY EFFECT
+            # 3. DRAW "STELLA" TEXT & TYPOGRAPHY EFFECT
             # -------------------------------------------------------------
             if self._time >= 1.35:
                 text_t = min(1.0, (self._time - 1.35) / 0.45)
@@ -7662,17 +7662,17 @@ class BootSequenceOverlay(QWidget):
                 spacing_prog = min(1.0, (self._time - 1.35) / 1.5)
                 letter_spacing = 10.0 + (spacing_prog * 14.0)
 
-                font_brahma = QFont("Segoe UI", 56, QFont.Weight.Black)
-                font_brahma.setLetterSpacing(QFont.SpacingType.AbsoluteSpacing, letter_spacing)
-                painter.setFont(font_brahma)
+                font_stella = QFont("Segoe UI", 56, QFont.Weight.Black)
+                font_stella.setLetterSpacing(QFont.SpacingType.AbsoluteSpacing, letter_spacing)
+                painter.setFont(font_stella)
 
-                rect_brahma = QRectF(cx - 500, cy - 85, 1000, 90)
+                rect_stella = QRectF(cx - 500, cy - 85, 1000, 90)
 
                 # Outer text cyan glow
                 glow_col = QColor(0, 240, 255, int(text_alpha * 0.45))
                 painter.setPen(glow_col)
                 for ox, oy in [(-2, 0), (2, 0), (0, -2), (0, 2), (-1, -1), (1, 1)]:
-                    painter.drawText(rect_brahma.translated(ox, oy), Qt.AlignmentFlag.AlignCenter, "BRAHMA")
+                    painter.drawText(rect_stella.translated(ox, oy), Qt.AlignmentFlag.AlignCenter, "STELLA")
 
                 # Core white text with dynamic shimmer
                 if 1.8 <= self._time < 2.5:
@@ -7687,7 +7687,7 @@ class BootSequenceOverlay(QWidget):
                 else:
                     painter.setPen(QColor(255, 255, 255, text_alpha))
 
-                painter.drawText(rect_brahma, Qt.AlignmentFlag.AlignCenter, "BRAHMA")
+                painter.drawText(rect_stella, Qt.AlignmentFlag.AlignCenter, "STELLA")
 
             # -------------------------------------------------------------
             # 4. DRAW "AI - EVO" WITH MAXIMUM IMPACT (>= 2.5s)
@@ -8381,7 +8381,7 @@ class FloatingLauncher(QWidget):
         hide_act.triggered.connect(self.hide)
         menu.addAction(hide_act)
 
-        quit_act = QAction("Quit Brahma", self)
+        quit_act = QAction("Quit Stella", self)
         quit_act.triggered.connect(lambda: self.action_requested.emit("quit"))
         menu.addAction(quit_act)
 
@@ -9084,8 +9084,8 @@ class MainWindow(QMainWindow):
             except Exception:
                 pass
 
-    def set_brahma_connect_service(self, service):
-        self._brahma_connect = service
+    def set_stella_connect_service(self, service):
+        self._stella_connect = service
         if hasattr(self, "_devices_page"):
             self._devices_page.set_service(service)
             if service is not None:
@@ -9324,7 +9324,7 @@ class MainWindow(QMainWindow):
                     self.on_chat_event({"role": "user", "text": user_msg, "source": source})
                 except Exception:
                     pass
-        if hasattr(self, "_result_card") and low.startswith("brahma evo:"):
+        if hasattr(self, "_result_card") and low.startswith("stella evo:"):
             reply = raw.split(":", 1)[1].strip()
             self._result_card.set_body(reply[:80] + ("…" if len(reply) > 80 else ""))
             self._result_card.hide()
@@ -9740,7 +9740,7 @@ class MainWindow(QMainWindow):
             ph_map = {
                 "LISTENING": "Listening... (or type your command)",
                 "SPEAKING": "Stella is responding...",
-                "THINKING": "Brahma is thinking...",
+                "THINKING": "Stella is thinking...",
                 "PROCESSING": "Processing request...",
                 "EXECUTING": "Executing action...",
                 "WORKING": "Working on it...",
@@ -9753,7 +9753,7 @@ class MainWindow(QMainWindow):
         if hasattr(self, "_inline_workspace") and hasattr(self._inline_workspace, "_footer_status"):
             foot_map = {
                 "LISTENING": "● Listening for voice command...",
-                "SPEAKING": "● Brahma is speaking...",
+                "SPEAKING": "● Stella is speaking...",
                 "THINKING": "● Thinking...",
                 "PROCESSING": "● Processing...",
                 "EXECUTING": "● Executing system command...",
@@ -10089,8 +10089,8 @@ class MainWindow(QMainWindow):
         self._developer_card.hide()
         self._developer_status_lbl = QLabel(self._hidden_legacy_container)
 
-        self._hud_result_wing = BrahmaResultWing(self)
-        self._hud_telemetry_wing = BrahmaTelemetryWing(self)
+        self._hud_result_wing = StellaResultWing(self)
+        self._hud_telemetry_wing = StellaTelemetryWing(self)
         self._command_card = self._hud_result_wing
         self._result_card = self._hud_telemetry_wing
 
@@ -10129,8 +10129,8 @@ class MainWindow(QMainWindow):
         cmd_lay.addLayout(self._build_command_row())
         stage.addWidget(self._command_panel)
 
-        self._home_page = BrahmaHomePage()
-        self._devices_page = BrahmaConnectDevicesPage(self)
+        self._home_page = StellaHomePage()
+        self._devices_page = StellaConnectDevicesPage(self)
         self._center_stack = QStackedWidget()
         self._center_stack.setStyleSheet("background: transparent; border: none;")
         self._center_stack.addWidget(w)
@@ -10170,7 +10170,7 @@ class MainWindow(QMainWindow):
         pulse_dot.setStyleSheet("color: #37ff5f; background: transparent;")
         header_bar.addWidget(pulse_dot)
 
-        header_title = QLabel("BRAHMA CHAT")
+        header_title = QLabel("STELLA CHAT")
         header_title.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
         header_title.setStyleSheet(f"color: {C.WHITE}; background: transparent; letter-spacing: 1px;")
         header_bar.addWidget(header_title)
@@ -11039,7 +11039,7 @@ class SystemConnectivityPage(QWidget):
         ast_row = QHBoxLayout()
         ast_row.addWidget(QLabel("Assistant Name"))
         self._set_ast_name = QLineEdit(identity.get_assistant_name())
-        self._set_ast_name.textChanged.connect(lambda t: identity.set_assistant_name(t.strip() or "Brahma"))
+        self._set_ast_name.textChanged.connect(lambda t: identity.set_assistant_name(t.strip() or "Stella"))
         ast_row.addWidget(self._set_ast_name)
         ilay.addLayout(ast_row)
         
@@ -11273,6 +11273,18 @@ class SystemConnectivityPage(QWidget):
             self._toggle_offline_mode
         )
         lay1.addWidget(self._offline_mode_btn)
+
+        # Autonomous Mode — hands-off operation (reversible).
+        # When on, irreversible actions (delete, shutdown, answering calls)
+        # run without the on-screen confirmation. Everything still goes through
+        # the Recycle Bin / undo stack, so it stays reversible. See core/autonomy.py.
+        is_autonomous = bool(self._load_app_settings().get("autonomous_mode_enabled", False))
+        self._autonomous_mode_btn = self._mk_toggle(
+            "🤖 Autonomous Mode (act without asking — reversible, logged)",
+            is_autonomous,
+            self._toggle_autonomous_mode
+        )
+        lay1.addWidget(self._autonomous_mode_btn)
         lay.addWidget(card)
 
         # Feedback & Updates — upgrade/update pings to the creator
@@ -11518,7 +11530,7 @@ class SystemConnectivityPage(QWidget):
 
         rule_input_row = QHBoxLayout()
         self._ah_rule_input = QLineEdit()
-        self._ah_rule_input.setPlaceholderText("Teach Brahma a rule (e.g. Always summarize in bullet points)")
+        self._ah_rule_input.setPlaceholderText("Teach Stella a rule (e.g. Always summarize in bullet points)")
         rule_input_row.addWidget(self._ah_rule_input)
         self._ah_learn_btn = QPushButton("Teach Rule")
         self._ah_learn_btn.clicked.connect(self._handle_ah_learn_rule)
@@ -11536,7 +11548,7 @@ class SystemConnectivityPage(QWidget):
         except Exception:
             pass
 
-        # Brahma Audio Routing & Hardware Controls
+        # Stella Audio Routing & Hardware Controls
         audio_card = self._card("Audio Routing & Hardware Controls", "Select hardware audio interfaces, toggle Push-to-Talk, or inspect long-term memory.")
         alay = audio_card.layout()
 
@@ -11873,7 +11885,7 @@ class SystemConnectivityPage(QWidget):
         self._update_ig_status()
         from PyQt6.QtWidgets import QMessageBox
         name_str = f" as @{detected_username}" if detected_username else ""
-        QMessageBox.information(self, "Instagram Connected", f"Instagram successfully connected via Browser{name_str}!\n\nBrahma is now active for voice DM notifications and instant direct replies.")
+        QMessageBox.information(self, "Instagram Connected", f"Instagram successfully connected via Browser{name_str}!\n\nStella is now active for voice DM notifications and instant direct replies.")
 
     def _ig_browser_error(self, err_msg):
         self._ig_browser_btn.setEnabled(True)
@@ -12449,7 +12461,7 @@ class SystemConnectivityPage(QWidget):
             AutoHealEngine.record_last_error(tb)
             self._ah_output_lbl.setText(
                 f"❌ Simulated bug triggered in test_action.py: {type(e).__name__}: {e}\n"
-                f"Traceback captured in AutoHealEngine! Click 'Fix Captured Bug' or say 'Brahma, fix that bug'."
+                f"Traceback captured in AutoHealEngine! Click 'Fix Captured Bug' or say 'Stella, fix that bug'."
             )
 
     def _handle_ah_fix_captured_bug(self):
@@ -12734,6 +12746,30 @@ class SystemConnectivityPage(QWidget):
             self._sys_provider.setText(provider)
         if self._ctrl() and hasattr(self._ctrl(), "write_log"):
             self._ctrl().write_log(msg)
+
+    def _toggle_autonomous_mode(self, checked: bool):
+        """Toggle hands-off operation. Persisted + cached via core/autonomy.py.
+
+        Autonomous mode is fully reversible: it only removes the confirmation
+        prompt before an irreversible action, and every such action is still
+        recoverable through the Recycle Bin / undo stack."""
+        self._set_setting("autonomous_mode_enabled", bool(checked))
+        try:
+            from core import autonomy
+            autonomy.set_autonomous(bool(checked))
+        except Exception:
+            pass
+        if self._ctrl() and hasattr(self._ctrl(), "write_log"):
+            if checked:
+                self._ctrl().write_log(
+                    "🤖 SYSTEM: Autonomous Mode ENGAGED. Stella will act without "
+                    "asking for confirmation. All actions remain reversible (undo)."
+                )
+            else:
+                self._ctrl().write_log(
+                    "🛡️ SYSTEM: Autonomous Mode DISENGAGED. Confirmation is "
+                    "required before irreversible actions again."
+                )
 
     def _toggle_auto_provider_switch(self, checked: bool):
         self._set_setting("auto_provider_switch", bool(checked))
@@ -13319,7 +13355,7 @@ class SystemConnectivityPage(QWidget):
             # Base variables
             base_dir = Path(os.path.abspath("."))
             script_path = base_dir / "main.py"
-            icon_path = base_dir / "assets" / "Brahma_Lite_Logo.ico"
+            icon_path = base_dir / "assets" / "stella_logo.ico"
             
             python_exe = sys.executable
             if not python_exe:
@@ -13490,7 +13526,7 @@ class SmartDevicesSection(QFrame):
                 background: rgba(124, 110, 230,0.16);
             }}
         """)
-        self._open_home_btn.clicked.connect(self._open_brahma_home)
+        self._open_home_btn.clicked.connect(self._open_stella_home)
         header.addWidget(self._open_home_btn)
         root.addLayout(header)
 
@@ -13523,7 +13559,7 @@ class SmartDevicesSection(QFrame):
                 background: rgba(124, 110, 230,0.18);
             }}
         """)
-        empty_btn.clicked.connect(self._open_brahma_home)
+        empty_btn.clicked.connect(self._open_stella_home)
         empty_lay.addStretch(1)
         empty_lay.addWidget(empty_title)
         empty_lay.addWidget(empty_desc)
@@ -13634,7 +13670,7 @@ class SmartDevicesSection(QFrame):
     def _controller_bridge(self):
         return self._controller
 
-    def _open_brahma_home(self):
+    def _open_stella_home(self):
         bridge = self._controller_bridge()
         if bridge and hasattr(bridge, "_set_page"):
             bridge._set_page("home")
@@ -14063,7 +14099,7 @@ class _ConnectDeviceCard(QFrame):
         super().mouseReleaseEvent(event)
 
 
-class BrahmaConnectDevicesPage(QFrame):
+class StellaConnectDevicesPage(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._service = None
@@ -14074,9 +14110,9 @@ class BrahmaConnectDevicesPage(QFrame):
         self._selected_device_id: str | None = None
         self._onboarding_known_device_ids: set[str] = set()
 
-        self.setObjectName("BrahmaConnectDevicesPage")
+        self.setObjectName("StellaConnectDevicesPage")
         self.setStyleSheet(f"""
-            QFrame#BrahmaConnectDevicesPage {{
+            QFrame#StellaConnectDevicesPage {{
                 background: transparent;
                 border: none;
             }}
@@ -14096,7 +14132,7 @@ class BrahmaConnectDevicesPage(QFrame):
         self._title = QLabel("DEVICES")
         self._title.setFont(QFont("Segoe UI", 18, QFont.Weight.Black))
         self._title.setStyleSheet("color: #ffffff; letter-spacing: 2px;")
-        self._subtitle = QLabel("Everything connected to Brahma.")
+        self._subtitle = QLabel("Everything connected to Stella.")
         self._subtitle.setFont(QFont("Segoe UI", 9))
         self._subtitle.setStyleSheet("color: rgba(255,255,255,0.62);")
         title_box.addWidget(self._title)
@@ -14450,7 +14486,7 @@ class BrahmaConnectDevicesPage(QFrame):
         self._onboarding_pulse = 0
 
     def _service_obj(self):
-        return self._service or getattr(self.parentWidget(), "_brahma_connect", None)
+        return self._service or getattr(self.parentWidget(), "_stella_connect", None)
 
     def set_service(self, service):
         self._service = service
@@ -14477,7 +14513,7 @@ class BrahmaConnectDevicesPage(QFrame):
             import io
             import qrcode
 
-            self._onboarding_offer = dict(service.create_pairing_offer(device_name="Brahma Connect", platform="gateway"))
+            self._onboarding_offer = dict(service.create_pairing_offer(device_name="Stella Connect", platform="gateway"))
             code = str(self._onboarding_offer.get("pairing_code") or "------")
             self._onb_code_lbl.setText(code)
             self._onb_status_lbl.setText("WAITING FOR CONNECTION")
@@ -14707,7 +14743,7 @@ class _RootShim:
         pass
 
 
-class BrahmaUI:
+class StellaUI:
     def __init__(self, face_path: str, size=None, *, show_immediately: bool = True):
         self._app = QApplication.instance() or QApplication(sys.argv)
         self._app.setStyle("Fusion")
@@ -14806,8 +14842,8 @@ class BrahmaUI:
     def _make_app_icon(self) -> QIcon:
         return _logo_icon()
 
-    def set_brahma_connect_service(self, service):
-        self._win.set_brahma_connect_service(service)
+    def set_stella_connect_service(self, service):
+        self._win.set_stella_connect_service(service)
 
 
     
@@ -15504,7 +15540,7 @@ class BrahmaUI:
             self._win._hud_deliverable_sig.emit(payload)
 
     def show_content(self, title: str, body: str):
-        """Universal rich content presenter. Automatically routes to the Brahma Holographic Left Deliverable Wing."""
+        """Universal rich content presenter. Automatically routes to the Stella Holographic Left Deliverable Wing."""
         import re
         file_path = None
         m = re.search(r'([A-Za-z]:\\[^\s"\'<>`\r\n]+\.(?:pdf|docx|xlsx|pptx|png|jpg|mp4|py|html|json|txt))', body)

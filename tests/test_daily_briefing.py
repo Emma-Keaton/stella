@@ -2,7 +2,7 @@ import time
 from unittest.mock import patch
 
 from actions import daily_briefing
-from main import BrahmaLive, _looks_like_daily_briefing_request, _speak_daily_briefing
+from main import StellaLive, _looks_like_daily_briefing_request, _speak_daily_briefing
 
 
 def test_daily_briefing_returns_when_one_source_times_out(monkeypatch):
@@ -44,7 +44,7 @@ def test_daily_briefing_command_routes_directly_to_action():
         def start(self):
             self.target()
 
-    assistant = object.__new__(BrahmaLive)
+    assistant = object.__new__(StellaLive)
     assistant.ui = FakeUI()
     assistant._reply_mode = False
     assistant._reset_idle_activity = lambda: None

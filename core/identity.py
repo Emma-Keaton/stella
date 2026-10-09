@@ -22,7 +22,7 @@ class IdentityService:
                 "about": ""
             },
             "assistant": {
-                "name": "Brahma",
+                "name": "Stella",
                 "application_name": "Stella",
                 "title": "Personal AI Assistant"
             },
@@ -64,8 +64,8 @@ class IdentityService:
 
     # Assistant methods
     def get_assistant_name(self) -> str:
-        val = self.data["assistant"].get("name", "Brahma")
-        return val if val is not None else "Brahma"
+        val = self.data["assistant"].get("name", "Stella")
+        return val if val is not None else "Stella"
         
     def set_assistant_name(self, name: str):
         self.data["assistant"]["name"] = name

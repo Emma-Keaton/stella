@@ -1,6 +1,6 @@
 # Stella Reconstruction Plan (plan.md)
 
-Project: **Stella** — personal AI, rebuilt from Brahma-Ai-Evo.
+Project: **Stella** — personal AI, rebuilt from Stella-Ai-Evo.
 Targets (in order): **web → desktop → Android → iOS**, each as a runnable
 executable/package. Personal use first, open-source friendly.
 

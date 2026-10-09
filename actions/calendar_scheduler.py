@@ -228,7 +228,7 @@ def calendar_scheduler(
                 dt_end = dt_start + timedelta(minutes=ev.get("duration_minutes", 30))
                 ics_lines.extend([
                     "BEGIN:VEVENT",
-                    f"UID:{ev.get('id', uuid.uuid4())}@brahma.ai",
+                    f"UID:{ev.get('id', uuid.uuid4())}@stella.ai",
                     f"DTSTAMP:{datetime.utcnow().strftime('%Y%m%dT%H%M%SZ')}",
                     f"DTSTART:{dt_start.strftime('%Y%m%dT%H%M%S')}",
                     f"DTEND:{dt_end.strftime('%Y%m%dT%H%M%S')}",
@@ -241,7 +241,7 @@ def calendar_scheduler(
                 continue
         ics_lines.append("END:VCALENDAR")
 
-        desktop_ics = Path.home() / "Desktop" / "brahma_calendar.ics"
+        desktop_ics = Path.home() / "Desktop" / "stella_calendar.ics"
         desktop_ics.write_text("\n".join(ics_lines), encoding="utf-8")
         return f"Exported calendar events to {desktop_ics}"
 
@@ -249,5 +249,5 @@ def calendar_scheduler(
 
 
 def run(parameters: dict, player=None, session_memory=None) -> str:
-    """Plugin wrapper for Brahma architecture."""
+    """Plugin wrapper for Stella architecture."""
     return calendar_scheduler(parameters, player=player, session_memory=session_memory)

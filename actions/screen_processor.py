@@ -442,7 +442,7 @@ def screen_process(
             if w_info and w_info.get("title"):
                 w_title = w_info.get("title", "").strip()
                 w_class = w_info.get("class_name", "").strip()
-                if w_title and "brahma" not in w_title.lower():
+                if w_title and "stella" not in w_title.lower():
                     context_tag = f"\n[User's Active Focused Application: \"{w_title}\" (Class: {w_class})]"
                     if context_tag not in user_text:
                         user_text += context_tag

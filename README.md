@@ -1,8 +1,8 @@
-# ⚡ Brahma AI Evo — Autonomous Desktop Operating Intelligence
+# ⚡ Stella AI Evo — Autonomous Desktop Operating Intelligence
 
 <div align="center">
 
-<img src="assets/brahma_evo_logo.png" alt="Brahma AI Evo Logo" width="220" />
+<img src="assets/stella_logo.png" alt="Stella AI Evo Logo" width="220" />
 
 ### *The Self-Evolving, Multimodal Personal AI Desktop Environment*
 
@@ -18,22 +18,24 @@
 
 ## 🌌 Overview
 
-**Brahma AI Evo** is a next-generation desktop intelligence built to function like an authentic JARVIS workstation. Combining real-time bi-directional native voice audio, multimodal computer vision, autonomous code self-evolution, and local system orchestrations, Brahma Evo transforms your Windows PC into a self-evolving command center.
+**Stella AI Evo** is a next-generation desktop intelligence built to function like an authentic JARVIS workstation. Combining real-time bi-directional native voice audio, multimodal computer vision, autonomous code self-evolution, and local system orchestrations, Stella Evo transforms your Windows PC into a self-evolving command center.
+
+> **Heritage.** Stella AI Evo is the rebranded, actively-developed successor to **Brahma AI Evo** — the original autonomous desktop assistant of the same lineage. If you have been using Brahma AI Evo, your data migrates automatically: on first launch Stella copies your existing `%LOCALAPPDATA%\BrahmaAI` profile (settings, memories, credentials) into `%LOCALAPPDATA%\StellaAI`, so nothing is lost in the move. See [Architecture](#️-architecture) for details.
 
 ---
 
-## ⚡ What's New in Brahma AI Evo
+## ⚡ What's New in Stella AI Evo
 
 ### 1. 🔌 Holographic Hardware Assembler & Circuit HUD
-- **Screen & Voice Part Recognition**: Brahma scans your screen via computer vision or parses voice commands (`"Brahma, how to connect DHT11 to Arduino Pro Mini"`) to recognize microcontrollers (Arduino Uno, Pro Mini, ESP32), sensors (DHT11, HC-SR04 ultrasonic, servos), and passive components.
-- **In-App Interactive Pop-up**: Opens a compact, dark glassmorphic popup overlay directly inside Brahma showing:
+- **Screen & Voice Part Recognition**: Stella scans your screen via computer vision or parses voice commands (`"Stella, how to connect DHT11 to Arduino Pro Mini"`) to recognize microcontrollers (Arduino Uno, Pro Mini, ESP32), sensors (DHT11, HC-SR04 ultrasonic, servos), and passive components.
+- **In-App Interactive Pop-up**: Opens a compact, dark glassmorphic popup overlay directly inside Stella showing:
   - Component cards with pinout labels (`VCC`, `DATA`, `GND`, `2`, `p8`, `p9`).
   - **Animated glowing neon SVG wires** with real-time flowing white electron pulse dots.
   - Numbered pin bubbles (`①`, `②`, `③`, `④`, `⑤`).
   - Operating voltage safety callouts and ready-to-flash Arduino C++ firmware.
 
 ### 2. 🧬 Project Ultron — Self-Evolving Autonomous Skill Crucible
-- **On-the-Fly Code Synthesis**: When asked to execute a task outside its built-in toolkit, Brahma identifies the capability gap, writes a brand-new Python tool directly into `features/`, tests it inside an isolated sandbox ("The Crucible"), and auto-registers it dynamically without restarting the application.
+- **On-the-Fly Code Synthesis**: When asked to execute a task outside its built-in toolkit, Stella identifies the capability gap, writes a brand-new Python tool directly into `features/`, tests it inside an isolated sandbox ("The Crucible"), and auto-registers it dynamically without restarting the application.
 - **Persistent Vault**: All forged skills are saved in your `features/` directory and hot-reloaded automatically.
 
 ### 3. 🛡️ Proactive Auto-Heal Engine
@@ -44,7 +46,7 @@
 - **Dynamic State Glow States**:
   - 🟡 **Gold**: Standby / Listening
   - 🔵 **Cyan / Blue**: Capturing Voice (Live Energy Wave)
-  - 🟣 **Purple**: Brahma Reasoning / Thinking
+  - 🟣 **Purple**: Stella Reasoning / Thinking
   - 🟢 **Green**: Executing Tool / System Action
   - 🔴 **Red**: Muted
 
@@ -87,8 +89,8 @@
 - **PowerPoint (`.pptx`)**: Build branded presentations with slide layouts, typography, and speaker notes.
 - **PDF Suite**: Convert, merge, extract, and assemble PDF deliverables.
 
-### 📱 Brahma Connect (Android Companion)
-- **AI Phone Call Proxy**: Brahma screens incoming phone calls, talks to the caller, takes meeting notes, and delivers immediate desktop transcripts and summaries.
+### 📱 Stella Connect (Android Companion)
+- **AI Phone Call Proxy**: Stella screens incoming phone calls, talks to the caller, takes meeting notes, and delivers immediate desktop transcripts and summaries.
 - **Ecosystem Sync**: Device geolocation, SMS notifications, and battery status.
 
 ### 🏡 Smart Home Hub
@@ -112,8 +114,8 @@
 
 1. **Clone the repository:**
    ```powershell
-   git clone https://github.com/titechprabhasolutions/Brahma-Ai-Evo.git
-   cd Brahma-Ai-Evo
+   git clone https://github.com/titechprabhasolutions/Stella-Ai-Evo.git
+   cd Stella-Ai-Evo
    ```
 
 2. **Run the Automated Setup:**
@@ -122,11 +124,11 @@
    ```
    *Or launch using the included batch file:*
    ```cmd
-   start_brahma.bat
+   start_stella.bat
    ```
 
 3. **Configure API Keys:**
-   - Launch Brahma AI Evo.
+   - Launch Stella AI Evo.
    - Click the **Settings** icon on the top navigation bar.
    - Enter your **Gemini API Key** and any optional credentials (Spotify MCP, Weather, etc.) into the respective cards.
    - Click **Save & Connect**.
@@ -137,9 +139,9 @@
 
 | Intent | Sample Voice / Text Command |
 | :--- | :--- |
-| **Hardware Circuit** | *"Brahma, how to connect DHT11 to Arduino Pro Mini"* |
+| **Hardware Circuit** | *"Stella, how to connect DHT11 to Arduino Pro Mini"* |
 | **Circuit Vision** | *"See the Arduino parts on my screen and tell me how to assemble them"* |
-| **Self-Evolution** | *"Brahma, learn a new skill to track International Space Station coordinates"* |
+| **Self-Evolution** | *"Stella, learn a new skill to track International Space Station coordinates"* |
 | **Flight Radar** | *"Show flight route from Mumbai to London"* |
 | **Nearby Amenities** | *"Find nearby hospitals on the map"* |
 | **Music Playback** | *"Play Starboy on Spotify"* |
@@ -152,35 +154,62 @@
 ## 🏗️ Architecture
 
 ```
-Brahma AI Evo/
+Stella AI Evo/
 ├── main.py                     # Main application entry point & live event loop
-├── ui.py                       # PyQt6 GUI: Command Bar, Waveform FFT, HUD Wings, Chat
+├── ui.py                       # PyQt6 GUI: Command Bar, Waveform FFT, HUD Wings, Chat, Settings
+├── core/                       # Core system architecture
+│   ├── user_paths.py           # %LOCALAPPDATA%\StellaAI + auto-migration from BrahmaAI
+│   ├── confirm.py              # Confirmation gate for irreversible actions
+│   ├── autonomy.py             # Reversible autonomous mode (act without asking)
+│   ├── undo.py                 # Undo stack for reversible actions
+│   ├── globe_window.py         # 3D WebGL Earth globe & map controller
+│   ├── circuit_hud.py          # Compact in-app holographic circuit popup overlay
+│   ├── skill_forge.py          # Project Ultron: LLM skill synthesizer
+│   ├── skill_crucible.py       # Isolated test execution sandbox
+│   ├── dynamic_registry.py     # Runtime tool hot-reloader & dispatcher
+│   └── identity.py             # System prompt & behavioral core
 ├── actions/                    # Built-in action tools & executors
+│   ├── file_controller.py      # File ops (create/move/delete via Recycle Bin + undo)
+│   ├── computer_settings.py    # System settings & orchestration
 │   ├── circuit_assembler.py    # Hardware vision & circuit solver engine
 │   ├── spotify_controller.py   # Spotify MCP client & playback manager
 │   ├── geospatial_globe.py     # Great-circle routes, radar & POI fetcher
 │   ├── auto_heal_engine.py     # Proactive exception interceptor & patcher
 │   ├── call_assistant.py       # Android phone call proxy & transcript analyzer
 │   └── office_builder.py       # Excel, Word, PPTX & PDF generators
-├── core/                       # Core system architecture
-│   ├── circuit_hud.py          # Compact in-app holographic circuit popup overlay
-│   ├── globe_window.py         # 3D WebGL Earth globe & map controller
-│   ├── skill_forge.py          # Project Ultron: LLM skill synthesizer
-│   ├── skill_crucible.py       # Isolated test execution sandbox
-│   ├── dynamic_registry.py     # Runtime tool hot-reloader & dispatcher
-│   └── identity.py             # System prompt & behavioral core
+├── memory/                     # Persistent state
+│   └── config_manager.py       # app_settings.json read/write facade
+├── assets/
+│   ├── globe/                  # Three.js + Leaflet HoloGlobe (starfield, night lights, Phong shading)
+│   ├── web_background/         # Ambient WebGL background
+│   └── stella_logo.png         # Repo / app logo
+├── config/
+│   └── app_settings.json       # User-facing defaults & persisted toggles
 ├── features/                   # Self-evolved & custom Python tools
-│   ├── circuit_schematic.py    # Modular circuit schematic feature
-│   └── spotify_mcp.py          # Modular Spotify feature
 ├── smart_home/                 # Smart device provider & discovery services
-└── brahma-connect-android/     # Companion Android mobile application
+├── stella-connect-android/     # Companion Android mobile application
+├── installer/                  # PyInstaller specs + setup wizard
+│   ├── Stella.spec             # Main app (onedir -> dist/StellaEvo/)
+│   ├── Stella_Setup.spec       # One-file setup wizard
+│   └── install_wizard.py
+├── scripts/
+│   └── package_bundle.py       # plan / check / resumable download for installs
+├── build_all.ps1               # Windows build (app + setup wizard)
+├── build_macos.sh              # macOS build
+├── build_linux.sh              # Linux build
+└── version.txt
 ```
+
+### User data location & migration
+All long-term memories, credentials, and configuration files live in `%LOCALAPPDATA%\StellaAI\`. On first launch, `core/user_paths.py` performs a one-time copy of a pre-existing `%LOCALAPPDATA%\BrahmaAI` folder into `StellaAI`, so upgrading from Brahma AI Evo preserves your profile.
 
 ---
 
 ## 🔒 Security & Privacy
 
-- All long-term memories, credentials, and configuration files are stored locally in `%LOCALAPPDATA%\BrahmaAI\`.
+- All long-term memories, credentials, and configuration files are stored locally in `%LOCALAPPDATA%\StellaAI\`.
+- **Confirmation gate** (`core/confirm.py`): irreversible actions — deleting files, shutting down, answering a call as you — require an on-screen confirmation before they run.
+- **Autonomous mode** (`core/autonomy.py`): optionally, the user can let Stella act without asking. It is a single reversible toggle (Settings › AI & Assistant), every toggle is logged, and all actions still go through the Recycle Bin / undo stack so they remain reversible.
 - External tools run through permission sentries and the isolated Crucible sandbox.
 - Audio and video frames are only streamed during active conversation sessions.
 
@@ -190,7 +219,7 @@ Brahma AI Evo/
 
 **Personal & Private Local Use Only — No Distribution.**
 
-This project is licensed under the **Brahma AI Evo Source-Available Personal Use License**.
+This project is licensed under the **Stella AI Evo Source-Available Personal Use License**.
 
 - ✅ **Allowed:** You may download, clone, inspect, build, and run the software locally strictly on your own personal device for private, personal, educational, and research use.
 - 🚫 **Strictly Prohibited (No Distribution):** You may **NOT** distribute, redistribute, re-upload, mirror, share, transmit, sublicense, or publish this software, repository, binaries, or derivative works anywhere (including other Git hosts, public repositories, or cloud platforms). The only official distribution source is this repository.
@@ -199,5 +228,5 @@ This project is licensed under the **Brahma AI Evo Source-Available Personal Use
 For full terms and legal conditions, see the [LICENSE](LICENSE) file. For commercial licensing inquiries, reach out via [Discord](https://discord.gg/gEYmJKKtq3).
 
 <div align="center">
-<b>Brahma AI Evo</b> • Built with intelligence, precision, and autonomy.
+<b>Stella AI Evo</b> • Built with intelligence, precision, and autonomy.
 </div>

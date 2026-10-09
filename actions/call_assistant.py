@@ -141,7 +141,7 @@ def _restore_system_audio_after_call(orig_mic_level: Optional[float]) -> None:
 
 class CallAssistant:
     """
-    Manages an active call screening session where Brahma acts as proxy.
+    Manages an active call screening session where Stella acts as proxy.
     """
 
     _active_instance: Optional["CallAssistant"] = None
@@ -218,7 +218,7 @@ class CallAssistant:
         _restore_system_audio_after_call(self._orig_mic_level)
 
         excuse = f"{self.owner_name} is joining the line right now. Thank you for holding, please go ahead."
-        self._log_turn("Brahma", excuse)
+        self._log_turn("Stella", excuse)
         self._speak(excuse)
 
         if self.ui:
@@ -236,7 +236,7 @@ class CallAssistant:
         self._stop_event.set()
 
         if message:
-            self._log_turn("Brahma", message)
+            self._log_turn("Stella", message)
             self._speak(message)
             time.sleep(0.5)
 
@@ -262,8 +262,8 @@ class CallAssistant:
 
     def _speak(self, text: str):
         """
-        Speaks text to the active call using Brahma's UNIFIED native voice (Gemini Live).
-        Blocks until speech finishes so Brahma doesn't cut itself off or listen to its own voice.
+        Speaks text to the active call using Stella's UNIFIED native voice (Gemini Live).
+        Blocks until speech finishes so Stella doesn't cut itself off or listen to its own voice.
         """
         text = (text or "").strip()
         if not text:
@@ -280,7 +280,7 @@ class CallAssistant:
         except Exception:
             pass
 
-        # 1. Primary: Brahma Unified Native Voice (Gemini Live Charon)
+        # 1. Primary: Stella Unified Native Voice (Gemini Live Charon)
         spoken = False
         if self.speak_fn:
             try:
@@ -329,7 +329,7 @@ class CallAssistant:
         greeting = (
             f"Hey! You've reached {self.owner_name}'s line. He's tied up right now, but leave a quick message and I'll make sure he gets it right away!"
         )
-        self._log_turn("Brahma", greeting)
+        self._log_turn("Stella", greeting)
         self._speak(greeting)
 
         # Audio stream setup
@@ -352,7 +352,7 @@ class CallAssistant:
             if not caller_text:
                 if turns_count == 1:
                     prompt_again = f"Hey, are you still there? Go ahead with your message for {self.owner_name}."
-                    self._log_turn("Brahma", prompt_again)
+                    self._log_turn("Stella", prompt_again)
                     self._speak(prompt_again)
                     continue
                 else:
@@ -380,7 +380,7 @@ class CallAssistant:
 
             if is_just_greeting and turns_count == 1:
                 clarification = "Yeah, I'm here! Go ahead, I'm listening."
-                self._log_turn("Brahma", clarification)
+                self._log_turn("Stella", clarification)
                 self._speak(clarification)
                 continue
 
@@ -665,7 +665,7 @@ def take_over_active_call() -> None:
 
 
 def hang_up_active_call() -> None:
-    """Invoked when user clicks Hang Up or asks Brahma to end the call."""
+    """Invoked when user clicks Hang Up or asks Stella to end the call."""
     inst = CallAssistant.get_active()
     if inst:
         inst.hang_up()

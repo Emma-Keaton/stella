@@ -243,7 +243,7 @@ class GmailEngine:
 class GoogleCalendarEngine:
     @classmethod
     def list_events(cls, days: int = 7) -> str:
-        """Lists events from Google Calendar if OAuth exists, or Brahma's local calendar."""
+        """Lists events from Google Calendar if OAuth exists, or Stella's local calendar."""
         # Try local calendar store first
         from actions.calendar_scheduler import calendar_scheduler
         res = calendar_scheduler({"action": "get_upcoming"})
@@ -271,8 +271,8 @@ class GoogleDriveEngine:
     @classmethod
     def search_files(cls, query: str) -> str:
         """Searches Google Drive or local Stella AI generated files."""
-        # Search Desktop/BrahmaAI folder
-        desktop_ai = Path.home() / "Desktop" / "BrahmaAI"
+        # Search Desktop/StellaAI folder
+        desktop_ai = Path.home() / "Desktop" / "StellaAI"
         if not desktop_ai.exists():
             return f"No Drive or local files found for query '{query}'."
 
@@ -283,12 +283,12 @@ class GoogleDriveEngine:
                 matches.append(f"- {f.name} ({round(f.stat().st_size / 1024, 1)} KB)")
 
         if matches:
-            return "Found files in Brahma Workspace:\n" + "\n".join(matches)
+            return "Found files in Stella Workspace:\n" + "\n".join(matches)
         return f"No files matching '{query}' found."
 
     @classmethod
     def read_file(cls, filename: str) -> str:
-        desktop_ai = Path.home() / "Desktop" / "BrahmaAI"
+        desktop_ai = Path.home() / "Desktop" / "StellaAI"
         target = desktop_ai / filename
         if not target.exists():
             for f in desktop_ai.glob("*.*"):
@@ -312,12 +312,12 @@ class GoogleDriveEngine:
         p = Path(local_path)
         if not p.exists():
             return f"Local file '{local_path}' does not exist."
-        # Store in BrahmaAI cloud staging
-        dest = Path.home() / "Desktop" / "BrahmaAI" / p.name
+        # Store in StellaAI cloud staging
+        dest = Path.home() / "Desktop" / "StellaAI" / p.name
         try:
             import shutil
             shutil.copy2(p, dest)
-            return f"File '{p.name}' uploaded to Brahma Workspace storage."
+            return f"File '{p.name}' uploaded to Stella Workspace storage."
         except Exception as e:
             return f"Upload error: {e}"
 

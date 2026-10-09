@@ -29,10 +29,10 @@ HISTORY_FILE = CONFIG_DIR / "organizer_history.json"
 PROTECTED_EXTENSIONS = {".lnk", ".url", ".sys", ".dll"}
 PROTECTED_FILENAMES = {
     "desktop.ini", "thumbs.db", ".ds_store",
-    "brahma_history.json", "organizer_history.json",
+    "stella_history.json", "organizer_history.json",
     "email_credentials.json", ".email_key", "api_keys.json"
 }
-PROTECTED_DIR_PREFIXES = (".", "brahmaprojects", ".brahma", ".git", ".venv", "node_modules", "$recycle.bin")
+PROTECTED_DIR_PREFIXES = (".", "stellaprojects", ".stella", ".git", ".venv", "node_modules", "$recycle.bin")
 
 # ── Categorization Rules ───────────────────────────────────────────────────
 

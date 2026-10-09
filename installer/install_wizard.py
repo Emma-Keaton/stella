@@ -58,7 +58,7 @@ class InstallThread(QThread):
             self.status.emit("Creating shortcuts...")
             
             # Create Desktop Shortcut
-            exe_path = os.path.join(self.target_dir, 'BrahmaEvo.exe')
+            exe_path = os.path.join(self.target_dir, 'StellaEvo.exe')
             if os.path.exists(exe_path):
                 shell = win32com.client.Dispatch("WScript.Shell")
                 
@@ -70,7 +70,7 @@ class InstallThread(QThread):
                     shortcut = shell.CreateShortCut(shortcut_path)
                     shortcut.Targetpath = exe_path
                     shortcut.WorkingDirectory = self.target_dir
-                    shortcut.IconLocation = os.path.join(self.target_dir, 'assets', 'Brahma_Lite_Logo.ico')
+                    shortcut.IconLocation = os.path.join(self.target_dir, 'assets', 'stella_logo.ico')
                     shortcut.WindowStyle = 1 # Normal window
                     shortcut.save()
                 except Exception as e:
@@ -83,7 +83,7 @@ class InstallThread(QThread):
                     shortcut_sm = shell.CreateShortCut(shortcut_path_sm)
                     shortcut_sm.Targetpath = exe_path
                     shortcut_sm.WorkingDirectory = self.target_dir
-                    shortcut_sm.IconLocation = os.path.join(self.target_dir, 'assets', 'Brahma_Lite_Logo.ico')
+                    shortcut_sm.IconLocation = os.path.join(self.target_dir, 'assets', 'stella_logo.ico')
                     shortcut_sm.WindowStyle = 1
                     shortcut_sm.save()
                 except Exception as e:
@@ -200,7 +200,7 @@ class InstallWizard(QWidget):
         p1_layout.addWidget(desc)
         
         # Default Path
-        self.install_path = os.path.join(os.environ.get('LOCALAPPDATA', os.environ['USERPROFILE']), 'Brahma_Evo')
+        self.install_path = os.path.join(os.environ.get('LOCALAPPDATA', os.environ['USERPROFILE']), 'Stella_Evo')
         path_label = QLabel(f"Destination Folder: {self.install_path}")
         path_label.setFont(QFont("Segoe UI", 10))
         path_label.setStyleSheet("color: #aaa;")
@@ -281,7 +281,7 @@ class InstallWizard(QWidget):
 
     def start_installation(self):
         self.stacked_widget.setCurrentIndex(1)
-        source_dir = os.path.join(self.base_dir, 'BrahmaEvo')
+        source_dir = os.path.join(self.base_dir, 'StellaEvo')
         if not os.path.exists(source_dir):
             self.lbl_status.setText(f"Error: Payload missing.\n{source_dir}")
             return
@@ -301,7 +301,7 @@ class InstallWizard(QWidget):
         self.lbl_status.setStyleSheet("color: #ff4444;")
         
     def launch_app(self):
-        exe_path = os.path.join(self.install_path, 'BrahmaEvo.exe')
+        exe_path = os.path.join(self.install_path, 'StellaEvo.exe')
         if os.path.exists(exe_path):
             os.startfile(exe_path)
         self.close()

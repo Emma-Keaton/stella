@@ -5,7 +5,7 @@ Monitors the Windows clipboard in the background for actionable technical conten
 - JSON structures
 - URLs or SQL queries
 - Code snippets
-Notifies Brahma so it can offer quick contextual assistance.
+Notifies Stella so it can offer quick contextual assistance.
 """
 
 import time

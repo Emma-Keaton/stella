@@ -87,4 +87,4 @@ if failed:
         print(f"  - {f}")
     print("\nSome packages failed to install. Check messages above for details.")
 else:
-    print("Setup complete! Run 'python main.py' or start_brahma.bat to start Stella.")
+    print("Setup complete! Run 'python main.py' or start_stella.bat to start Stella.")

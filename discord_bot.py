@@ -36,7 +36,7 @@ from google import genai
 from llm_client import client as openrouter_client
 
 
-logger = logging.getLogger("brahma_evo.discord")
+logger = logging.getLogger("stella_evo.discord")
 
 
 def _base_dir() -> Path:

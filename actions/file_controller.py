@@ -266,6 +266,16 @@ def create_folder(path: str, name: str = "") -> str:
         return f"Could not create folder: {e}"
 
 
+def _perform_delete(target: Path) -> str:
+    """The actual delete — moves to the Recycle Bin / Trash and arms undo."""
+    original = target.resolve()
+    result   = _safe_trash(target)
+    if result.startswith("Moved to Trash"):
+        push_undo(f"deleted {original.name}",
+                  lambda p=original: _restore_from_trash(p))
+    return result
+
+
 def delete_file(path: str, name: str = "") -> str:
     try:
         base   = _resolve_path(path)
@@ -283,12 +293,23 @@ def delete_file(path: str, name: str = "") -> str:
         if target.resolve() in {p.resolve() for p in protected}:
             return f"Protected directory, cannot delete: {target.name}"
 
-        original = target.resolve()
-        result   = _safe_trash(target)
-        if result.startswith("Moved to Trash"):
-            push_undo(f"deleted {original.name}",
-                      lambda p=original: _restore_from_trash(p))
-        return result
+        # Deletion is the one file action that genuinely cannot be undone by
+        # hand once it leaves the Recycle Bin, so it goes through the shared
+        # confirmation gate — unless the user has explicitly turned on
+        # autonomous mode (core/autonomy.py), in which case confirm.request
+        # runs it immediately. Both paths keep the undo stack armed.
+        try:
+            from core import confirm
+            return confirm.request(
+                key=f"delete:{target.resolve()}",
+                title=f"Delete {target.name}",
+                detail=f"{target} will be moved to the Recycle Bin. "
+                       f"You can undo this afterwards.",
+                run=lambda t=target: _perform_delete(t),
+            )
+        except Exception:
+            # No gate available (headless) — fall back to the reversible path.
+            return _perform_delete(target)
 
     except PermissionError:
         return f"Permission denied: {path}"

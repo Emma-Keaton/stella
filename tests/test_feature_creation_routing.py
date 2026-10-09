@@ -1,6 +1,6 @@
 from unittest.mock import patch
 
-from main import BrahmaLive, _extract_skill_creation_goal, _looks_like_screen_request
+from main import StellaLive, _extract_skill_creation_goal, _looks_like_screen_request
 
 
 def test_extract_skill_creation_goal():
@@ -29,7 +29,7 @@ def test_explicit_skill_request_precedes_screen_analysis():
         def begin_task_workspace(self, *args, **kwargs):
             pass
 
-    assistant = object.__new__(BrahmaLive)
+    assistant = object.__new__(StellaLive)
     assistant.ui = FakeUI()
     assistant._reply_mode = False
     assistant._reset_idle_activity = lambda: None
@@ -73,7 +73,7 @@ def test_forge_completion_is_saved_as_assistant_reply_and_spoken():
         def show_hud_deliverable(self, **kwargs):
             self.deliverables.append(kwargs)
 
-    assistant = object.__new__(BrahmaLive)
+    assistant = object.__new__(StellaLive)
     assistant.ui = FakeUI()
     spoken = []
     assistant.speak = spoken.append

@@ -1,7 +1,7 @@
 # K2 Horizon 0.9B Local Integration Design
 
 ## Goal
-Run the user's K2-Horizon-0.9B-Q4_K_M GGUF inside Brahma Evo via llama.cpp,
+Run the user's K2-Horizon-0.9B-Q4_K_M GGUF inside Stella Evo via llama.cpp,
 selectable as "K2 Horizon" in the provider dropdown, autostarted with the app.
 
 ## Key finding: NO fork needed

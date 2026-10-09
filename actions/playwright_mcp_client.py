@@ -18,10 +18,10 @@ def _get_app_data_dir() -> Path:
     if platform.system() == "Windows":
         base = os.environ.get("LOCALAPPDATA")
         if base:
-            p = Path(base) / "BrahmaAI" / "PlaywrightProfile"
+            p = Path(base) / "StellaAI" / "PlaywrightProfile"
             p.mkdir(parents=True, exist_ok=True)
             return p
-    home = Path.home() / ".brahma_ai" / "playwright_profile"
+    home = Path.home() / ".stella_ai" / "playwright_profile"
     home.mkdir(parents=True, exist_ok=True)
     return home
 
@@ -108,7 +108,7 @@ class PlaywrightMCPClient:
                     {
                         "protocolVersion": "2024-11-05",
                         "capabilities": {},
-                        "clientInfo": {"name": "brahma-ai", "version": "1.0.0"},
+                        "clientInfo": {"name": "stella-ai", "version": "1.0.0"},
                     },
                     timeout=30,
                 )

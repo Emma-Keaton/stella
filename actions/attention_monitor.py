@@ -430,7 +430,7 @@ def _speak_edge_native(text: str, force_edge: bool = False) -> None:
             try:
                 import piper
                 _cleanup_current_audio()
-                audio_path = os.path.join(tempfile.gettempdir(), f"brahma_piper_tts_{uuid.uuid4().hex}.wav")
+                audio_path = os.path.join(tempfile.gettempdir(), f"stella_piper_tts_{uuid.uuid4().hex}.wav")
                 with open(model_path, "rb") as mf:
                     model = piper.PiperVoice.load(mf)
                 with open(audio_path, "wb") as af:
@@ -452,7 +452,7 @@ def _speak_edge_native(text: str, force_edge: bool = False) -> None:
         try:
             import edge_tts
             _cleanup_current_audio()
-            audio_path = os.path.join(tempfile.gettempdir(), f"brahma_edge_tts_{uuid.uuid4().hex}.mp3")
+            audio_path = os.path.join(tempfile.gettempdir(), f"stella_edge_tts_{uuid.uuid4().hex}.mp3")
             try:
                 communicator = edge_tts.Communicate(text, voice="en-US-GuyNeural")
                 communicator.save_sync(audio_path)
@@ -743,7 +743,7 @@ class AttentionMonitor:
                 continue
 
             hay = f"{title} {win.get('class') or ''} {proc_name}".lower()
-            if "brahma" in hay:
+            if "stella" in hay:
                 continue
 
             if app in {"Zoom", "Teams", "WhatsApp"} and _contains_any(hay, ("meeting", "call", "incoming", "ringing", "conference", "joined")):

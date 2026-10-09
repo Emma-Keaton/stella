@@ -306,7 +306,7 @@ def spotify_controller(
 
 
 def run(parameters: dict, player=None, session_memory=None) -> str:
-    """Plugin wrapper for Brahma architecture."""
+    """Plugin wrapper for Stella architecture."""
     return spotify_controller(parameters, player=player, session_memory=session_memory)
 
 
@@ -378,7 +378,7 @@ def _spotify_mcp_call(tool_name: str, arguments: dict | None = None) -> dict:
 
         init = request({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {
             "protocolVersion": "2024-11-05", "capabilities": {},
-            "clientInfo": {"name": "brahma evo-spotify", "version": "1.0.0"},
+            "clientInfo": {"name": "stella evo-spotify", "version": "1.0.0"},
         }})
         if "error" in init:
             return {"success": False, "error": init["error"].get("message", "Spotify MCP initialization failed.")}

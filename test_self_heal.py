@@ -31,7 +31,7 @@ from core.learned_rules import LearnedRulesEngine
 
 def run_test():
     print("=" * 65)
-    print(" [BRAHMA AI] SELF-HEALING & SELF-IMPROVEMENT TEST SUITE")
+    print(" [STELLA AI] SELF-HEALING & SELF-IMPROVEMENT TEST SUITE")
     print("=" * 65)
 
     # -------------------------------------------------------------

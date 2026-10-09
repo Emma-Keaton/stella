@@ -67,7 +67,7 @@ def download_and_apply_update(url: str, ui_callback=None):
         from core.user_paths import get_user_data_dir
         update_dir = get_user_data_dir() / "updates"
         update_dir.mkdir(parents=True, exist_ok=True)
-        setup_path = update_dir / "BrahmaEcho_Setup_Update.exe"
+        setup_path = update_dir / "StellaEcho_Setup_Update.exe"
         
         req = urllib.request.Request(url, headers={'User-Agent': 'Stella-OTA'})
         with urllib.request.urlopen(req, timeout=15) as response:

@@ -8,7 +8,7 @@ from core.learned_rules import LearnedRulesEngine
 from core.dynamic_registry import DynamicToolRegistry
 
 
-def test_planner_prompt_has_brahma_evo_rebrand_and_rules():
+def test_planner_prompt_has_stella_evo_rebrand_and_rules():
     assert "Stella" in PLANNER_PROMPT
     assert "Stella AI - Lite" not in PLANNER_PROMPT
     assert "Echo HUD" not in PLANNER_PROMPT

@@ -517,7 +517,7 @@ class CircuitPopupOverlay(QWidget):
 
 def show_circuit_schematic(circuit_data: Dict[str, Any], parent=None) -> Optional[QWidget]:
     """
-    Shows the compact circuit popup inside the Brahma main window.
+    Shows the compact circuit popup inside the Stella main window.
     """
     app = QApplication.instance()
     main_win = parent

@@ -86,7 +86,7 @@ class OpenRouterClient:
         self._headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type":  "application/json",
-            "HTTP-Referer":  "https://github.com/brahma-ai",
+            "HTTP-Referer":  "https://github.com/stella-ai",
             "X-Title":       "Stella",
         }
 

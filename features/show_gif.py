@@ -27,7 +27,7 @@ def execute(**kwargs):
         query = query.get('query', 'laughing cat')
     query_clean = str(query).strip() or 'laughing cat'
 
-    output_dir = os.path.join(os.environ.get('LOCALAPPDATA', os.path.expanduser('~')), 'BrahmaAI', 'deliverables')
+    output_dir = os.path.join(os.environ.get('LOCALAPPDATA', os.path.expanduser('~')), 'StellaAI', 'deliverables')
     os.makedirs(output_dir, exist_ok=True)
     gif_path = os.path.join(output_dir, 'show_gif_animation.gif')
 
@@ -80,7 +80,7 @@ def execute(**kwargs):
                 draw.text((160, 132), query_clean[:22].upper(), fill='#FFFFFF')
 
             # Telemetry text footer
-            draw.text((25, 265), 'BRAHMA EVO // ANIMATION ENGINE', fill='#38BDF8')
+            draw.text((25, 265), 'STELLA EVO // ANIMATION ENGINE', fill='#38BDF8')
             draw.text((25, 285), f"PROMPT: {query_clean.title()}", fill='#94A3B8')
 
             frames.append(img)

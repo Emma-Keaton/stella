@@ -84,8 +84,27 @@ def request(key: str, title: str, detail: str, run: Callable[[], str]) -> str:
 
     Returns the sentence the tool should hand back to the model — phrased as an
     instruction so the assistant asks the user out loud in their own language,
-    rather than reading an English string verbatim."""
+    rather than reading an English string verbatim.
+
+    Autonomous mode (core/autonomy.py) skips the gate and runs the action
+    immediately. It is opt-in, reversible, and logged; whatever runs is still
+    expected to be undoable via core/undo.py.
+    """
     global _pending
+
+    # The user explicitly asked for hands-off operation. Do the thing now and
+    # hand back a plain result string instead of a confirmation prompt.
+    try:
+        from core import autonomy
+        if autonomy.is_autonomous():
+            _log(f"SYS: Autonomous mode — running '{title}' without confirmation")
+            try:
+                return run() or "Done."
+            except Exception as e:
+                return f"{title} failed: {e}. Nothing was changed."
+    except Exception:
+        # Never let the autonomy check itself break a confirmation gate.
+        pass
 
     if _show_cb is None:
         # No interface bound (headless, or a very early call). Refuse rather

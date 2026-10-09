@@ -51,7 +51,7 @@ except Exception:
 import sounddevice as sd
 from google import genai
 from google.genai import types
-from ui import BrahmaUI
+from ui import StellaUI
 from memory.memory_manager import (
     load_memory, update_memory, format_memory_for_prompt,
     should_extract_memory, extract_memory, auto_learn_interaction
@@ -73,7 +73,7 @@ from actions.file_controller   import file_controller
 from actions.office_builder     import create_presentation, create_spreadsheet
 from actions.docx_tools        import word_document
 from actions.pdf_tools         import create_pdf
-from actions.brahma_connect    import (
+from actions.stella_connect    import (
     connect_list_devices,
     connect_get_device,
     connect_get_capabilities,
@@ -106,9 +106,9 @@ except ImportError:
         start_ig_daemon = None
 
 try:
-    from brahma_connect.service import get_service as get_brahma_connect_service
+    from stella_connect.service import get_service as get_stella_connect_service
 except Exception:
-    get_brahma_connect_service = None
+    get_stella_connect_service = None
 
 
 def get_base_dir():
@@ -170,7 +170,7 @@ def _ensure_desktop_shortcut() -> None:
         desktop_dir.mkdir(parents=True, exist_ok=True)
         shortcut_path = desktop_dir / "Stella.lnk"
         script_path = BASE_DIR / "main.py"
-        icon_path = BASE_DIR / "assets" / "Brahma_Lite_Logo.ico"
+        icon_path = BASE_DIR / "assets" / "stella_logo.ico"
 
         if not icon_path.exists():
             icon_path = None
@@ -535,10 +535,10 @@ def _wakeword_detected(text: str) -> bool:
     if not words:
         return False
     phrases = (
-        "brahma evo",
-        "hey brahma evo",
-        "hi brahma evo",
-        "hello brahma evo",
+        "stella evo",
+        "hey stella evo",
+        "hi stella evo",
+        "hello stella evo",
         "hey",
         "hi",
         "hello",
@@ -546,7 +546,7 @@ def _wakeword_detected(text: str) -> bool:
     compact = " ".join(words)
     if compact in phrases or any(p in compact for p in phrases):
         return True
-    return any(word in {"brahma evo", "hey", "hi", "hello"} for word in words)
+    return any(word in {"stella evo", "hey", "hi", "hello"} for word in words)
 
 
 def _build_task_plan(text: str) -> list[str]:
@@ -610,11 +610,11 @@ def _build_task_plan(text: str) -> list[str]:
 
 _last_memory_input = ""
 
-def _update_memory_async(user_text: str, brahma_text: str) -> None:
+def _update_memory_async(user_text: str, stella_text: str) -> None:
     global _last_memory_input
 
     user_text   = (user_text   or "").strip()
-    brahma_text = (brahma_text or "").strip()
+    stella_text = (stella_text or "").strip()
 
     if len(user_text) < 4 or user_text == _last_memory_input:
         return
@@ -622,7 +622,7 @@ def _update_memory_async(user_text: str, brahma_text: str) -> None:
 
     # Fast deterministic heuristic extraction (Pillar 5 - Living Knowledge Graph)
     try:
-        learned = auto_learn_interaction(user_text, brahma_text)
+        learned = auto_learn_interaction(user_text, stella_text)
         if learned:
             print(f"[Memory] 🧠 Auto-learned: {list(learned.keys())}")
     except Exception as exc:
@@ -630,9 +630,9 @@ def _update_memory_async(user_text: str, brahma_text: str) -> None:
 
     try:
         api_key = _get_api_key()
-        if not should_extract_memory(user_text, brahma_text, api_key):
+        if not should_extract_memory(user_text, stella_text, api_key):
             return
-        data = extract_memory(user_text, brahma_text, api_key)
+        data = extract_memory(user_text, stella_text, api_key)
         if data:
             update_memory(data)
             print(f"[Memory] ✅ {list(data.keys())}")
@@ -1098,7 +1098,7 @@ TOOL_DECLARATIONS = [
     {
         "name": "connect_list_devices",
         "description": (
-            "Lists devices connected to Brahma Connect. Use when the user asks what devices are connected, "
+            "Lists devices connected to Stella Connect. Use when the user asks what devices are connected, "
             "what is online, or wants a simple inventory of paired devices."
         ),
         "parameters": {
@@ -1146,7 +1146,7 @@ TOOL_DECLARATIONS = [
     {
         "name": "connect_execute",
         "description": (
-            "Routes a Brahma Connect command to a paired device through the gateway. "
+            "Routes a Stella Connect command to a paired device through the gateway. "
             "Use for actions such as launch_app, open_url, get_battery, capture_screen, take_photo, "
             "clipboard_get, clipboard_set, send_file, receive_file, media_play, media_pause, volume_set, "
             "notification_list, get_device_info, close_app, mouse_move, keyboard_type, unlock_phone, file_list, file_read, file_write, file_delete."
@@ -1180,7 +1180,7 @@ TOOL_DECLARATIONS = [
     {
         "name": "connect_pair_device",
         "description": (
-            "Creates or approves Brahma Connect pairing. Use to generate a QR code / pairing code for a new device, "
+            "Creates or approves Stella Connect pairing. Use to generate a QR code / pairing code for a new device, "
             "or to approve a pending pairing request."
         ),
         "parameters": {
@@ -1196,7 +1196,7 @@ TOOL_DECLARATIONS = [
     {
         "name": "connect_disconnect_device",
         "description": (
-            "Disconnects a device from Brahma Connect and marks it offline. "
+            "Disconnects a device from Stella Connect and marks it offline. "
             "Use when the user asks to disconnect, log out, or stop a paired device."
         ),
         "parameters": {
@@ -1613,7 +1613,7 @@ TOOL_DECLARATIONS = [
         }
     },
     {
-        "name": "shutdown_brahma",
+        "name": "shutdown_stella",
         "description": (
             "Shuts down the assistant completely. "
         "Call this when the user expresses intent to end the conversation, "
@@ -1894,7 +1894,7 @@ TOOL_DECLARATIONS = [
     },
     {
         "name": "geospatial_globe",
-        "description": "Opens Brahma's interactive 3D map for routes, live aircraft, weather, earthquakes, nearby places, and ISS tracking.",
+        "description": "Opens Stella's interactive 3D map for routes, live aircraft, weather, earthquakes, nearby places, and ISS tracking.",
         "parameters": {
             "type": "OBJECT",
             "properties": {
@@ -1911,7 +1911,7 @@ TOOL_DECLARATIONS = [
     },
     {
         "name": "call_screening",
-        "description": "Screens an incoming call with Brahma as an AI attendant. Answering always waits for the user to confirm on the Echo HUD.",
+        "description": "Screens an incoming call with Stella as an AI attendant. Answering always waits for the user to confirm on the Echo HUD.",
         "parameters": {
             "type": "OBJECT",
             "properties": {
@@ -1937,7 +1937,7 @@ TOOL_DECLARATIONS = [
     },
     {
         "name": "dynamic_skill",
-        "description": "Lists and runs installed Brahma skills, including stock, crypto, cricket, speed-test, and ISS examples. Running a skill requires user confirmation.",
+        "description": "Lists and runs installed Stella skills, including stock, crypto, cricket, speed-test, and ISS examples. Running a skill requires user confirmation.",
         "parameters": {
             "type": "OBJECT",
             "properties": {
@@ -2030,9 +2030,9 @@ TOOL_DECLARATIONS = [
 ]
 
 
-class BrahmaLive:
+class StellaLive:
 
-    def __init__(self, ui: BrahmaUI, dashboard=None, dashboard_started: bool = False, enable_dashboard: bool = True):
+    def __init__(self, ui: StellaUI, dashboard=None, dashboard_started: bool = False, enable_dashboard: bool = True):
         self.ui             = ui
         self._smart_home    = SmartHomeService()
         self.session        = None
@@ -2400,15 +2400,15 @@ class BrahmaLive:
             devices = self._smart_home.list_devices()
             routed_text_home = sd_mgr.route_command(text, devices)
             if routed_text_home != text:
-                print(f"[BRAHMA EVO] Redirection: '{text}' -> '{routed_text_home}'")
+                print(f"[STELLA EVO] Redirection: '{text}' -> '{routed_text_home}'")
                 text = routed_text_home
         except Exception as e:
-            print(f"[BRAHMA EVO] Redirection error: {e}")
+            print(f"[STELLA EVO] Redirection error: {e}")
 
         developer_settings = self.ui._load_app_settings() if hasattr(self.ui, "_load_app_settings") else {}
         developer_workspace = str(developer_settings.get("developer_mode_workspace", "")).strip()
         if not developer_workspace:
-            developer_workspace = str(Path.home() / "Desktop" / "BrahmaProjects")
+            developer_workspace = str(Path.home() / "Desktop" / "StellaProjects")
             Path(developer_workspace).mkdir(parents=True, exist_ok=True)
 
         presentation_request = _looks_like_presentation_request(text)
@@ -2427,7 +2427,7 @@ class BrahmaLive:
                 try:
                     from actions.office_generator import generate_presentation_from_prompt
                     res = generate_presentation_from_prompt(text, player=self.ui, speak=self.speak)
-                    self.ui.write_log(f"[BrahmaOffice] {res}")
+                    self.ui.write_log(f"[StellaOffice] {res}")
                     if hasattr(self.ui, "update_task_workspace"):
                         self.ui.update_task_workspace(status="Presentation Completed", output=res, percent=100)
                     self.speak("Your presentation has been created and saved to Desktop, sir.")
@@ -2453,7 +2453,7 @@ class BrahmaLive:
                 try:
                     from actions.office_generator import generate_spreadsheet_from_prompt
                     res = generate_spreadsheet_from_prompt(text, player=self.ui, speak=self.speak)
-                    self.ui.write_log(f"[BrahmaOffice] {res}")
+                    self.ui.write_log(f"[StellaOffice] {res}")
                     if hasattr(self.ui, "update_task_workspace"):
                         self.ui.update_task_workspace(status="Spreadsheet Completed", output=res, percent=100)
                     self.speak("Your spreadsheet workbook has been created and saved to Desktop, sir.")
@@ -2470,19 +2470,19 @@ class BrahmaLive:
         code_request = (not presentation_request and not spreadsheet_request) and _looks_like_code_request(text) and any(w in text.lower() for w in ("app", "website", "web", "program", "script", "project", "game", "calc", "html", "react"))
 
         if website_request or code_request:
-            self.speak("Working on your project with Brahma Dev...")
+            self.speak("Working on your project with Stella Dev...")
             if hasattr(self.ui, "begin_task_workspace"):
                 self.ui.begin_task_workspace(text, ["Analyzing specifications", "Scaffolding files", "Writing code", "Verifying build"], source=source or "local")
 
-            def _run_brahma_dev():
+            def _run_stella_dev():
                 try:
                     import webbrowser
-                    from actions.brahma_dev_agent import run_dev_agent
+                    from actions.stella_dev_agent import run_dev_agent
                     res = run_dev_agent({
                         "description": text,
                         "workspace_path": developer_workspace
                     }, speak=self.speak)
-                    self.ui.write_log(f"[BrahmaDev] {res[:400]}")
+                    self.ui.write_log(f"[StellaDev] {res[:400]}")
 
                     if "encountered an error during inference" in res or "LLM error:" in res:
                         if hasattr(self.ui, "update_task_workspace"):
@@ -2509,12 +2509,12 @@ class BrahmaLive:
                     except Exception:
                         pass
                 except Exception as exc:
-                    self.ui.write_log(f"ERR: Brahma Dev failed: {exc}")
+                    self.ui.write_log(f"ERR: Stella Dev failed: {exc}")
                     if hasattr(self.ui, "update_task_workspace"):
                         self.ui.update_task_workspace(status="Build Failed", output=str(exc), percent=0)
                     self.speak("There was an issue building the project, sir. Please check the logs.")
 
-            threading.Thread(target=_run_brahma_dev, daemon=True).start()
+            threading.Thread(target=_run_stella_dev, daemon=True).start()
             return
 
         # Google Workspace Direct Command Handling (Gmail & Calendar checks)
@@ -2665,7 +2665,7 @@ class BrahmaLive:
                     from actions.auto_heal_engine import AutoHealEngine
                     tb_str = traceback.format_exc()
                     AutoHealEngine.record_last_error(tb_str)
-                    err_msg = f"Simulated bug triggered in test_action.py: {type(exc).__name__}. Traceback captured! You can now say 'Brahma, fix that bug'."
+                    err_msg = f"Simulated bug triggered in test_action.py: {type(exc).__name__}. Traceback captured! You can now say 'Stella, fix that bug'."
                     self.speak(err_msg)
                     self.ui.write_log(f"[AutoHeal Test] {err_msg}")
                     if hasattr(self.ui, "finish_task_workspace"):
@@ -2775,7 +2775,7 @@ class BrahmaLive:
             self.ui.begin_task_workspace(text, _build_task_plan(text), source=source or "local")
         except Exception:
             pass
-        if source != "instagram" and self._handle_brahma_connect_command(text, source=source or "local"):
+        if source != "instagram" and self._handle_stella_connect_command(text, source=source or "local"):
             return
         if self._handle_smart_home_command(text, source=source or "local"):
             return
@@ -2851,7 +2851,7 @@ class BrahmaLive:
         
         # Don't touch commands targeted at phone or mobile
         mobile_words = (
-            "phone", "mobile", "android", "tablet", "brahma connect",
+            "phone", "mobile", "android", "tablet", "stella connect",
             "my phone", "my mobile", "my tablet", "my android", "flashlight", "torch"
         )
         if any(word in normalized for word in mobile_words):
@@ -2956,7 +2956,7 @@ class BrahmaLive:
         candidate = re.sub(r"\s+", " ", candidate)
         return candidate
 
-    def _handle_brahma_connect_command(self, text: str, source: str = "local") -> bool:
+    def _handle_stella_connect_command(self, text: str, source: str = "local") -> bool:
         normalized = re.sub(r"\s+", " ", re.sub(r"[^a-z0-9\s%]", " ", text.lower())).strip()
         
         # Explicit mobile indicators: only route to phone if user explicitly mentions phone/mobile
@@ -2964,7 +2964,7 @@ class BrahmaLive:
         is_flashlight = "flashlight" in normalized or "torch" in normalized
         is_ring_phone = any(p in normalized for p in ("ring phone", "ring my phone", "find my phone", "find phone", "locate phone"))
         has_phone_ref = any(token in normalized for token in (
-            "phone", "mobile", "android", "tablet", "brahma connect",
+            "phone", "mobile", "android", "tablet", "stella connect",
             "my phone", "my mobile", "my tablet", "my android"
         ))
 
@@ -3073,13 +3073,13 @@ class BrahmaLive:
             result = json.loads(result_json)
             if result.get("success", False):
                 detail = str(result.get("detail") or result.get("error") or "Device command completed.")
-                title = f"Brahma Connect: {action}"
+                title = f"Stella Connect: {action}"
                 self.ui.update_task_workspace(
                     title=title,
                     command=text,
                     plan=[
                         "Identify the paired phone or device",
-                        "Route the command through Brahma Connect",
+                        "Route the command through Stella Connect",
                         "Verify the device response",
                         "Report the result",
                     ],
@@ -3094,7 +3094,7 @@ class BrahmaLive:
                     self.ui.set_state("LISTENING")
                 return True
 
-            self.ui.write_log(f"ERR: Brahma Connect command failed: {result.get('error') or 'Unknown error'}")
+            self.ui.write_log(f"ERR: Stella Connect command failed: {result.get('error') or 'Unknown error'}")
             return False
         except Exception:
             return False
@@ -3400,7 +3400,7 @@ class BrahmaLive:
                     cleaned = re.sub(pattern, "", text, flags=re.IGNORECASE).strip()
                     if cleaned:
                         return "MANUAL_REPLY", cleaned
-            if len(text.strip().split()) >= 2 and not any(g in lower for g in ("hello", "hey brahma", "who are you")):
+            if len(text.strip().split()) >= 2 and not any(g in lower for g in ("hello", "hey stella", "who are you")):
                 return "MANUAL_REPLY", text.strip()
             return "IGNORE", ""
 
@@ -3717,9 +3717,9 @@ class BrahmaLive:
                         percent=50,
                     )
                     reply = _gemini_text_reply(request_text)
-                    print("[BRAHMA EVO] 🌐 Google Gemini answered successfully!")
+                    print("[STELLA EVO] 🌐 Google Gemini answered successfully!")
                 except Exception as e_gem:
-                    print(f"[BRAHMA EVO] ⚠️ Gemini failed: {e_gem}")
+                    print(f"[STELLA EVO] ⚠️ Gemini failed: {e_gem}")
                     if _is_gemini_limit_error(e_gem):
                         self._use_openrouter_first = True
 
@@ -3738,9 +3738,9 @@ class BrahmaLive:
                             "Reply naturally and briefly. Do not mention internal implementation details."
                         ),
                     )
-                    print("[BRAHMA EVO] 🌐 OpenRouter answered successfully!")
+                    print("[STELLA EVO] 🌐 OpenRouter answered successfully!")
                 except Exception as e_or:
-                    print(f"[BRAHMA EVO] ⚠️ OpenRouter failed: {e_or}")
+                    print(f"[STELLA EVO] ⚠️ OpenRouter failed: {e_or}")
 
             # 3. If user explicitly configured Local AI, is in Offline Mode, or cloud provider failed: run Local Brain
             if not reply and (configured_provider == "Local" or is_offline_mode or not (is_cloud_gemini or is_cloud_openrouter)) and local_brain.is_available():
@@ -3795,7 +3795,7 @@ class BrahmaLive:
                             else:
                                 fn_args = fn_args_raw or {}
 
-                            print(f"[BRAHMA EVO] 🔒 Local Brain executing tool: {fn_name}({fn_args})")
+                            print(f"[STELLA EVO] 🔒 Local Brain executing tool: {fn_name}({fn_args})")
                             self.ui.update_task_workspace(
                                 status=f"Executing {fn_name}",
                                 output=f"Running action: {fn_name} on local machine...",
@@ -3820,13 +3820,13 @@ class BrahmaLive:
                                 if followup_reply:
                                     reply = followup_reply
                             except Exception as e_fu:
-                                print(f"[BRAHMA EVO] ⚠️ Local Brain follow-up failed: {e_fu}")
+                                print(f"[STELLA EVO] ⚠️ Local Brain follow-up failed: {e_fu}")
                                 reply = str(tool_result) if tool_result else f"{fn_name.replace('_', ' ').capitalize()} completed."
                     else:
                         reply = msg.get("content", "").strip()
-                    print(f"[BRAHMA EVO] 🔒 Local Brain ({local_model_target}) answered successfully!")
+                    print(f"[STELLA EVO] 🔒 Local Brain ({local_model_target}) answered successfully!")
                 except Exception as e_loc:
-                    print(f"[BRAHMA EVO] ⚠️ Local Brain failed: {e_loc}")
+                    print(f"[STELLA EVO] ⚠️ Local Brain failed: {e_loc}")
 
             # 4. Fallback cascading: if primary cloud choice failed, try secondary cloud choice
             if not reply and not is_offline_mode:
@@ -3864,9 +3864,9 @@ class BrahmaLive:
                         reply = self._execute_tool_sync(fn_name, fn_args, call_id)
                     else:
                         reply = msg_net.get("content", "").strip()
-                    print(f"[BRAHMA EVO] 🔒 Local Brain offline safety net answered ({local_model_target})!")
+                    print(f"[STELLA EVO] 🔒 Local Brain offline safety net answered ({local_model_target})!")
                 except Exception as e_net:
-                    print(f"[BRAHMA EVO] ⚠️ Offline Local Brain fallback failed: {e_net}")
+                    print(f"[STELLA EVO] ⚠️ Offline Local Brain fallback failed: {e_net}")
             reply = (reply or "").strip()
             if not reply:
                 reply = "I’m ready, sir."
@@ -3881,7 +3881,7 @@ class BrahmaLive:
                 self.ui.set_state("LISTENING")
         except Exception as e:
             msg = f"Fallback reply failed: {e}"
-            print(f"[BRAHMA EVO] ⚠️ {msg}")
+            print(f"[STELLA EVO] ⚠️ {msg}")
             self.ui.write_log(f"ERR: {msg}")
             try:
                 self.ui.finish_task_workspace(msg, "Reply failed.", 100)
@@ -3943,14 +3943,14 @@ class BrahmaLive:
                     prompt = f"System Alert / Context: {text}\n\nPlease relay this information to me naturally now."
                     await self.session.send(input=prompt, end_of_turn=True)
                 except Exception as e:
-                    print(f"[BRAHMA EVO] Unified Speak (Charon) err: {e}")
+                    print(f"[STELLA EVO] Unified Speak (Charon) err: {e}")
                     def _fallback():
                         try:
                             self.set_speaking(True)
                             from actions.attention_monitor import _speak_edge_native
                             _speak_edge_native(text)
                         except Exception as exc:
-                            print(f"[Brahma Speak] Fallback TTS failed: {exc}")
+                            print(f"[Stella Speak] Fallback TTS failed: {exc}")
                         finally:
                             self.set_speaking(False)
                     threading.Thread(target=_fallback, daemon=True).start()
@@ -3963,7 +3963,7 @@ class BrahmaLive:
                     from actions.attention_monitor import _speak_edge_native
                     _speak_edge_native(text)
                 except Exception as exc:
-                    print(f"[Brahma Speak] Unified TTS failed: {exc}")
+                    print(f"[Stella Speak] Unified TTS failed: {exc}")
                 finally:
                     self.set_speaking(False)
             threading.Thread(target=_speak_thread, daemon=True).start()
@@ -4112,11 +4112,11 @@ class BrahmaLive:
         name = fc.name
         args = dict(fc.args or {})
 
-        print(f"[BRAHMA EVO] 🔧 {name}  {args}")
+        print(f"[STELLA EVO] 🔧 {name}  {args}")
         self.speak(f"Working on {name.replace('_', ' ')}...")
         self.ui.set_state("THINKING")
 
-        # Trigger Brahma Right Wing: Live Operations & Sources Telemetry
+        # Trigger Stella Right Wing: Live Operations & Sources Telemetry
         tool_title = name.replace("_", " ").title()
         brief_query = (
             args.get("query")
@@ -4552,7 +4552,7 @@ class BrahmaLive:
                 location = args.get("location") or "current"
                 if action == "open":
                     globe.open_globe(location if args.get("location") else None)
-                    result = "Opened the interactive Brahma map."
+                    result = "Opened the interactive Stella map."
                 elif action == "route":
                     r = await loop.run_in_executor(None, lambda: globe.show_route(args.get("origin", ""), args.get("destination", "")))
                     result = f"Flight route: {r.get('origin')} to {r.get('destination')}, {r.get('distance_km')} km, about {r.get('flight_time')}."
@@ -4598,7 +4598,7 @@ class BrahmaLive:
                     result = request(
                         "start-call-screening",
                         "Answer this call as Stella",
-                        f"Brahma will answer {event['title']} in {event['app']}, listen to the caller, and prepare a transcript and summary.",
+                        f"Stella will answer {event['title']} in {event['app']}, listen to the caller, and prepare a transcript and summary.",
                         lambda: (start_call_proxy(event, ui=self.ui, speak_fn=self.speak) and "Call screening started.")
                     )
                     self.ui.set_state("LISTENING")
@@ -4614,7 +4614,7 @@ class BrahmaLive:
                 elif action == "forge":
                     goal = (args.get("goal") or "").strip()
                     if not goal:
-                        result = "Describe the capability you want Brahma to learn."
+                        result = "Describe the capability you want Stella to learn."
                     else:
                         threading.Thread(
                             target=self._forge_skill,
@@ -4740,7 +4740,7 @@ class BrahmaLive:
                 from actions.upload_video import upload_video
                 r = await loop.run_in_executor(None, lambda: upload_video(parameters=args, player=self.ui, speak=self.speak))
                 result = r or "Video publishing ready."
-            elif name == "shutdown_brahma":
+            elif name == "shutdown_stella":
                 self.ui.write_log("SYS: Shutdown requested.")
                 self.speak("Goodbye, sir.")
 
@@ -4771,7 +4771,7 @@ class BrahmaLive:
         except Exception:
             pass
 
-        # Trigger Brahma Left Wing: Final Deliverables & Results
+        # Trigger Stella Left Wing: Final Deliverables & Results
         try:
             import re
             file_match = re.search(r'([A-Za-z]:\\[^\s"\'<>`\r\n]+\.(?:pdf|docx|xlsx|pptx|png|jpg|mp4|py|html|json|txt))', str(result))
@@ -4814,7 +4814,7 @@ class BrahmaLive:
         if not self.ui.muted:
             self.ui.set_state("LISTENING")
 
-        print(f"[BRAHMA EVO] 📤 {name} → {str(result)[:80]}")
+        print(f"[STELLA EVO] 📤 {name} → {str(result)[:80]}")
 
         return types.FunctionResponse(
             id=fc.id, name=name,
@@ -4865,7 +4865,7 @@ class BrahmaLive:
             await self.session.send_realtime_input(media=msg)
 
     async def _listen_audio(self):
-        print("[BRAHMA EVO] 🎤 Mic started")
+        print("[STELLA EVO] 🎤 Mic started")
         loop = asyncio.get_event_loop()
         import numpy as np
 
@@ -4889,7 +4889,7 @@ class BrahmaLive:
         def callback(indata, frames, time_info, status):
             nonlocal silence_chunks
             with self._speaking_lock:
-                brahma_speaking = self._is_speaking
+                stella_speaking = self._is_speaking
             if self._phone_active:
                 return
 
@@ -4919,7 +4919,7 @@ class BrahmaLive:
                 # Handle Local AI voice input when in Local or Offline mode
                 app_cfg = config_manager.load_settings()
                 if app_cfg.get("default_ai_provider") == "Local" or app_cfg.get("offline_mode_enabled", False):
-                    if not brahma_speaking and not self.ui.muted:
+                    if not stella_speaking and not self.ui.muted:
                         if lvl > 22.0:
                             speech_buffer.extend(indata.tobytes())
                             silence_chunks = 0
@@ -4944,7 +4944,7 @@ class BrahmaLive:
                                             pass
                                     threading.Thread(target=_process_local_speech, args=(captured,), daemon=True).start()
 
-                if brahma_speaking:
+                if stella_speaking:
                     if self._echo.is_user_speech(indata, SEND_SAMPLE_RATE, lvl) and lvl > 28.0:
                         loop.call_soon_threadsafe(self.trigger_barge_in)
                         data = indata.tobytes()
@@ -4977,15 +4977,15 @@ class BrahmaLive:
                 device=_mic_dev,
                 callback=callback,
             ):
-                print(f"[BRAHMA EVO] 🎤 Mic stream open ({_mic_name or 'Default'})")
+                print(f"[STELLA EVO] 🎤 Mic stream open ({_mic_name or 'Default'})")
                 while True:
                     await asyncio.sleep(0.1)
         except Exception as e:
-            print(f"[BRAHMA EVO] ❌ Mic: {e}")
+            print(f"[STELLA EVO] ❌ Mic: {e}")
             raise
 
     async def _receive_audio(self):
-        print("[BRAHMA EVO] 👂 Recv started")
+        print("[STELLA EVO] 👂 Recv started")
         out_buf, in_buf = [], []
 
         try:
@@ -5049,7 +5049,7 @@ class BrahmaLive:
                         self.ui.set_state("EXECUTING")
                         fn_responses = []
                         for fc in response.tool_call.function_calls:
-                            print(f"[BRAHMA EVO] 📞 {fc.name}")
+                            print(f"[STELLA EVO] 📞 {fc.name}")
                             fr = await self._execute_tool(fc)
                             fn_responses.append(fr)
                         self.ui.set_state("THINKING")
@@ -5058,12 +5058,12 @@ class BrahmaLive:
                         )
 
         except Exception as e:
-            print(f"[BRAHMA EVO] ❌ Recv: {e}")
+            print(f"[STELLA EVO] ❌ Recv: {e}")
             traceback.print_exc()
             raise
 
     async def _play_audio(self):
-        print("[BRAHMA EVO] 🔊 Play started")
+        print("[STELLA EVO] 🔊 Play started")
         loop = asyncio.get_event_loop()
         import numpy as np
 
@@ -5090,7 +5090,7 @@ class BrahmaLive:
                     pass
                 await asyncio.to_thread(stream.write, chunk)
         except Exception as e:
-            print(f"[BRAHMA EVO] ❌ Play: {e}")
+            print(f"[STELLA EVO] ❌ Play: {e}")
             raise
         finally:
             self.set_speaking(False)
@@ -5139,7 +5139,7 @@ class BrahmaLive:
 
         while True:
             try:
-                print("[BRAHMA EVO] 🔌 Connecting...")
+                print("[STELLA EVO] 🔌 Connecting...")
                 self.ui.set_state("THINKING")
                 config = self._build_config()
 
@@ -5152,7 +5152,7 @@ class BrahmaLive:
                         self.audio_in_queue = asyncio.Queue()
                         self.out_queue      = asyncio.Queue()  # Fix: removed maxsize=10 to prevent dropping packets
                         
-                        print("[BRAHMA EVO] ✅ Connected.")
+                        print("[STELLA EVO] ✅ Connected.")
                         try:
                             self.ui.boot_set_step_status("Connect AI backend", "done")
                             self.ui.boot_set_progress(75, "AI backend connected")
@@ -5192,7 +5192,7 @@ class BrahmaLive:
                         pass
                     
             except Exception as e:
-                print(f"[BRAHMA EVO] ⚠️ {e}")
+                print(f"[STELLA EVO] ⚠️ {e}")
                 traceback.print_exc()
                 if _is_gemini_limit_error(e):
                     self._use_openrouter_first = True
@@ -5200,7 +5200,7 @@ class BrahmaLive:
                 self._loop = None
             self.set_speaking(False)
             self.ui.set_state("LISTENING")
-            print("[BRAHMA EVO] 🔄 Reconnecting in 5s...")
+            print("[STELLA EVO] 🔄 Reconnecting in 5s...")
             await asyncio.sleep(5)
 
 def main():
@@ -5213,7 +5213,7 @@ def main():
     except Exception as exc:
         _startup_log(f"GitHub update skipped: {exc}")
     _ensure_desktop_shortcut()
-    ui = BrahmaUI(str(BASE_DIR / "assets" / "Brahma_Lite_Logo.png"), show_immediately=True)
+    ui = StellaUI(str(BASE_DIR / "assets" / "stella_logo.png"), show_immediately=True)
     dashboard = None
     dashboard_enabled = DashboardServer is not None and not _is_port_in_use(8000)
     if DashboardServer is not None and not dashboard_enabled:
@@ -5240,53 +5240,53 @@ def main():
         threading.Thread(target=_start_dashboard_server, daemon=True).start()
         _startup_log("dashboard thread spawned")
 
-    brahma_connect = None
-    brahma_connect_enabled = False
-    if get_brahma_connect_service is not None:
+    stella_connect = None
+    stella_connect_enabled = False
+    if get_stella_connect_service is not None:
         try:
-            brahma_connect = get_brahma_connect_service(BASE_DIR)
-            brahma_connect_enabled = bool(brahma_connect.gateway.config.enabled)
+            stella_connect = get_stella_connect_service(BASE_DIR)
+            stella_connect_enabled = bool(stella_connect.gateway.config.enabled)
         except Exception as exc:
-            _startup_log(f"brahma connect init failed: {exc}")
+            _startup_log(f"stella connect init failed: {exc}")
             try:
-                ui.write_log(f"ERR: Brahma Connect failed to initialize: {exc}")
+                ui.write_log(f"ERR: Stella Connect failed to initialize: {exc}")
             except Exception:
                 pass
-            brahma_connect = None
+            stella_connect = None
     try:
-        if brahma_connect is not None and hasattr(ui, "set_brahma_connect_service"):
-            ui.set_brahma_connect_service(brahma_connect)
+        if stella_connect is not None and hasattr(ui, "set_stella_connect_service"):
+            ui.set_stella_connect_service(stella_connect)
     except Exception:
         pass
-    if brahma_connect is not None and brahma_connect_enabled:
-        connect_port = int(getattr(brahma_connect.gateway.config, "port", 8765))
+    if stella_connect is not None and stella_connect_enabled:
+        connect_port = int(getattr(stella_connect.gateway.config, "port", 8765))
         if _is_port_in_use(connect_port):
-            _startup_log(f"brahma connect disabled: port {connect_port} already in use")
+            _startup_log(f"stella connect disabled: port {connect_port} already in use")
             try:
-                ui.write_log(f"SYS: Brahma Connect is already running on port {connect_port}.")
+                ui.write_log(f"SYS: Stella Connect is already running on port {connect_port}.")
             except Exception:
                 pass
         else:
-            def _start_brahma_connect_server():
+            def _start_stella_connect_server():
                 try:
-                    _startup_log("brahma connect thread started")
-                    brahma_connect.start_background()
-                    _startup_log("brahma connect thread spawned")
+                    _startup_log("stella connect thread started")
+                    stella_connect.start_background()
+                    _startup_log("stella connect thread spawned")
                 except Exception as exc:
-                    _startup_log(f"brahma connect thread error: {exc}")
+                    _startup_log(f"stella connect thread error: {exc}")
                     try:
-                        ui.write_log(f"ERR: Brahma Connect server failed: {exc}")
+                        ui.write_log(f"ERR: Stella Connect server failed: {exc}")
                     except Exception:
                         pass
 
-            threading.Thread(target=_start_brahma_connect_server, daemon=True).start()
+            threading.Thread(target=_start_stella_connect_server, daemon=True).start()
 
 
 
     ui.show_main()
     _startup_log("ui shown")
 
-    # Start Brahma Passive Sensorium Engine (v2)
+    # Start Stella Passive Sensorium Engine (v2)
     try:
         def _on_sensorium_alert(alert_type: str, meta: dict):
             msg = meta.get("message", "System state change detected.")
@@ -5330,7 +5330,7 @@ def main():
             _startup_log(f"k2 server autostart notice: {exc}")
         ui.wait_for_api_key()
         _startup_log("runner api key ready")
-        brahma_evo = BrahmaLive(
+        stella_evo = StellaLive(
             ui,
             dashboard=dashboard,
             dashboard_started=dashboard is not None,
@@ -5342,18 +5342,18 @@ def main():
             spoken_text = meta.get("speech")
             if spoken_text and not getattr(ui, "muted", False):
                 try:
-                    brahma_evo.speak(spoken_text, proactive=True)
+                    stella_evo.speak(spoken_text, proactive=True)
                 except Exception as exc:
                     print(f"[Sensorium Speak Error]: {exc}")
 
         sensorium.register_interjection_handler(_proactive_sensorium_voice)
         try:
             if plugin_manager is not None:
-                brahma_evo.plugin_manager = plugin_manager
-                plugin_manager.register_brahma(brahma_evo)
+                stella_evo.plugin_manager = plugin_manager
+                plugin_manager.register_stella(stella_evo)
                 # allow plugins to run a startup hook
                 try:
-                    plugin_manager.dispatch("on_startup", brahma_evo)
+                    plugin_manager.dispatch("on_startup", stella_evo)
                 except Exception:
                     pass
         except Exception:
@@ -5371,8 +5371,8 @@ def main():
                 if is_auto:
                     return _ig_gemini_reply(username, text)
                 else:
-                    brahma_evo._ig_reply_mode = True
-                    brahma_evo._ig_pending_thread = {
+                    stella_evo._ig_reply_mode = True
+                    stella_evo._ig_pending_thread = {
                         "thread_id": thread_id,
                         "username": username,
                         "message": text
@@ -5382,7 +5382,7 @@ def main():
                     msg = f"You received a new Instagram message from {username}{snippet}. What should I reply, or should I take over the chat?"
                     ui.write_log(f"📱 Insta (@{username}): {clean_text or '[Media/Attachment]'}")
                     ui.write_log(f"Stella: {msg}")
-                    brahma_evo.speak(msg)
+                    stella_evo.speak(msg)
                     return None
                 
             set_ig_prompt_callback(_ig_handler)
@@ -5403,7 +5403,7 @@ def main():
                     msg = f"You received a new email from {sender} with subject: {subj_preview}."
                     ui.write_log(f"📧 Email ({sender}): {clean_subj}")
                     ui.write_log(f"Stella: {msg}")
-                    brahma_evo.speak(msg)
+                    stella_evo.speak(msg)
 
                 set_email_prompt_callback(_email_handler)
                 start_email_daemon(poll_interval=25)
@@ -5427,14 +5427,14 @@ def main():
                         if text and len(text) > 3:
                             reply = _clipboard_gemini_reply(text[:1000])
                             ui.write_log(f"Stella (Clipboard): {reply}")
-                            brahma_evo.speak(reply)
+                            stella_evo.speak(reply)
                 except Exception:
                     pass
 
         threading.Thread(target=_clipboard_monitor, daemon=True, name="clipboard-monitor").start()
 
         try:
-            asyncio.run(brahma_evo.run())
+            asyncio.run(stella_evo.run())
         except KeyboardInterrupt:
             print("\n🔴 Shutting down...")
 

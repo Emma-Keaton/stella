@@ -53,7 +53,7 @@ class DynamicSkill:
     def _load_module(self) -> Any:
         if self.module is None:
             code_path = self.skill_path / "skill.py" if self.skill_path.is_dir() else self.skill_path
-            module_name = f"brahma_skill_{self.name}_{abs(hash(str(code_path.resolve())))}"
+            module_name = f"stella_skill_{self.name}_{abs(hash(str(code_path.resolve())))}"
             spec = importlib.util.spec_from_file_location(module_name, str(code_path))
             if not spec or not spec.loader:
                 raise ImportError(f"Unable to load skill module: {code_path}")
@@ -98,7 +98,7 @@ class DynamicSkill:
 
 
 class DynamicToolRegistry:
-    """Central registry for all hot-loaded features and synthetic Brahma skills."""
+    """Central registry for all hot-loaded features and synthetic Stella skills."""
 
     _skills: Dict[str, DynamicSkill] = {}
     _initialized: bool = False
@@ -242,7 +242,7 @@ class DynamicToolRegistry:
         stopwords = {
             "a", "an", "the", "and", "or", "to", "for", "when", "that", "will", "you", "i", "me", "my",
             "on", "in", "at", "by", "from", "of", "with", "about", "is", "are", "was", "were", "be",
-            "this", "that", "it", "can", "please", "do", "what", "how", "give", "brahma", "tell", "show",
+            "this", "that", "it", "can", "please", "do", "what", "how", "give", "stella", "tell", "show",
             "run", "use", "start", "execute", "check", "get", "fetch", "try", "call", "launch",
             "skill", "skills", "feature", "features", "tool", "tools", "test", "tests", "testing",
             "made", "make", "using", "u", "ur", "your", "created", "create", "built", "build",

@@ -327,7 +327,7 @@ def run(parameters: dict, player=None, speak=None, session_memory=None) -> str:
         "query": query
     })
 
-    # Display rich breakdown in Brahma UI
+    # Display rich breakdown in Stella UI
     panel_content = (
         f"**Dish**: {dish} ({portion})\n\n"
         f"### ⚡ Calories: {cals} kcal\n\n"
@@ -353,7 +353,7 @@ def run(parameters: dict, player=None, speak=None, session_memory=None) -> str:
 
     if player and hasattr(player, "show_content"):
         try:
-            player.show_content("🥗 BRAHMA NUTRITION SCAN", panel_content)
+            player.show_content("🥗 STELLA NUTRITION SCAN", panel_content)
         except Exception:
             pass
 

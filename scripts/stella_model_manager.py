@@ -199,7 +199,7 @@ def legacy_runtimes_allowed() -> bool:
     try:
         lad = os.environ.get("LOCALAPPDATA")
         if lad:
-            cands.insert(0, Path(lad) / "BrahmaAI" / "config" / "app_settings.json")
+            cands.insert(0, Path(lad) / "StellaAI" / "config" / "app_settings.json")
     except Exception:
         pass
     for cand in cands:
