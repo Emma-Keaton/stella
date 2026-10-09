@@ -149,11 +149,26 @@ def _host_os() -> str:
     return {"darwin": "macos", "windows": "windows", "linux": "linux"}.get(s, s)
 
 
-def _venv_pyinstaller() -> str | None:
+def _venv_pyinstaller() -> list[str] | None:
+    """Command that runs PyInstaller from the project venv.
+
+    Prefers the console-script shim, but a venv can have the PyInstaller
+    package installed while the .exe shim is missing (seen in practice), so
+    fall back to `python -m PyInstaller`, which needs no shim at all.
+    Returns the argv prefix, or None when PyInstaller is not installed.
+    """
+    interp = REPO / ".venv" / ("Scripts/python.exe" if os.name == "nt"
+                               else "bin/python")
     for sub in ("Scripts/pyinstaller.exe", "bin/pyinstaller"):
         p = REPO / ".venv" / sub
         if p.exists():
-            return str(p)
+            return [str(p)]
+    if interp.exists():
+        probe = subprocess.run(
+            [str(interp), "-c", "import PyInstaller"],
+            capture_output=True, timeout=60)
+        if probe.returncode == 0:
+            return [str(interp), "-m", "PyInstaller"]
     return None
 
 
@@ -170,12 +185,28 @@ def _read_version() -> str:
                 return m.group(1)
     return "0.0.0"
 
+def _printable(s: str) -> str:
+    """Encode-proof console text: strip glyphs the host console can't print."""
+    try:
+        s.encode(sys.stdout.encoding or "utf-8", errors="strict")
+        return s
+    except Exception:
+        keep = []
+        for ch in s:
+            try:
+                ch.encode(sys.stdout.encoding or "utf-8", errors="strict")
+                keep.append(ch)
+            except Exception:
+                keep.append("-")
+        return "".join(keep)
+
+
 def cmd_plan(edition: str, target: str) -> int:
     ed = EDITIONS[edition]
     groups = ed["include"]
     est = sum(GROUP_COST_GB.get(g, 0.0) for g in groups)
     print("=" * 66)
-    print(f"  STELLA BUILD PLAN — edition '{edition}' → {target}")
+    print(_printable(f"  STELLA BUILD PLAN — edition '{edition}' → {target}"))
     print("=" * 66)
     print(f"  {ed['blurb']}")
     print("-" * 66)
@@ -193,7 +224,30 @@ def cmd_plan(edition: str, target: str) -> int:
         gradlew = REPO / "stella-connect-android" / "gradlew.bat"
         print(f"  Gradle wrapper     : {'found' if gradlew.exists() else 'missing'}")
     print("=" * 66)
+    _print_install_footprint(edition)
     return 0
+
+
+def _print_install_footprint(edition: str) -> None:
+    """Full install footprint in GB: app + .venv + local model + voice data.
+
+    This is what the user actually takes home, and it is what package_bundle.py
+    --plan is estimating for a single model tier. Print it alongside the tier
+    picker so nobody plans on 2 GB and pulls down 9 GB.
+    """
+    ed = EDITIONS[edition]
+    app_gb = sum(GROUP_COST_GB.get(g, 0.0) for g in ed["include"])
+    dep_gb = 3.2                    # .venv site-packages + runtime overhead
+    model_gb = {
+        "api_only": 0.0,
+        "qwen_1_5b_q4": 1.0,
+        "qwen_3b_q4": 2.0,
+        "qwen_7b_q4": 4.4,
+        "qwen_14b_q4": 9.0,
+    }.get(edition, 0.0)
+    total = app_gb + dep_gb + model_gb + 0.001
+    print(f"  Full install footprint : ~{total:.2f} GB on disk "
+          f"(app ~{app_gb:.2f} + .venv ~{dep_gb:.2f} + model {model_gb:.2f})")
 
 
 def _pyinstaller_build(edition: str, target: str) -> Path:

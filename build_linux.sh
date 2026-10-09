@@ -10,9 +10,14 @@ if [ ! -x ".venv/bin/python" ]; then
     exit 1
 fi
 
-PYI=".venv/bin/pyinstaller"
-if [ ! -x "$PYI" ]; then
-    echo "pyinstaller missing in .venv. Install: .venv/bin/pip install pyinstaller"
+PYI=()
+if [ -x ".venv/bin/pyinstaller" ]; then
+    PYI=(".venv/bin/pyinstaller")
+else
+    PYI=(".venv/bin/python" "-m" "PyInstaller")
+fi
+if ! "${PYI[@]}" --version >/dev/null 2>&1; then
+    echo "pyinstaller missing in .venv. Install: .venv/bin/pip install pyinstaller" >&2
     exit 1
 fi
 

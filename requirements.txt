@@ -39,3 +39,4 @@ edge-tts
 matplotlib
 speedtest-cli
 piper-tts
+pyinstaller

@@ -11641,12 +11641,54 @@ class SystemConnectivityPage(QWidget):
             self._tts_voice_combo.setCurrentText("en_US-lessac-medium")
         self._tts_voice_combo.currentTextChanged.connect(lambda v: self._set_setting("tts_voice", v))
         voice_row.addWidget(self._tts_voice_combo, 1)
+        # Wake Word & Voice Enrollment ─ record a few wake phrases so that
+        # when Stella hears the user, it binds the session to that voice.
+        # This runs after the TTS voice pick so the user can enroll once and
+        # reuse it for outbound calls and voice messages.
+        self._wake_enroll_btn = QPushButton("🎤 Record My Voice (wake + enroll)")
+        self._wake_enroll_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._wake_enroll_btn.clicked.connect(self._on_wakeword_enroll)
+        tools_row.addWidget(self._wake_enroll_btn)
+
+        self._wake_status_lbl = QLabel("")
+        self._wake_status_lbl.setStyleSheet(f"color: {C.TEXT_MED}; font-size: 11px;")
+        tools_row.addWidget(self._wake_status_lbl)
+
         tools_row.addLayout(voice_row)
 
         mem_btn = QPushButton("🧠 Inspect Memory")
         mem_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         mem_btn.clicked.connect(self._open_memory_inspector)
         tools_row.addWidget(mem_btn)
+    def _on_wakeword_enroll(self):
+        """Walk the user through wake-word + voice enrollment and report status.
+
+        Enrolling records several wake-phrase utterances, extracts a compact
+        speaker embedding for each, and stores the strongest one. The wake phrase
+        text (``hey stella``) stays voice-independent, while the enrolled voice is
+        what Stella binds the AI session to and reuses in outbound calls /
+        voice messages.
+        """
+        try:
+            from core import wakeword, voice_clone
+
+            if not wakeword.is_wake_enrolled():
+                paths = voice_clone.record_enrollment_phrases()
+                wakeword.enroll_wake_phrases()
+                self._wake_status_lbl.setText(
+                    f"<font color='#38bdf8'>Enrolled <b>{len(paths)}</b> wake phrases. "
+                    f"Say it to wake Stella.</font>")
+            else:
+                e = wakeword.get_enrollment()
+                n = e.get("count", 0)
+                self._wake_status_lbl.setText(
+                    f"<font color='#38bdf8'>Already enrolled ({n} wake phrases). "
+                    f"Re-record anytime.</font>")
+            self._wake_status_lbl.show()
+        except Exception as exc:
+            self._wake_status_lbl.setText(f"Enrollment unavailable: {exc}")
+            self._wake_status_lbl.show()
+
 
         undo_btn = QPushButton("↺ Rollback (Undo)")
         undo_btn.setCursor(Qt.CursorShape.PointingHandCursor)
