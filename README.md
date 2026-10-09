@@ -114,7 +114,7 @@
 
 1. **Clone the repository:**
    ```powershell
-   git clone https://github.com/titechprabhasolutions/Stella-Ai-Evo.git
+   git clone https://github.com/Emma-Keaton/stella.git
    cd Stella-Ai-Evo
    ```
 
