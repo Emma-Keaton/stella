@@ -9547,6 +9547,7 @@ class MainWindow(QMainWindow):
             translated = translate_error(error, context)
             improvement = suggest_improvement(error, context)
         except Exception:
+            reporter = None
             translated = {"plain_to_user": str(error), "type": type(error).__name__,
                           "message": str(error)}
             improvement = {"alternatives": [], "plain_message": str(error)}
@@ -9588,7 +9589,9 @@ class MainWindow(QMainWindow):
         elif clicked is btn_admin:
             try:
                 import webbrowser
-                url = reporter.submit_issue(translated)
+                from core.error_reporter import ErrorReporter as _ER
+                rep = reporter if reporter is not None else _ER()
+                url = rep.submit_issue(translated)
                 self._log_sig.emit(
                     "SYS: Bug report saved locally. Opening GitHub issues — "
                     "submit it there so the admin can fix it globally."
