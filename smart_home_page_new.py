@@ -690,6 +690,14 @@ class _DeviceTile(ClickableFrame):
 
 
 class StellaHomePage(QWidget):
+    # Emitted so the shell can navigate to any screen from the home page and so
+    # the manual composer works exactly like the voice path (same signals the
+    # chat surface already listens for).
+    nav_requested = pyqtSignal(str)
+    command_submitted = pyqtSignal(str)
+    attach_requested = pyqtSignal()
+    mic_requested = pyqtSignal()
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self._service = SmartHomeService()
@@ -721,6 +729,7 @@ class StellaHomePage(QWidget):
         root.addWidget(self._main_frame, 1)
 
         self._build_header(main_lay)
+        self._build_nav_row(main_lay)
 
         # Split layout for body: Devices (Left) + Recent Activity Feed (Right)
         self._body_layout = QHBoxLayout()
@@ -781,6 +790,11 @@ class StellaHomePage(QWidget):
         self._body_layout.addWidget(self._right_container, 1)
         main_lay.addLayout(self._body_layout, 1)
 
+        # Manual composer: attach, voice, text, plus quick access to commands,
+        # context and tools. Voice activation stays live alongside it - this is
+        # for when you'd rather type, not a replacement for speaking.
+        self._build_composer(main_lay)
+
         self._drawer = self._build_drawer()
         self._drawer.hide()
 
@@ -833,6 +847,102 @@ class StellaHomePage(QWidget):
         self._voice_button.clicked.connect(self._toggle_voice_mode)
         row.addWidget(self._voice_button)
         lay.addLayout(row)
+
+    def _build_nav_row(self, lay: QVBoxLayout):
+        """Quick navigation to every other screen, reachable from Home."""
+        nav = QHBoxLayout()
+        nav.setSpacing(8)
+        self._nav_buttons: dict[str, QPushButton] = {}
+        # label -> target page id used by MainWindow._set_page
+        for label, target in (
+            ("Dashboard", "dashboard"),
+            ("Devices", "devices"),
+            ("Settings", "settings"),
+        ):
+            btn = QPushButton(label)
+            btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            btn.setFixedHeight(30)
+            btn.setStyleSheet(
+                f"QPushButton {{ background: rgba(255,255,255,0.02); color: {TEXT_DIM}; "
+                f"border: 1px solid rgba(255,255,255,0.06); border-radius: 10px; padding: 0 14px; "
+                f"font-weight: bold; font-size: 11px; }}"
+                f" QPushButton:hover {{ color: {ACCENT}; border: 1px solid {ACCENT}; }}"
+            )
+            btn.clicked.connect(lambda _=False, t=target: self.nav_requested.emit(t))
+            self._nav_buttons[target] = btn
+            nav.addWidget(btn)
+        nav.addStretch(1)
+        lay.addLayout(nav)
+
+    def _build_composer(self, lay: QVBoxLayout):
+        """Prompt box: attach, voice, text, commands, context and tools."""
+        box = QFrame()
+        box.setStyleSheet(_panel_style(34))
+        col = QVBoxLayout(box)
+        col.setContentsMargins(14, 12, 14, 12)
+        col.setSpacing(8)
+
+        # Quick chips: commands / context / tools for manual prompting.
+        chips = QHBoxLayout()
+        chips.setSpacing(6)
+        for label in ("Commands", "Context", "Tools"):
+            chip = QPushButton(label)
+            chip.setCursor(Qt.CursorShape.PointingHandCursor)
+            chip.setFixedHeight(24)
+            chip.setStyleSheet(
+                f"QPushButton {{ background: rgba(255,255,255,0.03); color: {TEXT_DIM}; "
+                f"border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 0 10px; "
+                f"font-size: 10px; }}"
+                f" QPushButton:hover {{ color: {ACCENT}; border: 1px solid {ACCENT}; }}"
+            )
+            chips.addWidget(chip)
+        chips.addStretch(1)
+        col.addLayout(chips)
+
+        row = QHBoxLayout()
+        row.setSpacing(8)
+
+        attach = QPushButton("Attach")
+        attach.setCursor(Qt.CursorShape.PointingHandCursor)
+        attach.setFixedHeight(34)
+        attach.setStyleSheet(_soft_button_style())
+        attach.clicked.connect(self.attach_requested.emit)
+        row.addWidget(attach)
+
+        self._prompt_input = QLineEdit()
+        self._prompt_input.setPlaceholderText("Ask Stella anything - or just speak.")
+        self._prompt_input.setFixedHeight(34)
+        self._prompt_input.setStyleSheet(
+            f"QLineEdit {{ background: rgba(255,255,255,0.03); color: {TEXT}; "
+            f"border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 0 12px; }}"
+            f" QLineEdit:focus {{ border: 1px solid {ACCENT}; }}"
+        )
+        self._prompt_input.returnPressed.connect(self._submit_prompt)
+        row.addWidget(self._prompt_input, 1)
+
+        mic = QPushButton("Voice")
+        mic.setCursor(Qt.CursorShape.PointingHandCursor)
+        mic.setFixedHeight(34)
+        mic.setStyleSheet(_soft_button_style())
+        mic.clicked.connect(self.mic_requested.emit)
+        row.addWidget(mic)
+
+        send = QPushButton("Send")
+        send.setCursor(Qt.CursorShape.PointingHandCursor)
+        send.setFixedHeight(34)
+        send.setStyleSheet(_soft_button_style())
+        send.clicked.connect(self._submit_prompt)
+        row.addWidget(send)
+
+        col.addLayout(row)
+        lay.addWidget(box)
+
+    def _submit_prompt(self):
+        text = (self._prompt_input.text() or "").strip()
+        if not text:
+            return
+        self._prompt_input.clear()
+        self.command_submitted.emit(text)
 
     def _build_voice_card(self, lay: QVBoxLayout):
         self._voice_frame = QFrame()
