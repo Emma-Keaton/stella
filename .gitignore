@@ -1,4 +1,4 @@
-# Environments
+﻿# Environments
 .venv/
 venv/
 ENV/
@@ -23,11 +23,11 @@ installer/dist/
 installer/build/
 
 # Android build outputs & IDE
-brahma-connect-android/.gradle/
-brahma-connect-android/**/build/
-brahma-connect-android/local.properties
-brahma-connect-android/.idea/
-brahma-connect-android/.cxx/
+stella-connect-android/.gradle/
+stella-connect-android/**/build/
+stella-connect-android/local.properties
+stella-connect-android/.idea/
+stella-connect-android/.cxx/
 *.apk
 *.aab
 
@@ -55,8 +55,8 @@ config/device_location_cache.json
 config/learned_rules.json
 config/organizer_history.json
 config/patch_history.json
-config/brahma_connect.json
-config/brahma_connect/devices.json
+config/stella_connect.json
+config/stella_connect/devices.json
 memory/calendar_events.json
 memory/long_term.json
 memory/nutrition_log.json
@@ -75,6 +75,33 @@ process_logo.py
 models/
 *.gguf
 
-# Personal-only local runtime (K2 + bundled llama.cpp) — not for other devices
+# Personal-only local runtime (K2 + bundled llama.cpp) â€” not for other devices
+#
+# The K2 weights and llama-server binaries are BUILT LOCALLY and must never
+# reach the repo. Both the Android assets tree and any staged desktop payload
+# are covered here. GitHub ships the public variant, which carries neither and
+# instead suggests the user download K2.
 core/k2_server.py
 .venv/llama.cpp/
+
+# Staged personal K2 payloads â€” model + llama-server for any target.
+# Paths are anchored so nothing under these trees can be committed by accident.
+**/assets/k2/
+**/k2/llama-server
+**/k2/llama-server.exe
+**/k2/*.gguf
+k2/
+# Cross-compiled fork checkouts and outputs from the K2 runtime build.
+llama-k2/
+
+# Personal Android signing keystore + credentials (never commit).
+.stella-signing.txt
+.stella-signing.json
+.stella-personal.jks
+.stella-personal.json
+*.jks
+*.keystore
+
+# Machine-specific build notes.
+BUILD.local.md
+

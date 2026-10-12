@@ -1,14 +1,23 @@
 name: Build & Release
 
-# One tag -> every platform's installable + a manifest.json, published to
-# GitHub Releases. The in-app updater (scripts/stella_update.py) then pulls that
-# manifest and self-updates every install on next launch. This is the "we just
-# push a tag and the world updates" pipeline.
+# One tag -> every platform's installable + a single merged manifest.json,
+# published to GitHub Releases. The in-app updater (core/updater.py) pulls that
+# manifest and self-updates each install on next launch.
+#
+# VARIANTS
+# --------
+#   public : no K2 runtime, no weights. The app suggests downloading K2.
+#            This is what the GitHub release ships.
+#   k2     : PERSONAL only. Built from locally-compiled llama-server + local
+#            GGUF, uploaded as a workflow artifact but NOT attached to the
+#            public release. The weights are never in the repo, so CI cannot
+#            build this variant - it is produced by the local build script
+#            (scripts/build_k2_apk.ps1 / stella_build.py --k2).
 
 on:
   push:
     tags:
-      - "v*"          # e.g. git tag v1.2.0 && git push --tags
+      - "v*"
   workflow_dispatch:
     inputs:
       edition:
@@ -19,9 +28,57 @@ on:
         options: [lite, core, full]
 
 permissions:
-  contents: write      # needed to create/upload the GitHub Release
+  contents: write
 
 jobs:
+  # ---------------------------------------------------------------------------
+  # Shared: an Android keystore.
+  #
+  # Both the package installer and `pm install` (Termux) REFUSE an unsigned
+  # APK with INSTALL_PARSE_FAILED_NO_CERTIFICATES, so the public build has to
+  # be signed too, not just the personal one.
+  #
+  # Set secret ANDROID_KEYSTORE_BASE64 (+ ANDROID_KEYSTORE_PASSWORD,
+  # ANDROID_KEY_ALIAS) to get a stable signature that survives upgrades. If the
+  # secret is absent we generate a throwaway key so the APK still installs;
+  # that key changes every run, so updates would not replace the old app.
+  # ---------------------------------------------------------------------------
+  android-key:
+    name: android signing key
+    runs-on: ubuntu-latest
+    outputs:
+      keystore_b64: ${{ steps.provide.outputs.b64 }}
+      password: ${{ steps.provide.outputs.password }}
+      alias: ${{ steps.provide.outputs.alias }}
+    steps:
+      - name: Provide or generate keystore
+        id: provide
+        shell: bash
+        run: |
+          set -euo pipefail
+          alias_name="stella"
+          if [ -n "${ANDROID_KEYSTORE_BASE64:-}" ]; then
+            echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > release.jks
+            pw="${ANDROID_KEYSTORE_PASSWORD:-}"
+            echo "b64=$ANDROID_KEYSTORE_BASE64" >> "$GITHUB_OUTPUT"
+            echo "password=$pw" >> "$GITHUB_OUTPUT"
+            echo "alias=$alias_name" >> "$GITHUB_OUTPUT"
+            echo "::notice::using repository signing key"
+          else
+            pw="stella-ci-ephemeral"
+            keytool -genkeypair -v -keystore release.jks -alias "$alias_name" \
+              -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass "$pw" -keypass "$pw" \
+              -dname "CN=Stella CI, OU=Build, O=Stella, L=CI, ST=CI, C=US" 2>/dev/null
+            b64=$(base64 -w0 release.jks)
+            echo "b64=$b64" >> "$GITHUB_OUTPUT"
+            echo "password=$pw" >> "$GITHUB_OUTPUT"
+            echo "alias=$alias_name" >> "$GITHUB_OUTPUT"
+            echo "::warning::no ANDROID_KEYSTORE_BASE64 secret set - generated an"
+            echo "::warning::ephemeral key. Install works, but the next release"
+            echo "::warning::cannot upgrade over this build. Set the secret."
+          fi
+
   desktop:
     name: ${{ matrix.os }} / ${{ matrix.edition }}
     strategy:
@@ -37,16 +94,38 @@ jobs:
         with:
           python-version: "3.11"
 
+      # Native packagers. Without these the build still emits the portable zip,
+      # but you get no .exe / .AppImage.
+      - name: Install native packagers
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            choco install innosetup --yes --no-progress
+            echo "ISCC=$(which ISCC || echo 'C:/Program Files (x86)/Inno Setup 6/ISCC.exe')" >> "$GITHUB_ENV"
+          elif [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq desktop-file-utils file fuse libsdl2-2.0-0
+            sudo wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool.AppImage \
+              -O appimagetool
+            chmod +x appimagetool
+            sudo mv appimagetool /usr/local/bin/appimagetool
+          fi
+
       - name: Install runtime deps + packager
         shell: bash
         run: |
+          set -euo pipefail
           python -m pip install --upgrade pip
-          # PyInstaller FIRST and standalone: requirements.txt contains
-          # Windows/py2-era packages (pypiwin32, win10toast) that cannot
-          # build on macOS/Linux — a single combined install would abort and
-          # silently leave pyinstaller uninstalled too.
           pip install pyinstaller
-          pip install -r requirements.txt || true
+          # Portable deps install everywhere. Windows-only packages live in
+          # requirements-windows.txt and must NOT be installed here, which is
+          # what used to break (and then silently hide via `|| true`) the
+          # Linux and macOS builds.
+          pip install -r requirements.txt
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            pip install -r requirements-windows.txt
+          fi
 
       - name: Build edition (${{ matrix.edition }}) for ${{ matrix.os }}
         shell: bash
@@ -62,11 +141,20 @@ jobs:
           name: stella-${{ matrix.os }}-${{ matrix.edition }}
           path: |
             dist/*.zip
+            dist/*.exe
+            dist/*.AppImage
+            dist/*.dmg
             dist/manifest.json
           if-no-files-found: warn
 
+  # ---------------------------------------------------------------------------
+  # Android public APK. Signed so both the system package installer and
+  # Termux (`pm install`) can install it, and constrained to the ABIs we
+  # actually build llama-server for.
+  # ---------------------------------------------------------------------------
   android:
-    name: android / apk
+    name: android / public apk
+    needs: android-key
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -74,23 +162,48 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - name: Build APK via Gradle wrapper
-        working-directory: stella-connect-android
+      - uses: actions/setup-gradle@v4
+
+      - name: Restore keystore
+        shell: bash
+        env:
+          KEYSTORE_B64: ${{ needs.android-key.outputs.keystore_b64 }}
+          KEYSTORE_PW: ${{ needs.android-key.outputs.password }}
+          KEY_ALIAS: ${{ needs.android-key.outputs.alias }}
         run: |
-          chmod +x gradlew || true
-          ./gradlew assembleRelease
+          set -euo pipefail
+          mkdir -p "$HOME/.stella-toolchain"
+          echo "$KEYSTORE_B64" | base64 -d > "$HOME/.stella-toolchain/release.jks"
+          echo "STELLA_ANDROID_KEYSTORE=$HOME/.stella-toolchain/release.jks" >> "$GITHUB_ENV"
+          echo "STELLA_ANDROID_KEYSTORE_PASSWORD=$KEYSTORE_PW" >> "$GITHUB_ENV"
+          echo "STELLA_ANDROID_KEY_ALIAS=$KEY_ALIAS" >> "$GITHUB_ENV"
+
+      - name: Build signed public APK
+        working-directory: stella-connect-android
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Verify installability (signature + alignment)
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK=$(ls stella-connect-android/app/build/outputs/apk/release/*.apk)
+          BT="$ANDROID_HOME/build-tools/35.0.0"
+          "$BT/zipalign" -c -v 4 "$APK" >/dev/null && echo "zipalign OK"
+          # Fails here if unsigned, which is exactly the condition that makes
+          # the package installer and Termux reject the APK.
+          "$BT/apksigner" verify --print-certs "$APK" | head -3
+          echo "APK: $APK ($(du -h "$APK" | cut -f1))"
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: stella-android
-          path: stella-connect-android/app/build/outputs/apk/**/*.apk
-          if-no-files-found: warn
+          path: stella-connect-android/app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
 
   release:
     name: Publish GitHub Release
-    # Ship what's green: the APK (or any desktop zip) must not be held
-    # hostage by an unrelated platform's failure.
-    needs: [desktop, android]
+    needs: [desktop, android, android-key]
     if: >-
       startsWith(github.ref, 'refs/tags/') &&
       (needs.android.result == 'success' || needs.desktop.result == 'success')
@@ -100,11 +213,24 @@ jobs:
         with:
           path: artifacts
           merge-multiple: true
+
+      # Every build wrote its own manifest.json to the same path. Merging into
+      # one is mandatory: the updater looks itself up by host OS, so a lost
+      # entry means updates silently never arrive on that platform.
+      - name: Merge per-build manifests
+        run: |
+          set -euo pipefail
+          python scripts/merge_manifests.py artifacts/manifest.json \
+            $(find artifacts -name manifest.json)
+
       - name: Publish
         uses: softprops/action-gh-release@v2
         with:
           files: |
             artifacts/*.zip
             artifacts/*.apk
+            artifacts/*.exe
+            artifacts/*.AppImage
+            artifacts/*.dmg
             artifacts/manifest.json
           generate_release_notes: true

@@ -130,7 +130,41 @@ active by default; mute it any time and the greeting is text-only). Replies
 stream token-by-token by default; you can turn streaming or the greeting off in
 Settings (`stream_replies`, `startup_greeting`).
 
-### On Android (APK)
+### Signing & releases
+
+The two Android APKs ship on completely different terms:
+
+- **`Stella-Connect-1.0.0-android-k2.apk` — private edition (K2-bundled).**
+  Signed with the per-user personal keystore (`~/.stella-toolchain/stella-personal.jks`,
+  credentials recorded in `stella-personal.json`). The key is minted automatically
+  on first build and is reused on every rebuild, so the same key keeps the app
+  installing over the previous one (in-place updates). This is a *personal* build:
+  it carries the K2 runtime and the pinned `K2-Horizon-0.9B-Q4_K_M.gguf` weights.
+- **`Stella-Connect-1.0.0-android.apk` — public edition.** Unsigned by design.
+  There is no keystore bundled, which keeps the app freely sideloadable and
+  lets the user pick their own compatible model. Android will warn about
+  "unknown sources" at install time — that is expected behaviour, not a defect.
+
+**Supplying your own keystore (CI / GitHub Releases):**
+
+```powershell
+# Point the builder at a real keystore + password instead of the auto-minted one.
+$env:STELLA_ANDROID_KEYSTORE = "C:\path\to\your-release.jks"
+$env:STELLA_ANDROID_KEYSTORE_PASSWORD = "your-storepass"
+python scripts\stella_build.py --edition core --os android --release
+```
+
+If you do not set these, the builder mints a throwaway local key (password
+`stella-local-personal`) and writes it to `~/.stella-toolchain/stella-personal.jks`
+plus credentials in `stella-personal.json`. That throwaway key is for
+sideloading and *local* release trials only — do not upload it to GitHub
+Releases. Export a real signable keystore (`keytool -exportcert`) and add the
+alias `stella` before uploading APKs as release artifacts.
+
+The matching desktop installers (`Stella-Setup.exe` / `.appimage` / `.dmg`)
+bundle no model by default; the *private* builds add the model + K2 runtime at
+build time. iOS is excluded from this workflow (requires macOS + Apple Dev
+Program).
 
 1. Download the APK from
    [Releases](https://github.com/Emma-Keaton/stella/releases):
