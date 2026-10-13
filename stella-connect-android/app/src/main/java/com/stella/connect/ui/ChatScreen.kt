@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.stella.connect.core.AgentStateStore
 import com.stella.connect.core.ChatMessage
+import com.stella.connect.ui.theme.StellaBrand
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -172,7 +173,7 @@ fun ChatMessageBubble(message: ChatMessage) {
                     .border(1.dp, Color.White.copy(alpha = 0.2f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                Text("S", color = Color.Black, fontWeight = FontWeight.Black, fontSize = 18.sp)
+                Text("S", color = StellaBrand.ink, fontWeight = FontWeight.Black, fontSize = 18.sp)
             }
             Spacer(modifier = Modifier.width(8.dp))
         }

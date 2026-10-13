@@ -459,14 +459,14 @@ class RemoteKeyOverlay(QWidget):
 
         title = QLabel("Mobile Connect")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        title.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
+        title.setFont(QFont("Exo 2", 16, QFont.Weight.Bold))
         title.setStyleSheet("color: #ffffff; background: transparent; border: none;")
         lay.addWidget(title)
 
         subtitle = QLabel("Scan the QR code with your phone to remotely control Stella.")
         subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
         subtitle.setWordWrap(True)
-        subtitle.setFont(QFont("Segoe UI", 9))
+        subtitle.setFont(QFont("Exo 2", 9))
         subtitle.setStyleSheet(f"color: {C.TEXT_DIM}; border: none; margin-bottom: 10px;")
         lay.addWidget(subtitle)
 
@@ -482,7 +482,7 @@ class RemoteKeyOverlay(QWidget):
 
         manual_hint = QLabel("Manual address")
         manual_hint.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        manual_hint.setFont(QFont("Segoe UI", 8, QFont.Weight.Bold))
+        manual_hint.setFont(QFont("Exo 2", 8, QFont.Weight.Bold))
         manual_hint.setStyleSheet(f"color: {C.TEXT_DIM}; border: none; margin-top: 10px;")
         lay.addWidget(manual_hint)
 
@@ -511,7 +511,7 @@ class RemoteKeyOverlay(QWidget):
 
         self._timer_lbl = QLabel("")
         self._timer_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._timer_lbl.setFont(QFont("Segoe UI", 8))
+        self._timer_lbl.setFont(QFont("Exo 2", 8))
         self._timer_lbl.setStyleSheet(f"color: {C.TEXT_DIM}; border: none;")
         lay.addWidget(self._timer_lbl)
 
@@ -521,7 +521,7 @@ class RemoteKeyOverlay(QWidget):
         self._new_btn = QPushButton("New Key")
         self._new_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._new_btn.setFixedHeight(40)
-        self._new_btn.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
+        self._new_btn.setFont(QFont("Exo 2", 10, QFont.Weight.Bold))
         self._new_btn.setStyleSheet(f"""
             QPushButton {{
                 background: rgba(255, 255, 255, 0.03);
@@ -541,7 +541,7 @@ class RemoteKeyOverlay(QWidget):
         close_btn = QPushButton("Close")
         close_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         close_btn.setFixedHeight(40)
-        close_btn.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
+        close_btn.setFont(QFont("Exo 2", 10, QFont.Weight.Bold))
         close_btn.setStyleSheet(f"""
             QPushButton {{
                 background: rgba(255, 255, 255, 0.03);
@@ -593,7 +593,7 @@ class RemoteKeyOverlay(QWidget):
             self._qr_label.setPixmap(pix.scaled(172, 172, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
         except ImportError:
             self._qr_label.setText("Install\nqrcode[pil]")
-            self._qr_label.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+            self._qr_label.setFont(QFont("Exo 2", 9, QFont.Weight.Bold))
             self._qr_label.setStyleSheet("color: #111; background: white; border-radius: 12px; padding: 6px;")
         except Exception:
             self._qr_label.setText("QR failed")
@@ -617,7 +617,7 @@ class RemoteKeyOverlay(QWidget):
             letter-spacing: 4px;
         """)
         self._qr_label.setText("OK")
-        self._qr_label.setFont(QFont("Segoe UI", 34, QFont.Weight.Black))
+        self._qr_label.setFont(QFont("Orbitron", 34, QFont.Weight.Black))
         self._qr_label.setStyleSheet("color: #37ff5f; background: #041006; border-radius: 12px;")
         self._timer_lbl.setText("Phone connected. Stella remote is ready.")
 
@@ -713,13 +713,13 @@ class DailyBriefingOverlay(QWidget):
         hdr_info.setSpacing(2)
 
         title_lbl = QLabel("âš¡ STELLA INTELLIGENCE // UNIFIED MORNING BRIEFING")
-        title_lbl.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
+        title_lbl.setFont(QFont("Exo 2", 12, QFont.Weight.Bold))
         title_lbl.setStyleSheet(f"color: {C.PRI}; letter-spacing: 1.5px; background: transparent; border: none;")
         hdr_info.addWidget(title_lbl)
 
         ts_str = self._data.get("timestamp") or datetime.datetime.now().strftime("%A, %B %d â€¢ %I:%M %p")
         ts_lbl = QLabel(ts_str)
-        ts_lbl.setFont(QFont("Segoe UI", 9))
+        ts_lbl.setFont(QFont("Exo 2", 9))
         ts_lbl.setStyleSheet(f"color: {C.TEXT_DIM}; background: transparent; border: none;")
         hdr_info.addWidget(ts_lbl)
 
@@ -729,7 +729,7 @@ class DailyBriefingOverlay(QWidget):
         close_btn = QPushButton("âœ•")
         close_btn.setFixedSize(32, 32)
         close_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        close_btn.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        close_btn.setFont(QFont("Exo 2", 11, QFont.Weight.Bold))
         close_btn.setStyleSheet(f"""
             QPushButton {{
                 background: rgba(255, 255, 255, 0.05);
@@ -778,14 +778,14 @@ class DailyBriefingOverlay(QWidget):
         narr_lay.setSpacing(4)
 
         narr_tag = QLabel("ðŸŽ™ EXECUTIVE SUMMARY")
-        narr_tag.setFont(QFont("Segoe UI", 8, QFont.Weight.Bold))
+        narr_tag.setFont(QFont("Exo 2", 8, QFont.Weight.Bold))
         narr_tag.setStyleSheet(f"color: {C.PRI}; letter-spacing: 1px; background: transparent; border: none;")
         narr_lay.addWidget(narr_tag)
 
         narrative_text = self._data.get("spoken_narrative") or "No briefing narrative generated."
         narr_lbl = QLabel(narrative_text)
         narr_lbl.setWordWrap(True)
-        narr_lbl.setFont(QFont("Segoe UI", 9))
+        narr_lbl.setFont(QFont("Exo 2", 9))
         narr_lbl.setStyleSheet(f"color: {C.TEXT_MED}; background: transparent; border: none; line-height: 1.4;")
         narr_lbl.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         narr_lay.addWidget(narr_lbl)
@@ -797,7 +797,7 @@ class DailyBriefingOverlay(QWidget):
         bot_lay.setSpacing(12)
 
         self._countdown_lbl = QLabel(f"Auto-dismissing in {self._remaining_secs}s")
-        self._countdown_lbl.setFont(QFont("Segoe UI", 8))
+        self._countdown_lbl.setFont(QFont("Exo 2", 8))
         self._countdown_lbl.setStyleSheet(f"color: {C.TEXT_DIM}; background: transparent; border: none;")
         bot_lay.addWidget(self._countdown_lbl)
 
@@ -806,7 +806,7 @@ class DailyBriefingOverlay(QWidget):
         dismiss_btn = QPushButton("DISMISS")
         dismiss_btn.setFixedSize(100, 30)
         dismiss_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        dismiss_btn.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+        dismiss_btn.setFont(QFont("Exo 2", 9, QFont.Weight.Bold))
         dismiss_btn.setStyleSheet(f"""
             QPushButton {{
                 background: rgba(124, 110, 230, 0.12);
@@ -848,7 +848,7 @@ class DailyBriefingOverlay(QWidget):
 
         w = self._data.get("weather") or {}
         tag = QLabel("ðŸŒ¤  ATMOSPHERE & WEATHER")
-        tag.setFont(QFont("Segoe UI", 8, QFont.Weight.Bold))
+        tag.setFont(QFont("Exo 2", 8, QFont.Weight.Bold))
         tag.setStyleSheet(f"color: {C.PRI}; letter-spacing: 1px; background: transparent; border: none;")
         lay.addWidget(tag)
 
@@ -859,12 +859,12 @@ class DailyBriefingOverlay(QWidget):
 
         val_row = QHBoxLayout()
         val_lbl = QLabel(temp_str)
-        val_lbl.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
+        val_lbl.setFont(QFont("Exo 2", 20, QFont.Weight.Bold))
         val_lbl.setStyleSheet(f"color: {C.WHITE}; background: transparent; border: none;")
         val_row.addWidget(val_lbl)
 
         cond_lbl = QLabel(f"{cond}\n{city}")
-        cond_lbl.setFont(QFont("Segoe UI", 8, QFont.Weight.Bold))
+        cond_lbl.setFont(QFont("Exo 2", 8, QFont.Weight.Bold))
         cond_lbl.setStyleSheet(f"color: {C.TEXT_MED}; background: transparent; border: none;")
         cond_lbl.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         val_row.addWidget(cond_lbl)
@@ -873,7 +873,7 @@ class DailyBriefingOverlay(QWidget):
         hum = w.get("humidity", "--")
         wind = w.get("wind_kmph", "--")
         meta_lbl = QLabel(f"Humidity: {hum}% â€¢ Wind: {wind} km/h")
-        meta_lbl.setFont(QFont("Segoe UI", 8))
+        meta_lbl.setFont(QFont("Exo 2", 8))
         meta_lbl.setStyleSheet(f"color: {C.TEXT_DIM}; background: transparent; border: none;")
         lay.addWidget(meta_lbl)
         return box
@@ -886,7 +886,7 @@ class DailyBriefingOverlay(QWidget):
 
         cal = self._data.get("calendar") or {}
         tag = QLabel("ðŸ“…  TODAY'S AGENDA")
-        tag.setFont(QFont("Segoe UI", 8, QFont.Weight.Bold))
+        tag.setFont(QFont("Exo 2", 8, QFont.Weight.Bold))
         tag.setStyleSheet(f"color: {C.PRI}; letter-spacing: 1px; background: transparent; border: none;")
         lay.addWidget(tag)
 
@@ -895,28 +895,28 @@ class DailyBriefingOverlay(QWidget):
 
         if count > 0:
             val_lbl = QLabel(f"{count} Event{'s' if count > 1 else ''}")
-            val_lbl.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
+            val_lbl.setFont(QFont("Exo 2", 20, QFont.Weight.Bold))
             val_lbl.setStyleSheet(f"color: {C.WHITE}; background: transparent; border: none;")
             lay.addWidget(val_lbl)
 
             evt_summary = events[0] if len(events) == 1 else f"{events[0]} (+{len(events)-1} more)"
             sub_lbl = QLabel(evt_summary[:38] + ("..." if len(evt_summary) > 38 else ""))
-            sub_lbl.setFont(QFont("Segoe UI", 8))
+            sub_lbl.setFont(QFont("Exo 2", 8))
             sub_lbl.setStyleSheet(f"color: {C.TEXT_MED}; background: transparent; border: none;")
             lay.addWidget(sub_lbl)
         else:
             val_lbl = QLabel("Clear Schedule")
-            val_lbl.setFont(QFont("Segoe UI", 18, QFont.Weight.Bold))
+            val_lbl.setFont(QFont("Exo 2", 18, QFont.Weight.Bold))
             val_lbl.setStyleSheet(f"color: {C.GREEN}; background: transparent; border: none;")
             lay.addWidget(val_lbl)
 
             sub_lbl = QLabel("No events booked today")
-            sub_lbl.setFont(QFont("Segoe UI", 8))
+            sub_lbl.setFont(QFont("Exo 2", 8))
             sub_lbl.setStyleSheet(f"color: {C.TEXT_MED}; background: transparent; border: none;")
             lay.addWidget(sub_lbl)
 
         meta_lbl = QLabel("Google Calendar Active")
-        meta_lbl.setFont(QFont("Segoe UI", 8))
+        meta_lbl.setFont(QFont("Exo 2", 8))
         meta_lbl.setStyleSheet(f"color: {C.TEXT_DIM}; background: transparent; border: none;")
         lay.addWidget(meta_lbl)
         return box
@@ -929,7 +929,7 @@ class DailyBriefingOverlay(QWidget):
 
         gm = self._data.get("gmail") or {}
         tag = QLabel("âœ‰  GMAIL COMMUNICATIONS")
-        tag.setFont(QFont("Segoe UI", 8, QFont.Weight.Bold))
+        tag.setFont(QFont("Exo 2", 8, QFont.Weight.Bold))
         tag.setStyleSheet(f"color: {C.PRI}; letter-spacing: 1px; background: transparent; border: none;")
         lay.addWidget(tag)
 
@@ -938,7 +938,7 @@ class DailyBriefingOverlay(QWidget):
 
         if count > 0:
             val_lbl = QLabel(f"{count} Unread")
-            val_lbl.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
+            val_lbl.setFont(QFont("Exo 2", 20, QFont.Weight.Bold))
             val_lbl.setStyleSheet(f"color: {C.WHITE}; background: transparent; border: none;")
             lay.addWidget(val_lbl)
 
@@ -949,22 +949,22 @@ class DailyBriefingOverlay(QWidget):
             else:
                 s_str = "Unread messages awaiting review"
             sub_lbl = QLabel(s_str[:38] + ("..." if len(s_str) > 38 else ""))
-            sub_lbl.setFont(QFont("Segoe UI", 8))
+            sub_lbl.setFont(QFont("Exo 2", 8))
             sub_lbl.setStyleSheet(f"color: {C.TEXT_MED}; background: transparent; border: none;")
             lay.addWidget(sub_lbl)
         else:
             val_lbl = QLabel("Inbox Zero")
-            val_lbl.setFont(QFont("Segoe UI", 18, QFont.Weight.Bold))
+            val_lbl.setFont(QFont("Exo 2", 18, QFont.Weight.Bold))
             val_lbl.setStyleSheet(f"color: {C.GREEN}; background: transparent; border: none;")
             lay.addWidget(val_lbl)
 
             sub_lbl = QLabel("All communications caught up")
-            sub_lbl.setFont(QFont("Segoe UI", 8))
+            sub_lbl.setFont(QFont("Exo 2", 8))
             sub_lbl.setStyleSheet(f"color: {C.TEXT_MED}; background: transparent; border: none;")
             lay.addWidget(sub_lbl)
 
         meta_lbl = QLabel("Google Workspace Connected")
-        meta_lbl.setFont(QFont("Segoe UI", 8))
+        meta_lbl.setFont(QFont("Exo 2", 8))
         meta_lbl.setStyleSheet(f"color: {C.TEXT_DIM}; background: transparent; border: none;")
         lay.addWidget(meta_lbl)
         return box
@@ -977,7 +977,7 @@ class DailyBriefingOverlay(QWidget):
 
         ig = self._data.get("instagram") or {}
         tag = QLabel("ðŸ“¸  INSTAGRAM INTEL")
-        tag.setFont(QFont("Segoe UI", 8, QFont.Weight.Bold))
+        tag.setFont(QFont("Exo 2", 8, QFont.Weight.Bold))
         tag.setStyleSheet(f"color: {C.PRI}; letter-spacing: 1px; background: transparent; border: none;")
         lay.addWidget(tag)
 
@@ -986,7 +986,7 @@ class DailyBriefingOverlay(QWidget):
 
         if count > 0:
             val_lbl = QLabel(f"{count} New DM{'s' if count > 1 else ''}")
-            val_lbl.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
+            val_lbl.setFont(QFont("Exo 2", 20, QFont.Weight.Bold))
             val_lbl.setStyleSheet(f"color: {C.WHITE}; background: transparent; border: none;")
             lay.addWidget(val_lbl)
 
@@ -997,22 +997,22 @@ class DailyBriefingOverlay(QWidget):
             else:
                 s_str = "Direct messages awaiting review"
             sub_lbl = QLabel(s_str[:38] + ("..." if len(s_str) > 38 else ""))
-            sub_lbl.setFont(QFont("Segoe UI", 8))
+            sub_lbl.setFont(QFont("Exo 2", 8))
             sub_lbl.setStyleSheet(f"color: {C.TEXT_MED}; background: transparent; border: none;")
             lay.addWidget(sub_lbl)
         else:
             val_lbl = QLabel("0 Direct Messages")
-            val_lbl.setFont(QFont("Segoe UI", 18, QFont.Weight.Bold))
+            val_lbl.setFont(QFont("Exo 2", 18, QFont.Weight.Bold))
             val_lbl.setStyleSheet(f"color: {C.TEXT}; background: transparent; border: none;")
             lay.addWidget(val_lbl)
 
             sub_lbl = QLabel("No pending notifications")
-            sub_lbl.setFont(QFont("Segoe UI", 8))
+            sub_lbl.setFont(QFont("Exo 2", 8))
             sub_lbl.setStyleSheet(f"color: {C.TEXT_MED}; background: transparent; border: none;")
             lay.addWidget(sub_lbl)
 
         meta_lbl = QLabel("Instagram Browser Engine Ready")
-        meta_lbl.setFont(QFont("Segoe UI", 8))
+        meta_lbl.setFont(QFont("Exo 2", 8))
         meta_lbl.setStyleSheet(f"color: {C.TEXT_DIM}; background: transparent; border: none;")
         lay.addWidget(meta_lbl)
         return box
@@ -1054,26 +1054,26 @@ class ConfirmationOverlay(QWidget):
         lay.setSpacing(10)
 
         hdr = QLabel("âš   PHYSICAL CONFIRMATION REQUIRED")
-        hdr.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        hdr.setFont(QFont("Exo 2", 11, QFont.Weight.Bold))
         hdr.setStyleSheet(f"color: {C.ACC}; background: transparent; letter-spacing: 0.5px;")
         lay.addWidget(hdr)
 
         ttl = QLabel(title)
         ttl.setWordWrap(True)
-        ttl.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
+        ttl.setFont(QFont("Exo 2", 12, QFont.Weight.Bold))
         ttl.setStyleSheet(f"color: {C.TEXT}; background: transparent;")
         lay.addWidget(ttl)
 
         if detail:
             dtl = QLabel(detail)
             dtl.setWordWrap(True)
-            dtl.setFont(QFont("Segoe UI", 9))
+            dtl.setFont(QFont("Exo 2", 9))
             dtl.setStyleSheet(f"color: {C.TEXT_MED}; background: transparent;")
             lay.addWidget(dtl)
 
         self._remaining_secs = 90
         self._countdown_lbl = QLabel(f"Confirmation auto-cancels in {self._remaining_secs}s")
-        self._countdown_lbl.setFont(QFont("Segoe UI", 8))
+        self._countdown_lbl.setFont(QFont("Exo 2", 8))
         self._countdown_lbl.setStyleSheet(f"color: {C.TEXT_DIM}; background: transparent;")
         lay.addWidget(self._countdown_lbl)
 
@@ -1082,7 +1082,7 @@ class ConfirmationOverlay(QWidget):
 
         yes = QPushButton("CONFIRM")
         yes.setFixedHeight(36)
-        yes.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+        yes.setFont(QFont("Exo 2", 9, QFont.Weight.Bold))
         yes.setCursor(Qt.CursorShape.PointingHandCursor)
         yes.setStyleSheet(f"""
             QPushButton {{
@@ -1102,7 +1102,7 @@ class ConfirmationOverlay(QWidget):
 
         no = QPushButton("CANCEL")
         no.setFixedHeight(36)
-        no.setFont(QFont("Segoe UI", 9))
+        no.setFont(QFont("Exo 2", 9))
         no.setCursor(Qt.CursorShape.PointingHandCursor)
         no.setStyleSheet(f"""
             QPushButton {{
@@ -1196,7 +1196,7 @@ class MemoryInspectorOverlay(QWidget):
         from memory.memory_manager import all_entries_for_ui
 
         hdr = QLabel("ðŸ§   WHAT STELLA REMEMBERS")
-        hdr.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
+        hdr.setFont(QFont("Exo 2", 12, QFont.Weight.Bold))
         hdr.setStyleSheet(f"color: {C.PRI}; background: transparent; letter-spacing: 0.5px;")
         self._lay.addWidget(hdr)
 
@@ -1214,7 +1214,7 @@ class MemoryInspectorOverlay(QWidget):
             f"Stella recalls these during relevant conversations."
         )
         cap.setWordWrap(True)
-        cap.setFont(QFont("Segoe UI", 8))
+        cap.setFont(QFont("Exo 2", 8))
         cap.setStyleSheet(f"color: {C.TEXT_DIM}; background: transparent;")
         self._lay.addWidget(cap)
 
@@ -1238,7 +1238,7 @@ class MemoryInspectorOverlay(QWidget):
 
         if not rows:
             empty = QLabel("No matching memories found.")
-            empty.setFont(QFont("Segoe UI", 10))
+            empty.setFont(QFont("Exo 2", 10))
             empty.setStyleSheet(f"color: {C.TEXT_MED}; background: transparent; padding: 20px 0;")
             self._lay.addWidget(empty)
         else:
@@ -1261,18 +1261,18 @@ class MemoryInspectorOverlay(QWidget):
 
                 txt = QLabel(f"<b>{r['key'].replace('_', ' ')}</b>: <span style='color:{C.TEXT_MED}'>{r['value']}</span>")
                 txt.setWordWrap(True)
-                txt.setFont(QFont("Segoe UI", 9))
+                txt.setFont(QFont("Exo 2", 9))
                 txt.setStyleSheet(f"color: {C.TEXT}; background: transparent;")
                 line.addWidget(txt, 1)
 
                 meta = QLabel(f"{r['category'][:4].upper()} Â· {r.get('updated') or 'â€”'}")
-                meta.setFont(QFont("Segoe UI", 8))
+                meta.setFont(QFont("Exo 2", 8))
                 meta.setStyleSheet(f"color: {C.TEXT_DIM}; background: transparent;")
                 line.addWidget(meta)
 
                 rm = QPushButton("âœ•")
                 rm.setFixedSize(22, 22)
-                rm.setFont(QFont("Segoe UI", 8, QFont.Weight.Bold))
+                rm.setFont(QFont("Exo 2", 8, QFont.Weight.Bold))
                 rm.setCursor(Qt.CursorShape.PointingHandCursor)
                 rm.setToolTip("Forget this fact")
                 rm.setStyleSheet(f"""
@@ -1301,7 +1301,7 @@ class MemoryInspectorOverlay(QWidget):
 
         close = QPushButton("CLOSE")
         close.setFixedHeight(34)
-        close.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+        close.setFont(QFont("Exo 2", 9, QFont.Weight.Bold))
         close.setCursor(Qt.CursorShape.PointingHandCursor)
         close.setStyleSheet(f"""
             QPushButton {{
@@ -1785,7 +1785,7 @@ class _GestureRenderCanvas(QWidget):
             dot_count = (self._search_phase // 8) % 4
             message = "Searching for hand" + ("." * dot_count)
             painter.setPen(QColor(200, 200, 220, 180))
-            painter.setFont(QFont("Segoe UI", 10, QFont.Weight.Medium))
+            painter.setFont(QFont("Exo 2", 10, QFont.Weight.Medium))
             painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, message)
 
         painter.end()
@@ -1840,7 +1840,7 @@ class GestureCameraPreview(QFrame):
         header_row.setSpacing(10)
 
         title = QLabel("HAND TRACKING")
-        title.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
+        title.setFont(QFont("Exo 2", 10, QFont.Weight.Bold))
         title.setStyleSheet(f"color: {C.WHITE}; letter-spacing: 1px;")
         header_row.addWidget(title)
         header_row.addStretch(1)
@@ -1851,7 +1851,7 @@ class GestureCameraPreview(QFrame):
         header_row.addWidget(self._status_dot)
 
         self._status_text = QLabel("SEARCHING")
-        self._status_text.setFont(QFont("Segoe UI", 8, QFont.Weight.Bold))
+        self._status_text.setFont(QFont("Exo 2", 8, QFont.Weight.Bold))
         self._status_text.setStyleSheet("color: #ffb347;")
         header_row.addWidget(self._status_text)
 
@@ -1887,7 +1887,7 @@ class GestureCameraPreview(QFrame):
         lay.addWidget(self._hand_canvas)
 
         self._status_hint_label = QLabel("Initializing hand detection...")
-        self._status_hint_label.setFont(QFont("Segoe UI", 8))
+        self._status_hint_label.setFont(QFont("Exo 2", 8))
         self._status_hint_label.setStyleSheet(f"color: {C.TEXT_DIM};")
         self._status_hint_label.setWordWrap(True)
         lay.addWidget(self._status_hint_label)
@@ -1909,9 +1909,9 @@ class GestureCameraPreview(QFrame):
             ("Cursor", self._cursor_value),
         ]):
             label = QLabel(label_text.upper())
-            label.setFont(QFont("Segoe UI", 7, QFont.Weight.DemiBold))
+            label.setFont(QFont("Exo 2", 7, QFont.Weight.DemiBold))
             label.setStyleSheet(f"color: {C.TEXT_DIM};")
-            value_label.setFont(QFont("Segoe UI", 8, QFont.Weight.Bold))
+            value_label.setFont(QFont("Exo 2", 8, QFont.Weight.Bold))
             value_label.setStyleSheet(f"color: {C.WHITE};")
             footer.addWidget(label, idx, 0)
             footer.addWidget(value_label, idx, 1)
@@ -2439,7 +2439,7 @@ class MessageCard(QFrame):
         avatar = QLabel(name[:1].upper())
         avatar.setFixedSize(34, 34)
         avatar.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        avatar.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        avatar.setFont(QFont("Exo 2", 11, QFont.Weight.Bold))
 
         palette = {
             "user": ("#0d0f14", C.WHITE, C.BORDER_B),
@@ -2462,11 +2462,11 @@ class MessageCard(QFrame):
         top.setSpacing(8)
 
         name_lbl = QLabel(name)
-        name_lbl.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+        name_lbl.setFont(QFont("Exo 2", 9, QFont.Weight.Bold))
         name_lbl.setStyleSheet(f"color: {C.WHITE}; background: transparent;")
 
         time_lbl = QLabel(stamp)
-        time_lbl.setFont(QFont("Segoe UI", 7))
+        time_lbl.setFont(QFont("Exo 2", 7))
         time_lbl.setStyleSheet(f"color: {C.TEXT_DIM}; background: transparent;")
         time_lbl.setAlignment(Qt.AlignmentFlag.AlignRight)
 
@@ -2476,7 +2476,7 @@ class MessageCard(QFrame):
 
         text_lbl = QLabel(text)
         text_lbl.setWordWrap(True)
-        text_lbl.setFont(QFont("Segoe UI", 9))
+        text_lbl.setFont(QFont("Exo 2", 9))
         text_color = {
             "user": C.TEXT,
             "assistant": C.WHITE,
@@ -2519,11 +2519,11 @@ class TaskCard(QFrame):
 
         row = QHBoxLayout()
         self._title = QLabel("Task Workspace")
-        self._title.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        self._title.setFont(QFont("Exo 2", 11, QFont.Weight.Bold))
         self._title.setStyleSheet(f"color: {C.PRI}; background: transparent;")
 
         self._pct = QLabel("0%")
-        self._pct.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
+        self._pct.setFont(QFont("Exo 2", 10, QFont.Weight.Bold))
         self._pct.setStyleSheet(f"color: {C.WHITE}; background: transparent;")
         self._pct.setAlignment(Qt.AlignmentFlag.AlignRight)
         row.addWidget(self._title)
@@ -2533,25 +2533,25 @@ class TaskCard(QFrame):
 
         self._command_lbl = QLabel("Command: waiting for input")
         self._command_lbl.setWordWrap(True)
-        self._command_lbl.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+        self._command_lbl.setFont(QFont("Exo 2", 9, QFont.Weight.Bold))
         self._command_lbl.setStyleSheet(f"color: {C.WHITE}; background: transparent;")
         lay.addWidget(self._command_lbl)
 
         self._plan_lbl = QLabel("Plan: Stella will generate a task plan after you send a command.")
         self._plan_lbl.setWordWrap(True)
-        self._plan_lbl.setFont(QFont("Segoe UI", 9))
+        self._plan_lbl.setFont(QFont("Exo 2", 9))
         self._plan_lbl.setStyleSheet(f"color: {C.TEXT_MED}; background: transparent;")
         lay.addWidget(self._plan_lbl)
 
         self._status_lbl = QLabel("Status: Idle")
         self._status_lbl.setWordWrap(True)
-        self._status_lbl.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+        self._status_lbl.setFont(QFont("Exo 2", 9, QFont.Weight.Bold))
         self._status_lbl.setStyleSheet(f"color: {C.WHITE}; background: transparent;")
         lay.addWidget(self._status_lbl)
 
         self._output_lbl = QLabel("Output: Ready to work.")
         self._output_lbl.setWordWrap(True)
-        self._output_lbl.setFont(QFont("Segoe UI", 9))
+        self._output_lbl.setFont(QFont("Exo 2", 9))
         self._output_lbl.setStyleSheet(f"color: {C.TEXT_MED}; background: transparent;")
         lay.addWidget(self._output_lbl)
 
@@ -2576,7 +2576,7 @@ class TaskCard(QFrame):
         lay.addWidget(self._bar)
 
         self._foot = QLabel("Working on it...")
-        self._foot.setFont(QFont("Segoe UI", 9))
+        self._foot.setFont(QFont("Exo 2", 9))
         self._foot.setStyleSheet(f"color: {C.TEXT_DIM}; background: transparent;")
         lay.addWidget(self._foot)
 
@@ -2763,7 +2763,7 @@ class EventCard(QFrame):
         icon_lbl = QLabel(icon[:1])
         icon_lbl.setFixedSize(24, 24)
         icon_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        icon_lbl.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
+        icon_lbl.setFont(QFont("Exo 2", 10, QFont.Weight.Bold))
         icon_lbl.setStyleSheet(f"background: transparent; color: {accent};")
         lay.addWidget(icon_lbl)
 
@@ -2772,14 +2772,14 @@ class EventCard(QFrame):
             clean_detail = clean_detail[:157] + "..."
         full_text = f"{title}: {clean_detail}" if clean_detail and clean_detail != title else title
         title_lbl = QLabel(full_text)
-        title_lbl.setFont(QFont("Segoe UI", 9))
+        title_lbl.setFont(QFont("Exo 2", 9))
         title_lbl.setWordWrap(True)
         title_lbl.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         title_lbl.setStyleSheet("color: rgba(255,255,255,0.85); background: transparent;")
         lay.addWidget(title_lbl, 1)
         
         stamp_lbl = QLabel(stamp)
-        stamp_lbl.setFont(QFont("Segoe UI", 7))
+        stamp_lbl.setFont(QFont("Exo 2", 7))
         stamp_lbl.setStyleSheet("color: rgba(255,255,255,0.4); background: transparent;")
         lay.addWidget(stamp_lbl)
 
@@ -2821,7 +2821,7 @@ class ArtifactCard(QFrame):
         badge = QLabel("â†—")
         badge.setFixedSize(30, 30)
         badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        badge.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
+        badge.setFont(QFont("Exo 2", 10, QFont.Weight.Bold))
         badge.setStyleSheet("background: rgba(124, 110, 230,0.08); color: #7C6EE6; border: 1px solid rgba(124, 110, 230,0.24); border-radius: 15px;")
         head.addWidget(badge)
 
@@ -2829,10 +2829,10 @@ class ArtifactCard(QFrame):
         meta.setContentsMargins(0, 0, 0, 0)
         meta.setSpacing(2)
         name_lbl = QLabel(title or "Generated file")
-        name_lbl.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+        name_lbl.setFont(QFont("Exo 2", 9, QFont.Weight.Bold))
         name_lbl.setStyleSheet("color: #ffffff; background: transparent;")
         type_lbl = QLabel(f"{file_type} â€¢ {status}")
-        type_lbl.setFont(QFont("Segoe UI", 8))
+        type_lbl.setFont(QFont("Exo 2", 8))
         type_lbl.setStyleSheet("color: rgba(255,255,255,0.62); background: transparent;")
         meta.addWidget(name_lbl)
         meta.addWidget(type_lbl)
@@ -2916,7 +2916,7 @@ class ChatBubble(QFrame):
             avatar = _framed_logo(24, 24, bg="rgba(12,14,20,245)", border="rgba(124, 110, 230,0.50)", radius=12, inset=4)
             head.addWidget(avatar)
             name_lbl = QLabel(name or "Stella")
-            name_lbl.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+            name_lbl.setFont(QFont("Exo 2", 9, QFont.Weight.Bold))
             name_lbl.setStyleSheet("color: #ffffff; background: transparent;")
             head.addWidget(name_lbl)
             if live:
@@ -2929,23 +2929,23 @@ class ChatBubble(QFrame):
                     self._pulse = None
         elif role != "user":
             name_lbl = QLabel(name)
-            name_lbl.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+            name_lbl.setFont(QFont("Exo 2", 9, QFont.Weight.Bold))
             name_lbl.setStyleSheet("color: #ffffff; background: transparent;")
             head.addWidget(name_lbl)
         elif role == "user":
             user_icon = QLabel("ðŸ‘¤")
-            user_icon.setFont(QFont("Segoe UI", 9))
+            user_icon.setFont(QFont("Exo 2", 9))
             user_icon.setStyleSheet("color: #7C6EE6; background: transparent;")
             head.addWidget(user_icon)
             name_lbl = QLabel(name or "You")
-            name_lbl.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+            name_lbl.setFont(QFont("Exo 2", 9, QFont.Weight.Bold))
             name_lbl.setStyleSheet("color: #ffffff; background: transparent;")
             head.addWidget(name_lbl)
 
         head.addStretch()
 
         time_lbl = QLabel(stamp)
-        time_lbl.setFont(QFont("Segoe UI", 7))
+        time_lbl.setFont(QFont("Exo 2", 7))
         time_lbl.setStyleSheet("color: rgba(255,255,255,0.45); background: transparent;")
         head.addWidget(time_lbl)
 
@@ -3083,7 +3083,7 @@ class HistoryConversationItem(QFrame):
         row.setContentsMargins(0, 0, 0, 0)
         row.setSpacing(6)
         title_lbl = QLabel(title or "Conversation")
-        title_lbl.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+        title_lbl.setFont(QFont("Exo 2", 9, QFont.Weight.Bold))
         title_lbl.setStyleSheet("color: #ffffff; background: transparent;")
         row.addWidget(title_lbl)
         if pinned:
@@ -3092,7 +3092,7 @@ class HistoryConversationItem(QFrame):
             row.addWidget(pin)
         row.addStretch()
         stamp_lbl = QLabel(stamp)
-        stamp_lbl.setFont(QFont("Segoe UI", 7))
+        stamp_lbl.setFont(QFont("Exo 2", 7))
         stamp_lbl.setStyleSheet("color: rgba(255,255,255,0.50); background: transparent;")
         row.addWidget(stamp_lbl)
         meta.addLayout(row)
@@ -3181,7 +3181,7 @@ class ConversationFeed(QScrollArea):
         lay.setContentsMargins(14, 12, 14, 12)
         lay.setSpacing(10)
         title = QLabel("Try asking Stella")
-        title.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+        title.setFont(QFont("Exo 2", 9, QFont.Weight.Bold))
         title.setStyleSheet("color: #ffffff; background: transparent;")
         subtitle = QLabel("Create a presentation, analyze a screen, build a website, organize files, or run browser automation.")
         subtitle.setWordWrap(True)
@@ -3417,14 +3417,14 @@ class TaskDock(QFrame):
             from core.hud_theme import mono_font
             self._title.setFont(mono_font(13, True))
         except Exception:
-            self._title.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
+            self._title.setFont(QFont("Exo 2", 14, QFont.Weight.Bold))
         self._title.setStyleSheet(f"color: {C.PRI}; background: transparent; letter-spacing: 2px;")
         header.addWidget(self._title)
         header.addStretch()
 
         self._toggle_btn = QPushButton(">")
         self._toggle_btn.setFixedSize(34, 34)
-        self._toggle_btn.setFont(QFont("Segoe UI", 13, QFont.Weight.Bold))
+        self._toggle_btn.setFont(QFont("Exo 2", 13, QFont.Weight.Bold))
         self._toggle_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._toggle_btn.setStyleSheet(
             f"QPushButton {{ background: rgba(12,14,18,245); color: {C.WHITE}; border: 1px solid {C.BORDER_B}; border-radius: 8px; }}"
@@ -3450,7 +3450,7 @@ class TaskDock(QFrame):
 
         self._mini_hint = QLabel("TASK")
         self._mini_hint.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._mini_hint.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+        self._mini_hint.setFont(QFont("Exo 2", 9, QFont.Weight.Bold))
         self._mini_hint.setStyleSheet(
             f"color: {C.PRI}; background: rgba(12,14,18,245); border: 1px solid {C.BORDER_B}; border-radius: 8px; padding: 10px 4px;"
         )
@@ -3551,7 +3551,7 @@ class WorkspaceSidebar(QWidget):
         header = QHBoxLayout()
         header.setSpacing(10)
         self._title = QLabel("STELLA EVO WORKSPACE")
-        self._title.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
+        self._title.setFont(QFont("Exo 2", 12, QFont.Weight.Bold))
         self._title.setStyleSheet("color: #FFFFFF; background: transparent; letter-spacing: 1px;")
         header.addWidget(self._title)
         header.addStretch()
@@ -3559,7 +3559,7 @@ class WorkspaceSidebar(QWidget):
         self._close_btn.setToolTip("Close Workspace")
         self._close_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._close_btn.setFixedSize(30, 30)
-        self._close_btn.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        self._close_btn.setFont(QFont("Exo 2", 11, QFont.Weight.Bold))
         self._close_btn.setStyleSheet(
             """
             QPushButton {
@@ -3610,7 +3610,7 @@ class WorkspaceSidebar(QWidget):
         btn = QPushButton(text)
         btn.setCursor(Qt.CursorShape.PointingHandCursor)
         btn.setFixedHeight(34)
-        btn.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+        btn.setFont(QFont("Exo 2", 9, QFont.Weight.Bold))
         btn.setCheckable(True)
         btn.setChecked(active)
         btn.setStyleSheet(self._tab_style(active))
@@ -3676,7 +3676,7 @@ class WorkspaceSidebar(QWidget):
         mem_lay.setContentsMargins(12, 10, 12, 10)
         mem_lay.setSpacing(6)
         mem_title = QLabel("Using Memory:")
-        mem_title.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+        mem_title.setFont(QFont("Exo 2", 9, QFont.Weight.Bold))
         mem_title.setStyleSheet("color: #FFFFFF; background: transparent;")
         self._memory_items = QLabel("")
         self._memory_items.setWordWrap(True)
@@ -3714,7 +3714,7 @@ class WorkspaceSidebar(QWidget):
 
         self._input = QLineEdit()
         self._input.setPlaceholderText("Message Stella...")
-        self._input.setFont(QFont("Segoe UI", 10))
+        self._input.setFont(QFont("Exo 2", 10))
         self._input.setStyleSheet(
             f"QLineEdit {{ background: transparent; color: {C.WHITE}; border: none; padding: 2px 4px; selection-background-color: rgba(124, 110, 230, 0.25); }}"
         )
@@ -3757,7 +3757,7 @@ class WorkspaceSidebar(QWidget):
 
         self._history_search = QLineEdit()
         self._history_search.setPlaceholderText("Search conversations...")
-        self._history_search.setFont(QFont("Segoe UI", 10))
+        self._history_search.setFont(QFont("Exo 2", 10))
         self._history_search.setFixedHeight(38)
         self._history_search.setStyleSheet(
             """
@@ -4184,7 +4184,7 @@ class InlineChatWorkspace(QFrame):
         btn.setChecked(active)
         btn.setCursor(Qt.CursorShape.PointingHandCursor)
         btn.setFixedHeight(34)
-        btn.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+        btn.setFont(QFont("Exo 2", 9, QFont.Weight.Bold))
         btn.setStyleSheet(
             """
             QPushButton {
@@ -4233,7 +4233,7 @@ class InlineChatWorkspace(QFrame):
         today_bar = QHBoxLayout()
         today_bar.addStretch()
         today_pill = QLabel("Today")
-        today_pill.setFont(QFont("Segoe UI", 8, QFont.Weight.Bold))
+        today_pill.setFont(QFont("Exo 2", 8, QFont.Weight.Bold))
         today_pill.setStyleSheet("""
             QLabel {
                 background: rgba(124, 110, 230, 0.12);
@@ -4264,7 +4264,7 @@ class InlineChatWorkspace(QFrame):
         mlay.setContentsMargins(12, 10, 12, 10)
         mlay.setSpacing(6)
         title = QLabel("Using Memory:")
-        title.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+        title.setFont(QFont("Exo 2", 9, QFont.Weight.Bold))
         title.setStyleSheet("color: #FFFFFF; background: transparent;")
         self._memory_lbl = QLabel("")
         self._memory_lbl.setWordWrap(True)
@@ -4301,7 +4301,7 @@ class InlineChatWorkspace(QFrame):
 
         self._input = QLineEdit()
         self._input.setPlaceholderText("Message Stella...")
-        self._input.setFont(QFont("Segoe UI", 10))
+        self._input.setFont(QFont("Exo 2", 10))
         self._input.setStyleSheet(
             f"QLineEdit {{ background: transparent; color: {C.WHITE}; border: none; padding: 0 4px; selection-background-color: rgba(124, 110, 230, 0.25); }}"
         )
@@ -4336,7 +4336,7 @@ class InlineChatWorkspace(QFrame):
         footer = QHBoxLayout()
         footer.setContentsMargins(4, 2, 4, 2)
         self._footer_status = QLabel("Stella is ready")
-        self._footer_status.setFont(QFont("Segoe UI", 8))
+        self._footer_status.setFont(QFont("Exo 2", 8))
         self._footer_status.setStyleSheet("color: rgba(255, 255, 255, 0.55); background: transparent;")
         footer.addWidget(self._footer_status)
         footer.addStretch(1)
@@ -4368,7 +4368,7 @@ class InlineChatWorkspace(QFrame):
         lay.setSpacing(10)
         self._search = QLineEdit()
         self._search.setPlaceholderText("Search conversations...")
-        self._search.setFont(QFont("Segoe UI", 10))
+        self._search.setFont(QFont("Exo 2", 10))
         self._search.setFixedHeight(38)
         self._search.setStyleSheet("QLineEdit { background: rgba(10,11,14,205); color: #FFFFFF; border: 1px solid rgba(124, 110, 230,100); border-radius: 12px; padding: 0 12px; }")
         self._search.textChanged.connect(self._refresh_history)
@@ -4611,12 +4611,12 @@ class LauncherControlPanel(QDialog):
         lay.setSpacing(10)
 
         title = QLabel("STELLA EVO CONTROL")
-        title.setFont(QFont("Segoe UI", 13, QFont.Weight.Bold))
+        title.setFont(QFont("Exo 2", 13, QFont.Weight.Bold))
         title.setStyleSheet("color: #FFFFFF; background: transparent; letter-spacing: 1px;")
         lay.addWidget(title)
 
         sub = QLabel("Desktop launcher controls")
-        sub.setFont(QFont("Segoe UI", 9))
+        sub.setFont(QFont("Exo 2", 9))
         sub.setStyleSheet("color: rgba(255,255,255,0.65); background: transparent;")
         lay.addWidget(sub)
 
@@ -4626,7 +4626,7 @@ class LauncherControlPanel(QDialog):
             btn.setChecked(checked)
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
             btn.setMinimumHeight(36)
-            btn.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
+            btn.setFont(QFont("Exo 2", 10, QFont.Weight.Bold))
             btn.setStyleSheet("""
                 QPushButton {
                     background: rgba(255,255,255,0.05);
@@ -4750,7 +4750,7 @@ class SmallPanelCard(QFrame):
 
         self._body_lbl = QLabel(body)
         self._body_lbl.setWordWrap(True)
-        self._body_lbl.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
+        self._body_lbl.setFont(QFont("Exo 2", 10, QFont.Weight.Bold))
         self._body_lbl.setStyleSheet(f"color: {accent}; background: transparent;")
         lay.addWidget(self._body_lbl)
 
@@ -4788,7 +4788,7 @@ class StellaTelemetryWing(QFrame):
         header_row.addWidget(self._hud_tag)
 
         self._tool_tag = QLabel("TELEMETRY")
-        self._tool_tag.setFont(QFont("Segoe UI", 8, QFont.Weight.Bold))
+        self._tool_tag.setFont(QFont("Exo 2", 8, QFont.Weight.Bold))
         header_row.addWidget(self._tool_tag)
         header_row.addStretch()
 
@@ -4807,7 +4807,7 @@ class StellaTelemetryWing(QFrame):
 
         # Operation Title
         self._title_lbl = QLabel("LIVE TASK EXECUTION")
-        self._title_lbl.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        self._title_lbl.setFont(QFont("Exo 2", 11, QFont.Weight.Bold))
         self._title_lbl.setStyleSheet("color: #ffffff;")
         self._title_lbl.setWordWrap(True)
         lay.addWidget(self._title_lbl)
@@ -4820,7 +4820,7 @@ class StellaTelemetryWing(QFrame):
 
         step_hdr = QHBoxLayout()
         self._pulse_dot = QLabel("â—‰")
-        self._pulse_dot.setFont(QFont("Segoe UI", 8, QFont.Weight.Bold))
+        self._pulse_dot.setFont(QFont("Exo 2", 8, QFont.Weight.Bold))
         step_hdr.addWidget(self._pulse_dot)
         self._step_status_lbl = QLabel("ACTIVE STEP")
         self._step_status_lbl.setFont(QFont("Courier New", 7, QFont.Weight.Bold))
@@ -4829,7 +4829,7 @@ class StellaTelemetryWing(QFrame):
         step_lay.addLayout(step_hdr)
 
         self._step_text_lbl = QLabel("Initializing operation...")
-        self._step_text_lbl.setFont(QFont("Segoe UI", 9))
+        self._step_text_lbl.setFont(QFont("Exo 2", 9))
         self._step_text_lbl.setStyleSheet("color: #E2E8F0;")
         self._step_text_lbl.setWordWrap(True)
         step_lay.addWidget(self._step_text_lbl)
@@ -4989,7 +4989,7 @@ class StellaTelemetryWing(QFrame):
         sources = sources or []
         if not sources:
             default_item = QLabel("â€¢ System core processing data")
-            default_item.setFont(QFont("Segoe UI", 8))
+            default_item.setFont(QFont("Exo 2", 8))
             default_item.setStyleSheet("color: rgba(255, 255, 255, 0.6);")
             self._sources_lay.addWidget(default_item)
         else:
@@ -5002,7 +5002,7 @@ class StellaTelemetryWing(QFrame):
                 else:
                     text = f"ðŸ“„ {s_str[:32]}"
                 pill = QLabel(text)
-                pill.setFont(QFont("Segoe UI", 8))
+                pill.setFont(QFont("Exo 2", 8))
                 pill.setStyleSheet(f"""
                     background: rgba(255, 255, 255, 0.05);
                     color: #E2E8F0;
@@ -5102,7 +5102,7 @@ class StellaResultWing(QFrame):
         header_row.addWidget(self._hud_tag)
 
         self._status_badge = QLabel("COMPLETED")
-        self._status_badge.setFont(QFont("Segoe UI", 8, QFont.Weight.Bold))
+        self._status_badge.setFont(QFont("Exo 2", 8, QFont.Weight.Bold))
         header_row.addWidget(self._status_badge)
         header_row.addStretch()
 
@@ -5121,7 +5121,7 @@ class StellaResultWing(QFrame):
 
         # Title Label
         self._title_lbl = QLabel("MISSION RESULT")
-        self._title_lbl.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        self._title_lbl.setFont(QFont("Exo 2", 11, QFont.Weight.Bold))
         self._title_lbl.setStyleSheet("color: #ffffff;")
         self._title_lbl.setWordWrap(True)
         lay.addWidget(self._title_lbl)
@@ -5133,19 +5133,19 @@ class StellaResultWing(QFrame):
         file_lay.setSpacing(10)
 
         self._file_icon_lbl = QLabel("ðŸ“„")
-        self._file_icon_lbl.setFont(QFont("Segoe UI", 16))
+        self._file_icon_lbl.setFont(QFont("Exo 2", 16))
         file_lay.addWidget(self._file_icon_lbl)
 
         file_info_lay = QVBoxLayout()
         file_info_lay.setSpacing(2)
         self._file_name_lbl = QLabel("document.pdf")
-        self._file_name_lbl.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+        self._file_name_lbl.setFont(QFont("Exo 2", 9, QFont.Weight.Bold))
         self._file_name_lbl.setStyleSheet("color: #ffffff;")
         self._file_name_lbl.setWordWrap(True)
         file_info_lay.addWidget(self._file_name_lbl)
 
         self._file_size_lbl = QLabel("Ready to open")
-        self._file_size_lbl.setFont(QFont("Segoe UI", 8))
+        self._file_size_lbl.setFont(QFont("Exo 2", 8))
         self._file_size_lbl.setStyleSheet("color: rgba(255, 255, 255, 0.6);")
         file_info_lay.addWidget(self._file_size_lbl)
         file_lay.addLayout(file_info_lay, stretch=1)
@@ -5360,7 +5360,7 @@ class StellaResultWing(QFrame):
 
         for b in bullets[:6]:
             b_lbl = QLabel(f"â€¢ {b}")
-            b_lbl.setFont(QFont("Segoe UI", 9))
+            b_lbl.setFont(QFont("Exo 2", 9))
             b_lbl.setStyleSheet("color: #E2E8F0;")
             b_lbl.setWordWrap(True)
             self._bullets_lay.addWidget(b_lbl)
@@ -5478,10 +5478,10 @@ class StatCard(QFrame):
         lbl.setFont(QFont("Courier New", 7, QFont.Weight.Bold))
         lbl.setStyleSheet(f"color: {C.TEXT_DIM}; background: transparent;")
         val = QLabel(value)
-        val.setFont(QFont("Segoe UI", 15, QFont.Weight.Bold))
+        val.setFont(QFont("Exo 2", 15, QFont.Weight.Bold))
         val.setStyleSheet(f"color: {C.WHITE}; background: transparent;")
         self._detail_lbl = QLabel("")
-        self._detail_lbl.setFont(QFont("Segoe UI", 7))
+        self._detail_lbl.setFont(QFont("Exo 2", 7))
         self._detail_lbl.setStyleSheet(f"color: {C.TEXT_DIM}; background: transparent;")
         self._bar = QProgressBar()
         self._bar.setRange(0, 100)
@@ -5951,13 +5951,13 @@ class SetupOverlay(QWidget):
 
         title = QLabel("DEFINE YOUR ASSISTANT")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        title.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
+        title.setFont(QFont("Exo 2", 12, QFont.Weight.Bold))
         title.setStyleSheet("color: rgba(255,255,255,0.7); background: transparent; letter-spacing: 2px;")
         lay.addWidget(title)
         
         sub = QLabel("Every assistant needs an identity.")
         sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        sub.setFont(QFont("Segoe UI", 10))
+        sub.setFont(QFont("Exo 2", 10))
         sub.setStyleSheet("color: rgba(255,255,255,0.4); background: transparent;")
         lay.addWidget(sub)
         lay.addSpacing(20)
@@ -6008,13 +6008,13 @@ class SetupOverlay(QWidget):
 
         title = QLabel("WHO AM I ASSISTING?")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        title.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
+        title.setFont(QFont("Exo 2", 12, QFont.Weight.Bold))
         title.setStyleSheet("color: rgba(255,255,255,0.7); background: transparent; letter-spacing: 2px;")
         lay.addWidget(title)
         
         sub = QLabel("Tell me a little about yourself so I can work better with you.")
         sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        sub.setFont(QFont("Segoe UI", 10))
+        sub.setFont(QFont("Exo 2", 10))
         sub.setStyleSheet("color: rgba(255,255,255,0.4); background: transparent;")
         lay.addWidget(sub)
         lay.addSpacing(20)
@@ -6066,7 +6066,7 @@ class SetupOverlay(QWidget):
 
         title = QLabel("HOW SHOULD I ASSIST YOU?")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        title.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
+        title.setFont(QFont("Exo 2", 12, QFont.Weight.Bold))
         title.setStyleSheet("color: rgba(255,255,255,0.7); background: transparent; letter-spacing: 2px;")
         lay.addWidget(title)
         lay.addSpacing(20)
@@ -6113,7 +6113,7 @@ class SetupOverlay(QWidget):
 
         title = QLabel("WHO USES THIS COMPUTER?")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        title.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
+        title.setFont(QFont("Exo 2", 12, QFont.Weight.Bold))
         title.setStyleSheet("color: rgba(255,255,255,0.7); background: transparent; letter-spacing: 2px;")
         lay.addWidget(title)
         lay.addSpacing(20)
@@ -6156,7 +6156,7 @@ class SetupOverlay(QWidget):
 
         title = QLabel("SELECT PRIMARY INTELLIGENCE")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        title.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        title.setFont(QFont("Exo 2", 11, QFont.Weight.Bold))
         title.setStyleSheet("color: rgba(255,255,255,0.5); background: transparent; border: none; letter-spacing: 4px;")
         lay.addWidget(title)
         lay.addSpacing(24)
@@ -6185,24 +6185,24 @@ class SetupOverlay(QWidget):
         glay.setSpacing(4)
 
         gt = QLabel("Google Gemini")
-        gt.setFont(QFont("Segoe UI", 15, QFont.Weight.Bold))
+        gt.setFont(QFont("Exo 2", 15, QFont.Weight.Bold))
         gt.setStyleSheet("color: #7C6EE6; background: transparent; border: none;")
         glay.addWidget(gt)
 
         gs = QLabel("â˜…â˜…â˜…â˜…â˜…  Recommended")
-        gs.setFont(QFont("Segoe UI", 9))
+        gs.setFont(QFont("Exo 2", 9))
         gs.setStyleSheet("color: rgba(124, 110, 230,0.7); background: transparent; border: none;")
         glay.addWidget(gs)
 
         gd = QLabel("Primary Intelligence")
-        gd.setFont(QFont("Segoe UI", 9))
+        gd.setFont(QFont("Exo 2", 9))
         gd.setStyleSheet("color: rgba(255,255,255,0.35); background: transparent; border: none;")
         glay.addWidget(gd)
 
         glay.addStretch()
 
         gc = QLabel("Connect â†’")
-        gc.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        gc.setFont(QFont("Exo 2", 11, QFont.Weight.Bold))
         gc.setStyleSheet("color: #7C6EE6; background: transparent; border: none;")
         glay.addWidget(gc)
 
@@ -6235,24 +6235,24 @@ class SetupOverlay(QWidget):
         olay.setSpacing(4)
 
         ot = QLabel("OpenRouter")
-        ot.setFont(QFont("Segoe UI", 15, QFont.Weight.Bold))
+        ot.setFont(QFont("Exo 2", 15, QFont.Weight.Bold))
         ot.setStyleSheet("color: rgba(255,255,255,0.8); background: transparent; border: none;")
         olay.addWidget(ot)
 
         od = QLabel("Multiple Models")
-        od.setFont(QFont("Segoe UI", 9))
+        od.setFont(QFont("Exo 2", 9))
         od.setStyleSheet("color: rgba(255,255,255,0.3); background: transparent; border: none;")
         olay.addWidget(od)
 
         od2 = QLabel("Optional Â· Secondary")
-        od2.setFont(QFont("Segoe UI", 9))
+        od2.setFont(QFont("Exo 2", 9))
         od2.setStyleSheet("color: rgba(255,255,255,0.2); background: transparent; border: none;")
         olay.addWidget(od2)
 
         olay.addStretch()
 
         oc = QLabel("Configure Later â†’")
-        oc.setFont(QFont("Segoe UI", 11))
+        oc.setFont(QFont("Exo 2", 11))
         oc.setStyleSheet("color: rgba(255,255,255,0.35); background: transparent; border: none;")
         olay.addWidget(oc)
 
@@ -6290,12 +6290,12 @@ class SetupOverlay(QWidget):
         blay.setSpacing(6)
 
         self._s3_title = QLabel("Google Gemini")
-        self._s3_title.setFont(QFont("Segoe UI", 18, QFont.Weight.Bold))
+        self._s3_title.setFont(QFont("Exo 2", 18, QFont.Weight.Bold))
         self._s3_title.setStyleSheet("color: #7C6EE6; background: transparent; border: none;")
         blay.addWidget(self._s3_title)
 
         self._s3_sub = QLabel("Paste your Neural Key")
-        self._s3_sub.setFont(QFont("Segoe UI", 10))
+        self._s3_sub.setFont(QFont("Exo 2", 10))
         self._s3_sub.setStyleSheet("color: rgba(255,255,255,0.4); background: transparent; border: none;")
         blay.addWidget(self._s3_sub)
 
@@ -6372,10 +6372,10 @@ class SetupOverlay(QWidget):
             lbl = QLabel(txt)
             lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
             if txt == "I'm Stella.":
-                lbl.setFont(QFont("Segoe UI", 24, QFont.Weight.Bold))
+                lbl.setFont(QFont("Exo 2", 24, QFont.Weight.Bold))
                 lbl.setStyleSheet("color: #7C6EE6; background: transparent; border: none;")
             else:
-                lbl.setFont(QFont("Segoe UI", 14))
+                lbl.setFont(QFont("Exo 2", 14))
                 lbl.setStyleSheet("color: rgba(255,255,255,0.6); background: transparent; border: none;")
             lbl.hide()
             intro_lay.addWidget(lbl)
@@ -6386,7 +6386,7 @@ class SetupOverlay(QWidget):
         self._launch_btn = QPushButton("Launch Stella â†’")
         self._launch_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._launch_btn.setFixedSize(220, 48)
-        self._launch_btn.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
+        self._launch_btn.setFont(QFont("Exo 2", 12, QFont.Weight.Bold))
         self._launch_btn.setStyleSheet("""
             QPushButton {
                 background: rgba(124, 110, 230, 0.1);
@@ -6476,12 +6476,12 @@ class SetupOverlay(QWidget):
         prom_lay.setSpacing(8)
 
         q_title = QLabel("Secondary Intelligence")
-        q_title.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
+        q_title.setFont(QFont("Exo 2", 16, QFont.Weight.Bold))
         q_title.setStyleSheet("color: #ffffff; background: transparent; border: none;")
         prom_lay.addWidget(q_title)
 
         q_sub = QLabel("Would you like to configure OpenRouter as well?\nThis is optional and can be done later in Settings.")
-        q_sub.setFont(QFont("Segoe UI", 10))
+        q_sub.setFont(QFont("Exo 2", 10))
         q_sub.setWordWrap(True)
         q_sub.setStyleSheet("color: rgba(255,255,255,0.4); background: transparent; border: none;")
         prom_lay.addWidget(q_sub)
@@ -6494,7 +6494,7 @@ class SetupOverlay(QWidget):
         skip_btn = QPushButton("Skip")
         skip_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         skip_btn.setFixedHeight(42)
-        skip_btn.setFont(QFont("Segoe UI", 11))
+        skip_btn.setFont(QFont("Exo 2", 11))
         skip_btn.setStyleSheet("""
             QPushButton {
                 background: transparent;
@@ -6514,7 +6514,7 @@ class SetupOverlay(QWidget):
         yes_btn = QPushButton("Configure OpenRouter")
         yes_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         yes_btn.setFixedHeight(42)
-        yes_btn.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        yes_btn.setFont(QFont("Exo 2", 11, QFont.Weight.Bold))
         yes_btn.setStyleSheet("""
             QPushButton {
                 background: rgba(124, 110, 230, 0.1);
@@ -6561,12 +6561,12 @@ class SetupOverlay(QWidget):
         or_blay.setSpacing(6)
 
         or_title = QLabel("OpenRouter")
-        or_title.setFont(QFont("Segoe UI", 18, QFont.Weight.Bold))
+        or_title.setFont(QFont("Exo 2", 18, QFont.Weight.Bold))
         or_title.setStyleSheet("color: rgba(255,255,255,0.8); background: transparent; border: none;")
         or_blay.addWidget(or_title)
 
         or_sub = QLabel("Paste your OpenRouter API Key")
-        or_sub.setFont(QFont("Segoe UI", 10))
+        or_sub.setFont(QFont("Exo 2", 10))
         or_sub.setStyleSheet("color: rgba(255,255,255,0.4); background: transparent; border: none;")
         or_blay.addWidget(or_sub)
 
@@ -6599,7 +6599,7 @@ class SetupOverlay(QWidget):
         or_skip = QPushButton("Skip")
         or_skip.setCursor(Qt.CursorShape.PointingHandCursor)
         or_skip.setFixedHeight(42)
-        or_skip.setFont(QFont("Segoe UI", 11))
+        or_skip.setFont(QFont("Exo 2", 11))
         or_skip.setStyleSheet("""
             QPushButton { background: transparent; color: rgba(255,255,255,0.4); border: none; }
             QPushButton:hover { color: rgba(255,255,255,0.7); }
@@ -6610,7 +6610,7 @@ class SetupOverlay(QWidget):
         or_save = QPushButton("Save & Continue")
         or_save.setCursor(Qt.CursorShape.PointingHandCursor)
         or_save.setFixedHeight(42)
-        or_save.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        or_save.setFont(QFont("Exo 2", 11, QFont.Weight.Bold))
         or_save.setStyleSheet("""
             QPushButton {
                 background: rgba(124, 110, 230, 0.1);
@@ -6655,12 +6655,12 @@ class SetupOverlay(QWidget):
         c_blay.setSpacing(6)
 
         c_title = QLabel("CHOOSE AESTHETIC")
-        c_title.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
+        c_title.setFont(QFont("Exo 2", 16, QFont.Weight.Bold))
         c_title.setStyleSheet("color: rgba(255,255,255,0.8); background: transparent; border: none;")
         c_blay.addWidget(c_title)
 
         c_sub = QLabel("Select your preferred neural color palette.")
-        c_sub.setFont(QFont("Segoe UI", 10))
+        c_sub.setFont(QFont("Exo 2", 10))
         c_sub.setStyleSheet("color: rgba(255,255,255,0.4); background: transparent; border: none;")
         c_blay.addWidget(c_sub)
 
@@ -6668,7 +6668,7 @@ class SetupOverlay(QWidget):
         
         self._setup_color_btn = QPushButton("Pick Custom Color")
         self._setup_color_btn.setFixedHeight(48)
-        self._setup_color_btn.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
+        self._setup_color_btn.setFont(QFont("Exo 2", 12, QFont.Weight.Bold))
         self._setup_color_btn.setStyleSheet(f"""
             QPushButton {{
                 background: {C.PRI};
@@ -6687,7 +6687,7 @@ class SetupOverlay(QWidget):
         c_continue = QPushButton("Continue â†’")
         c_continue.setCursor(Qt.CursorShape.PointingHandCursor)
         c_continue.setFixedHeight(42)
-        c_continue.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        c_continue.setFont(QFont("Exo 2", 11, QFont.Weight.Bold))
         c_continue.setStyleSheet("""
             QPushButton {
                 background: rgba(124, 110, 230, 0.1);
@@ -6787,7 +6787,7 @@ class SetupOverlay(QWidget):
 
         self._s4_title = QLabel("ESTABLISHING NEURAL LINK")
         self._s4_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._s4_title.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
+        self._s4_title.setFont(QFont("Exo 2", 10, QFont.Weight.Bold))
         self._s4_title.setStyleSheet("color: rgba(124, 110, 230,0.7); background: transparent; border: none; letter-spacing: 3px;")
         c4lay.addWidget(self._s4_title)
         c4lay.addSpacing(12)
@@ -6916,7 +6916,7 @@ class CommandBar(QWidget):
         # Input field
         self._input = QLineEdit()
         self._input.setPlaceholderText("Tell Stella what to do...")
-        self._input.setFont(QFont("Segoe UI", 9))
+        self._input.setFont(QFont("Exo 2", 9))
         self._input.setFixedHeight(32)
         self._input.setStyleSheet(f"""
             QLineEdit {{
@@ -7092,7 +7092,7 @@ class DeveloperModeDialog(QDialog):
         root.setContentsMargins(16, 16, 16, 16)
 
         title = QLabel("Developer Co-pilot")
-        title.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        title.setFont(QFont("Exo 2", 11, QFont.Weight.Bold))
         title.setStyleSheet(f"color: {C.PRI};")
         root.addWidget(title)
 
@@ -7832,7 +7832,7 @@ class BootSequenceOverlay(QWidget):
                 spacing_prog = min(1.0, (self._time - 1.35) / 1.5)
                 letter_spacing = 10.0 + (spacing_prog * 14.0)
 
-                font_stella = QFont("Segoe UI", 56, QFont.Weight.Black)
+                font_stella = QFont("Orbitron", 56, QFont.Weight.Black)
                 font_stella.setLetterSpacing(QFont.SpacingType.AbsoluteSpacing, letter_spacing)
                 painter.setFont(font_stella)
 
@@ -7883,14 +7883,14 @@ class BootSequenceOverlay(QWidget):
                 painter.setBrush(QColor(0, 20, 35, int(evo_alpha * 0.55)))
                 painter.drawRoundedRect(badge_rect, 22.0, 22.0)
 
-                font_sub = QFont("Segoe UI", 18, QFont.Weight.Bold)
+                font_sub = QFont("Exo 2", 18, QFont.Weight.Bold)
                 font_sub.setLetterSpacing(QFont.SpacingType.AbsoluteSpacing, 4.0)
                 painter.setFont(font_sub)
 
                 painter.setPen(QColor(220, 230, 245, evo_alpha))
                 painter.drawText(QRectF(-badge_w / 2.0, -badge_h / 2.0, 125, badge_h), Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter, "AI - ")
 
-                font_evo = QFont("Segoe UI", 20, QFont.Weight.Black)
+                font_evo = QFont("Orbitron", 20, QFont.Weight.Black)
                 font_evo.setLetterSpacing(QFont.SpacingType.AbsoluteSpacing, 5.0)
                 painter.setFont(font_evo)
 
@@ -7951,19 +7951,19 @@ class IncomingAlertDialog(QDialog):
         lay.setSpacing(10)
 
         heading = QLabel("Incoming Call" if self._kind == "call" else "Incoming Message")
-        heading.setFont(QFont("Segoe UI", 13, QFont.Weight.Bold))
+        heading.setFont(QFont("Exo 2", 13, QFont.Weight.Bold))
         heading.setStyleSheet(f"color: {C.WHITE}; background: transparent;")
         lay.addWidget(heading)
 
         app_lbl = QLabel(f"From {self._app}")
-        app_lbl.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+        app_lbl.setFont(QFont("Exo 2", 9, QFont.Weight.Bold))
         app_lbl.setStyleSheet(f"color: {C.TEXT_MED}; background: transparent;")
         lay.addWidget(app_lbl)
 
         body = self._preview or self._title or "A notification was detected."
         body_lbl = QLabel(body)
         body_lbl.setWordWrap(True)
-        body_lbl.setFont(QFont("Segoe UI", 10))
+        body_lbl.setFont(QFont("Exo 2", 10))
         body_lbl.setStyleSheet(f"color: {C.WHITE}; background: transparent;")
         lay.addWidget(body_lbl)
 
@@ -7974,7 +7974,7 @@ class IncomingAlertDialog(QDialog):
             btn = QPushButton(text)
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
             btn.setFixedHeight(34)
-            btn.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+            btn.setFont(QFont("Exo 2", 9, QFont.Weight.Bold))
             fg = C.WHITE
             border = C.BORDER_B if primary else C.BORDER
             bg = "rgba(255,255,255,0.10)" if primary else "rgba(14,14,14,235)"
@@ -8078,14 +8078,14 @@ class MeetingOverlay(QWidget):
         top.setSpacing(10)
 
         self._badge = QLabel("MEETING MODE")
-        self._badge.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
+        self._badge.setFont(QFont("Exo 2", 10, QFont.Weight.Bold))
         self._badge.setStyleSheet(
             f"color: {C.WHITE}; background: rgba(255,255,255,0.06); border: 1px solid {C.BORDER_B}; border-radius: 10px; padding: 4px 10px;"
         )
         top.addWidget(self._badge)
 
         self._title = QLabel("Watching the meeting")
-        self._title.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
+        self._title.setFont(QFont("Exo 2", 10, QFont.Weight.Bold))
         self._title.setStyleSheet(f"color: {C.WHITE}; background: transparent;")
         top.addWidget(self._title)
         top.addStretch()
@@ -8093,7 +8093,7 @@ class MeetingOverlay(QWidget):
         self._min_btn = QPushButton("-")
         self._min_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._min_btn.setFixedSize(28, 28)
-        self._min_btn.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        self._min_btn.setFont(QFont("Exo 2", 11, QFont.Weight.Bold))
         self._min_btn.setToolTip("Minimize meeting bar")
         self._min_btn.setStyleSheet(f"""
             QPushButton {{
@@ -8113,7 +8113,7 @@ class MeetingOverlay(QWidget):
         self._stop_btn = QPushButton("Stop")
         self._stop_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._stop_btn.setFixedHeight(28)
-        self._stop_btn.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+        self._stop_btn.setFont(QFont("Exo 2", 9, QFont.Weight.Bold))
         self._stop_btn.setStyleSheet(f"""
             QPushButton {{
                 background: rgba(255,255,255,0.06);
@@ -8133,7 +8133,7 @@ class MeetingOverlay(QWidget):
         self._close_btn = QPushButton("x")
         self._close_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._close_btn.setFixedSize(28, 28)
-        self._close_btn.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        self._close_btn.setFont(QFont("Exo 2", 11, QFont.Weight.Bold))
         self._close_btn.setToolTip("Close meeting bar")
         self._close_btn.setStyleSheet(f"""
             QPushButton {{
@@ -8153,19 +8153,19 @@ class MeetingOverlay(QWidget):
 
         self._summary = QLabel("Waiting for a meeting to start...")
         self._summary.setWordWrap(True)
-        self._summary.setFont(QFont("Segoe UI", 10))
+        self._summary.setFont(QFont("Exo 2", 10))
         self._summary.setStyleSheet(f"color: {C.TEXT_MED}; background: transparent;")
         lay.addWidget(self._summary)
 
         self._speech = QLabel("They said: nothing yet.")
         self._speech.setWordWrap(True)
-        self._speech.setFont(QFont("Segoe UI", 10))
+        self._speech.setFont(QFont("Exo 2", 10))
         self._speech.setStyleSheet(f"color: {C.WHITE}; background: transparent;")
         lay.addWidget(self._speech)
 
         self._answer = QLabel("Stella will show the live answer here.")
         self._answer.setWordWrap(True)
-        self._answer.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        self._answer.setFont(QFont("Exo 2", 11, QFont.Weight.Bold))
         self._answer.setStyleSheet(f"color: {C.WHITE}; background: transparent;")
         lay.addWidget(self._answer)
 
@@ -8783,7 +8783,7 @@ class MainWindow(QMainWindow):
             btn.setStyleSheet(f"QPushButton {{ background: rgba(12,14,18,200); color: {C.WHITE}; border: 1px solid {C.BORDER_B}; border-radius: 8px; padding: 5px 15px; font-weight: bold; font-family: 'Segoe UI'; font-size: 13px; }} QPushButton:hover {{ color: {C.PRI}; border: 1px solid {C.PRI}; }}")
         
         self._status_badge = QLabel("â— ONLINE")
-        self._status_badge.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+        self._status_badge.setFont(QFont("Exo 2", 9, QFont.Weight.Bold))
         self._status_badge.setStyleSheet(
             f"color: {C.PRI}; background: rgba(12,14,18,220); border: 1px solid {C.BORDER_B}; border-radius: 8px; padding: 5px 12px;"
         )
@@ -10428,12 +10428,12 @@ class MainWindow(QMainWindow):
         header_bar.setSpacing(8)
 
         pulse_dot = QLabel("â—")
-        pulse_dot.setFont(QFont("Segoe UI", 10))
+        pulse_dot.setFont(QFont("Exo 2", 10))
         pulse_dot.setStyleSheet("color: #37ff5f; background: transparent;")
         header_bar.addWidget(pulse_dot)
 
         header_title = QLabel("STELLA CHAT")
-        header_title.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        header_title.setFont(QFont("Exo 2", 11, QFont.Weight.Bold))
         header_title.setStyleSheet(f"color: {C.WHITE}; background: transparent; letter-spacing: 1px;")
         header_bar.addWidget(header_title)
 
@@ -10441,7 +10441,7 @@ class MainWindow(QMainWindow):
 
         self._new_chat_btn = QPushButton("+ New")
         self._new_chat_btn.setFixedSize(54, 28)
-        self._new_chat_btn.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+        self._new_chat_btn.setFont(QFont("Exo 2", 9, QFont.Weight.Bold))
         self._new_chat_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._new_chat_btn.setToolTip("Start a new chat session")
         self._new_chat_btn.setStyleSheet(
@@ -10453,7 +10453,7 @@ class MainWindow(QMainWindow):
 
         self._right_toggle_btn = QPushButton("â¯")
         self._right_toggle_btn.setFixedSize(28, 28)
-        self._right_toggle_btn.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        self._right_toggle_btn.setFont(QFont("Exo 2", 11, QFont.Weight.Bold))
         self._right_toggle_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._right_toggle_btn.setToolTip("Collapse Chat Sidebar")
         self._right_toggle_btn.setStyleSheet(
@@ -10526,7 +10526,7 @@ class MainWindow(QMainWindow):
 
         self._input = QLineEdit()
         self._input.setPlaceholderText("Ask Stella anything...")
-        self._input.setFont(QFont("Segoe UI", 10))
+        self._input.setFont(QFont("Exo 2", 10))
         self._input.setFixedHeight(50)
         self._input.setStyleSheet(f"""
             QLineEdit {{
@@ -10593,7 +10593,7 @@ class MainWindow(QMainWindow):
 
         self._send_btn = QPushButton()
         self._send_btn.setFixedSize(44, 44)
-        self._send_btn.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        self._send_btn.setFont(QFont("Exo 2", 11, QFont.Weight.Bold))
         self._send_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._send_btn.setIcon(QIcon(_icon_pixmap("send", 20)))
         self._send_btn.setIconSize(QSize(20, 20))
@@ -10645,7 +10645,7 @@ class SystemConnectivitySidebar(QFrame):
         lay.setSpacing(14)
 
         title = QLabel("SYSTEM STATUS")
-        title.setFont(QFont("Segoe UI", 13, QFont.Weight.Bold))
+        title.setFont(QFont("Exo 2", 13, QFont.Weight.Bold))
         title.setStyleSheet(f"color: {C.WHITE}; letter-spacing: 1px;")
         lay.addWidget(title)
 
@@ -10683,7 +10683,7 @@ class SystemConnectivitySidebar(QFrame):
             self._info_rows[label] = val_lbl
 
         quick_title = QLabel("QUICK ACTIONS")
-        quick_title.setFont(QFont("Segoe UI", 13, QFont.Weight.Bold))
+        quick_title.setFont(QFont("Exo 2", 13, QFont.Weight.Bold))
         quick_title.setStyleSheet(f"color: {C.WHITE}; letter-spacing: 1px;")
         lay.addWidget(quick_title)
 
@@ -10784,13 +10784,13 @@ class SettingsHubPage(QWidget):
         lay.setSpacing(25)
 
         title = QLabel("Settings Hub")
-        title.setFont(QFont("Segoe UI", 32, QFont.Weight.Black))
+        title.setFont(QFont("Orbitron", 32, QFont.Weight.Black))
         title.setStyleSheet(f"color: {C.WHITE}; letter-spacing: 1px;")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         lay.addWidget(title)
 
         subtitle = QLabel("Select a section below to configure your Stella environment.")
-        subtitle.setFont(QFont("Segoe UI", 12))
+        subtitle.setFont(QFont("Exo 2", 12))
         subtitle.setStyleSheet(f"color: {C.TEXT_DIM};")
         subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
         lay.addWidget(subtitle)
@@ -10826,19 +10826,19 @@ class SettingsHubPage(QWidget):
             card_lay.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
             icon_lbl = QLabel(icon_emoji)
-            icon_lbl.setFont(QFont("Segoe UI", 36))
+            icon_lbl.setFont(QFont("Exo 2", 36))
             icon_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
             icon_lbl.setStyleSheet("background: transparent; border: none;")
             card_lay.addWidget(icon_lbl)
 
             t = QLabel(title_text)
-            t.setFont(QFont("Segoe UI", 15, QFont.Weight.Bold))
+            t.setFont(QFont("Exo 2", 15, QFont.Weight.Bold))
             t.setStyleSheet(f"color: {C.WHITE}; background: transparent; border: none;")
             t.setAlignment(Qt.AlignmentFlag.AlignCenter)
             card_lay.addWidget(t)
 
             d = QLabel(desc_text)
-            d.setFont(QFont("Segoe UI", 9))
+            d.setFont(QFont("Exo 2", 9))
             d.setStyleSheet(f"color: {C.TEXT_DIM}; background: transparent; border: none;")
             d.setWordWrap(True)
             d.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -10923,10 +10923,10 @@ class SystemConnectivityPage(QWidget):
         h_lay.setContentsMargins(0, 0, 0, 0)
         h_lay.setSpacing(6)
         title = QLabel("SYSTEM & CONNECTIVITY")
-        title.setFont(QFont("Segoe UI", 22, QFont.Weight.Black))
+        title.setFont(QFont("Orbitron", 22, QFont.Weight.Black))
         title.setStyleSheet(f"color: {C.WHITE}; letter-spacing: 1px;")
         sub = QLabel("Manage your AI providers, connections and application preferences.")
-        sub.setFont(QFont("Segoe UI", 10))
+        sub.setFont(QFont("Exo 2", 10))
         sub.setStyleSheet(f"color: {C.TEXT_DIM};")
         h_lay.addWidget(title)
         h_lay.addWidget(sub)
@@ -10959,7 +10959,7 @@ class SystemConnectivityPage(QWidget):
         lay.setContentsMargins(18, 16, 18, 16)
         lay.setSpacing(12)
         head = QLabel(title)
-        head.setFont(QFont("Segoe UI", 13, QFont.Weight.Bold))
+        head.setFont(QFont("Exo 2", 13, QFont.Weight.Bold))
         head.setStyleSheet(f"color: {C.WHITE};")
         lay.addWidget(head)
         if subtitle:
@@ -11016,7 +11016,7 @@ class SystemConnectivityPage(QWidget):
         icon = QLabel(name[:1].upper())
         icon.setFixedSize(42, 42)
         icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        icon.setFont(QFont("Segoe UI", 13, QFont.Weight.Bold))
+        icon.setFont(QFont("Exo 2", 13, QFont.Weight.Bold))
         if key:
             icon.setStyleSheet(f"background: rgba(55, 255, 95, 0.12); color: {C.GREEN}; border: 1px solid rgba(55, 255, 95, 0.3); border-radius: 21px;")
         else:
@@ -11024,7 +11024,7 @@ class SystemConnectivityPage(QWidget):
         r.addWidget(icon)
         meta = QVBoxLayout()
         title = QLabel(name)
-        title.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        title.setFont(QFont("Exo 2", 11, QFont.Weight.Bold))
         title.setStyleSheet(f"color: {C.WHITE}; border: none;")
         if key:
             status = QLabel("\u2713  Already Added")
@@ -13936,10 +13936,10 @@ class SmartDevicesSection(QFrame):
         title_box = QVBoxLayout()
         title_box.setSpacing(1)
         self._title_lbl = QLabel("SMART DEVICES")
-        self._title_lbl.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
+        self._title_lbl.setFont(QFont("Exo 2", 12, QFont.Weight.Bold))
         self._title_lbl.setStyleSheet(f"color: {C.WHITE}; letter-spacing: 1px;")
         self._subtitle_lbl = QLabel("Quick access to your connected home devices.")
-        self._subtitle_lbl.setFont(QFont("Segoe UI", 8))
+        self._subtitle_lbl.setFont(QFont("Exo 2", 8))
         self._subtitle_lbl.setStyleSheet(f"color: {C.TEXT_DIM};")
         title_box.addWidget(self._title_lbl)
         title_box.addWidget(self._subtitle_lbl)
@@ -13996,12 +13996,12 @@ class SmartDevicesSection(QFrame):
         empty_lay.setSpacing(6)
         empty_title = QLabel("No Smart Devices Connected")
         empty_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        empty_title.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        empty_title.setFont(QFont("Exo 2", 11, QFont.Weight.Bold))
         empty_title.setStyleSheet(f"color: {C.WHITE}; border: none;")
         empty_desc = QLabel("Connect your first smart device to control it directly from your dashboard.")
         empty_desc.setWordWrap(True)
         empty_desc.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        empty_desc.setFont(QFont("Segoe UI", 8))
+        empty_desc.setFont(QFont("Exo 2", 8))
         empty_desc.setStyleSheet(f"color: {C.TEXT_DIM};")
         empty_btn = QPushButton("Open Stella Home")
         empty_btn.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -14088,7 +14088,7 @@ class SmartDevicesSection(QFrame):
         panel_top = QHBoxLayout()
         panel_top.setSpacing(6)
         self._panel_name = QLabel("Device")
-        self._panel_name.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        self._panel_name.setFont(QFont("Exo 2", 11, QFont.Weight.Bold))
         self._panel_name.setStyleSheet(f"color: {C.WHITE};")
         panel_top.addWidget(self._panel_name, 1)
         self._panel_close = QPushButton("X")
@@ -14453,14 +14453,14 @@ class _ConnectDeviceCard(QFrame):
         layout.setSpacing(8)
 
         self._title = QLabel(str(device.get("name", "Device")))
-        self._title.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        self._title.setFont(QFont("Exo 2", 11, QFont.Weight.Bold))
         self._title.setStyleSheet("color: #ffffff;")
         layout.addWidget(self._title)
 
         platform = str(device.get("platform", "UNKNOWN")).upper()
         status = "ONLINE" if bool(device.get("online")) else "OFFLINE"
         self._status_label = QLabel(f"{platform} Î“Ã‡Ã³ {status}")
-        self._status_label.setFont(QFont("Segoe UI", 8))
+        self._status_label.setFont(QFont("Exo 2", 8))
         self._status_label.setStyleSheet("color: rgba(255,255,255,0.55);")
         layout.addWidget(self._status_label)
 
@@ -14472,7 +14472,7 @@ class _ConnectDeviceCard(QFrame):
         if device.get("ip"):
             info.append(str(device.get("ip")))
         self._info_lbl = QLabel(" â”¬â•– ".join(info) if info else "Connected device")
-        self._info_lbl.setFont(QFont("Segoe UI", 8))
+        self._info_lbl.setFont(QFont("Exo 2", 8))
         self._info_lbl.setStyleSheet("color: rgba(255,255,255,0.45);")
         self._info_lbl.setWordWrap(True)
         layout.addWidget(self._info_lbl)
@@ -14595,10 +14595,10 @@ class StellaConnectDevicesPage(QFrame):
         title_box = QVBoxLayout()
         title_box.setSpacing(2)
         self._title = QLabel("DEVICES")
-        self._title.setFont(QFont("Segoe UI", 18, QFont.Weight.Black))
+        self._title.setFont(QFont("Orbitron", 18, QFont.Weight.Black))
         self._title.setStyleSheet("color: #ffffff; letter-spacing: 2px;")
         self._subtitle = QLabel("Everything connected to Stella.")
-        self._subtitle.setFont(QFont("Segoe UI", 9))
+        self._subtitle.setFont(QFont("Exo 2", 9))
         self._subtitle.setStyleSheet("color: rgba(255,255,255,0.62);")
         title_box.addWidget(self._title)
         title_box.addWidget(self._subtitle)
@@ -14609,14 +14609,14 @@ class StellaConnectDevicesPage(QFrame):
         top_row = QHBoxLayout()
         top_row.setSpacing(8)
         self._gateway_pill = QLabel("Î“Ã¹Ã… Gateway Online")
-        self._gateway_pill.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+        self._gateway_pill.setFont(QFont("Exo 2", 9, QFont.Weight.Bold))
         self._gateway_pill.setStyleSheet("color: #35ff75; background: rgba(53,255,117,0.06); border: 1px solid rgba(53,255,117,0.16); border-radius: 12px; padding: 5px 10px;")
         top_row.addWidget(self._gateway_pill)
         top_row.addStretch(1)
         self._add_btn = QPushButton("+ Add Device")
         self._add_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._add_btn.setFixedHeight(34)
-        self._add_btn.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
+        self._add_btn.setFont(QFont("Exo 2", 10, QFont.Weight.Bold))
         self._add_btn.setStyleSheet("""
             QPushButton {
                 background: rgba(124, 110, 230, 0.10);
@@ -14635,7 +14635,7 @@ class StellaConnectDevicesPage(QFrame):
         status_wrap.addLayout(top_row)
         self._gateway_meta = QLabel("Port: 8765  â”¬â•–  Devices: 0")
         self._gateway_meta.setAlignment(Qt.AlignmentFlag.AlignRight)
-        self._gateway_meta.setFont(QFont("Segoe UI", 8))
+        self._gateway_meta.setFont(QFont("Exo 2", 8))
         self._gateway_meta.setStyleSheet("color: rgba(255,255,255,0.42);")
         status_wrap.addWidget(self._gateway_meta)
         header.addLayout(status_wrap)
@@ -14653,7 +14653,7 @@ class StellaConnectDevicesPage(QFrame):
         ov_lay.setSpacing(12)
         
         self._my_devices_lbl = QLabel("MY DEVICES")
-        self._my_devices_lbl.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
+        self._my_devices_lbl.setFont(QFont("Exo 2", 10, QFont.Weight.Bold))
         self._my_devices_lbl.setStyleSheet("color: #ffffff; letter-spacing: 1px;")
         ov_lay.addWidget(self._my_devices_lbl)
         
@@ -14682,13 +14682,13 @@ class StellaConnectDevicesPage(QFrame):
         empty_lay.addStretch(1)
         empty_lbl = QLabel("No devices connected yet.")
         empty_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        empty_lbl.setFont(QFont("Segoe UI", 12))
+        empty_lbl.setFont(QFont("Exo 2", 12))
         empty_lbl.setStyleSheet("color: rgba(255,255,255,0.5);")
         empty_lay.addWidget(empty_lbl)
         empty_btn = QPushButton("+ ADD DEVICE")
         empty_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         empty_btn.setFixedSize(160, 40)
-        empty_btn.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+        empty_btn.setFont(QFont("Exo 2", 9, QFont.Weight.Bold))
         empty_btn.setStyleSheet("""
             QPushButton {
                 background: rgba(124, 110, 230, 0.10);
@@ -14720,7 +14720,7 @@ class StellaConnectDevicesPage(QFrame):
         back_btn = QPushButton("Î“Ã¥Ã‰ Back to Devices")
         back_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         back_btn.setFixedSize(140, 32)
-        back_btn.setFont(QFont("Segoe UI", 9))
+        back_btn.setFont(QFont("Exo 2", 9))
         back_btn.setStyleSheet("""
             QPushButton { background: transparent; color: rgba(255,255,255,0.7); border: none; text-align: left; }
             QPushButton:hover { color: #7C6EE6; }
@@ -14732,18 +14732,18 @@ class StellaConnectDevicesPage(QFrame):
         self._detail_icon = QLabel()
         self._detail_icon.setFixedSize(48, 48)
         self._detail_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._detail_icon.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
+        self._detail_icon.setFont(QFont("Exo 2", 20, QFont.Weight.Bold))
         self._detail_icon.setStyleSheet("background: rgba(124, 110, 230, 0.10); color: #7C6EE6; border: 1px solid rgba(124, 110, 230,0.22); border-radius: 12px;")
         self._detail_header.addWidget(self._detail_icon)
         
         det_titles = QVBoxLayout()
         self._detail_title = QLabel()
-        self._detail_title.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
+        self._detail_title.setFont(QFont("Exo 2", 16, QFont.Weight.Bold))
         self._detail_title.setStyleSheet("color: #ffffff;")
         det_titles.addWidget(self._detail_title)
         
         self._detail_status = QLabel()
-        self._detail_status.setFont(QFont("Segoe UI", 10))
+        self._detail_status.setFont(QFont("Exo 2", 10))
         self._detail_status.setStyleSheet("color: rgba(255,255,255,0.6);")
         det_titles.addWidget(self._detail_status)
         self._detail_header.addLayout(det_titles, 1)
@@ -14768,7 +14768,7 @@ class StellaConnectDevicesPage(QFrame):
         action_lay = QVBoxLayout(self._action_box)
         action_lay.setContentsMargins(16, 16, 16, 16)
         action_title = QLabel("CONTROLS")
-        action_title.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
+        action_title.setFont(QFont("Exo 2", 10, QFont.Weight.Bold))
         action_title.setStyleSheet("color: #ffffff; letter-spacing: 1px;")
         action_lay.addWidget(action_title)
         self._action_buttons = QGridLayout()
@@ -14782,7 +14782,7 @@ class StellaConnectDevicesPage(QFrame):
         manage_lay = QVBoxLayout(manage_box)
         manage_lay.setContentsMargins(16, 16, 16, 16)
         manage_title = QLabel("MANAGE")
-        manage_title.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
+        manage_title.setFont(QFont("Exo 2", 10, QFont.Weight.Bold))
         manage_title.setStyleSheet("color: #ffffff; letter-spacing: 1px;")
         manage_lay.addWidget(manage_title)
         
@@ -14827,7 +14827,7 @@ class StellaConnectDevicesPage(QFrame):
         add_back_btn = QPushButton("Î“Ã¥Ã‰ Cancel")
         add_back_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         add_back_btn.setFixedSize(140, 32)
-        add_back_btn.setFont(QFont("Segoe UI", 9))
+        add_back_btn.setFont(QFont("Exo 2", 9))
         add_back_btn.setStyleSheet("""
             QPushButton { background: transparent; color: rgba(255,255,255,0.7); border: none; text-align: left; }
             QPushButton:hover { color: #7C6EE6; }
@@ -14844,7 +14844,7 @@ class StellaConnectDevicesPage(QFrame):
         w0_lay.addStretch(1)
         w0_title = QLabel("SELECT DEVICE TYPE")
         w0_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        w0_title.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
+        w0_title.setFont(QFont("Exo 2", 12, QFont.Weight.Bold))
         w0_title.setStyleSheet("color: #ffffff; letter-spacing: 2px;")
         w0_lay.addWidget(w0_title)
         w0_lay.addSpacing(20)
@@ -14854,7 +14854,7 @@ class StellaConnectDevicesPage(QFrame):
         self._cs_android_btn = QPushButton("ANDROID")
         self._cs_android_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._cs_android_btn.setFixedSize(140, 80)
-        self._cs_android_btn.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        self._cs_android_btn.setFont(QFont("Exo 2", 11, QFont.Weight.Bold))
         self._cs_android_btn.setStyleSheet("""
             QPushButton { background: rgba(10, 12, 18, 220); color: rgba(255,255,255,0.9); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; }
             QPushButton:hover { color: #7C6EE6; border: 1px solid rgba(124, 110, 230,0.6); background: rgba(124, 110, 230,0.1); }
@@ -14865,7 +14865,7 @@ class StellaConnectDevicesPage(QFrame):
         self._cs_pc_btn = QPushButton("PC")
         self._cs_pc_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._cs_pc_btn.setFixedSize(140, 80)
-        self._cs_pc_btn.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        self._cs_pc_btn.setFont(QFont("Exo 2", 11, QFont.Weight.Bold))
         self._cs_pc_btn.setStyleSheet("""
             QPushButton { background: rgba(10, 12, 18, 220); color: rgba(255,255,255,0.9); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; }
             QPushButton:hover { color: #7C6EE6; border: 1px solid rgba(124, 110, 230,0.6); background: rgba(124, 110, 230,0.1); }
@@ -14878,7 +14878,7 @@ class StellaConnectDevicesPage(QFrame):
         self._cs_join_btn = QPushButton("CONNECT TO A DEVICE")
         self._cs_join_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self._cs_join_btn.setFixedSize(200, 40)
-        self._cs_join_btn.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
+        self._cs_join_btn.setFont(QFont("Exo 2", 10, QFont.Weight.Bold))
         self._cs_join_btn.setStyleSheet("""
             QPushButton { background: rgba(124, 110, 230, 0.10); color: #7C6EE6; border: 1px solid rgba(124, 110, 230, 0.30); border-radius: 12px; }
             QPushButton:hover { color: #ffffff; border: 1px solid rgba(124, 110, 230, 0.6); background: rgba(124, 110, 230, 0.2); }
@@ -14894,7 +14894,7 @@ class StellaConnectDevicesPage(QFrame):
         w1_lay.addStretch(1)
         w1_title = QLabel("SCAN TO CONNECT")
         w1_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        w1_title.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
+        w1_title.setFont(QFont("Exo 2", 12, QFont.Weight.Bold))
         w1_title.setStyleSheet("color: #ffffff; letter-spacing: 2px;")
         w1_lay.addWidget(w1_title)
         w1_lay.addSpacing(16)
@@ -14918,7 +14918,7 @@ class StellaConnectDevicesPage(QFrame):
         
         self._onb_status_lbl = QLabel("WAITING FOR CONNECTION")
         self._onb_status_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._onb_status_lbl.setFont(QFont("Segoe UI", 8, QFont.Weight.Bold))
+        self._onb_status_lbl.setFont(QFont("Exo 2", 8, QFont.Weight.Bold))
         self._onb_status_lbl.setStyleSheet("color: rgba(255,255,255,0.5); letter-spacing: 1px;")
         w1_lay.addWidget(self._onb_status_lbl)
         
@@ -14944,12 +14944,12 @@ class StellaConnectDevicesPage(QFrame):
         w2_lay.addStretch(1)
         self._onb_success_title = QLabel("DEVICE CONNECTED")
         self._onb_success_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._onb_success_title.setFont(QFont("Segoe UI", 16, QFont.Weight.Black))
+        self._onb_success_title.setFont(QFont("Orbitron", 16, QFont.Weight.Black))
         self._onb_success_title.setStyleSheet("color: #35ff75; letter-spacing: 2px;")
         w2_lay.addWidget(self._onb_success_title)
         self._onb_success_name = QLabel("")
         self._onb_success_name.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self._onb_success_name.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
+        self._onb_success_name.setFont(QFont("Exo 2", 20, QFont.Weight.Bold))
         self._onb_success_name.setStyleSheet("color: #ffffff;")
         w2_lay.addWidget(self._onb_success_name)
         w2_lay.addStretch(1)
@@ -14961,12 +14961,12 @@ class StellaConnectDevicesPage(QFrame):
         w3_lay.addStretch(1)
         w3_title = QLabel("CONNECT TO A STELLA")
         w3_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        w3_title.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
+        w3_title.setFont(QFont("Exo 2", 12, QFont.Weight.Bold))
         w3_title.setStyleSheet("color: #ffffff; letter-spacing: 2px;")
         w3_lay.addWidget(w3_title)
         w3_sub = QLabel("Any method reaches the same host - pick whichever is easiest.")
         w3_sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        w3_sub.setFont(QFont("Segoe UI", 8))
+        w3_sub.setFont(QFont("Exo 2", 8))
         w3_sub.setStyleSheet("color: rgba(255,255,255,0.45);")
         w3_lay.addWidget(w3_sub)
         w3_lay.addSpacing(14)
@@ -14979,7 +14979,7 @@ class StellaConnectDevicesPage(QFrame):
         for _btn in (self._join_qr_btn, self._join_disc_btn, self._join_ip_btn):
             _btn.setCursor(Qt.CursorShape.PointingHandCursor)
             _btn.setFixedSize(150, 76)
-            _btn.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
+            _btn.setFont(QFont("Exo 2", 10, QFont.Weight.Bold))
             _btn.setStyleSheet("""
                 QPushButton { background: rgba(10, 12, 18, 220); color: rgba(255,255,255,0.9); border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; }
                 QPushButton:hover { color: #7C6EE6; border: 1px solid rgba(124, 110, 230,0.6); background: rgba(124, 110, 230,0.1); }
@@ -14996,7 +14996,7 @@ class StellaConnectDevicesPage(QFrame):
         self._join_status_lbl = QLabel("")
         self._join_status_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self._join_status_lbl.setWordWrap(True)
-        self._join_status_lbl.setFont(QFont("Segoe UI", 9))
+        self._join_status_lbl.setFont(QFont("Exo 2", 9))
         self._join_status_lbl.setStyleSheet("color: rgba(255,255,255,0.6);")
         w3_lay.addWidget(self._join_status_lbl)
 
@@ -15112,7 +15112,7 @@ class StellaConnectDevicesPage(QFrame):
             btn = QPushButton(target.label())
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
             btn.setFixedHeight(36)
-            btn.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+            btn.setFont(QFont("Exo 2", 9, QFont.Weight.Bold))
             btn.setStyleSheet("""
                 QPushButton { background: rgba(124, 110, 230, 0.10); color: #ffffff; border: 1px solid rgba(124, 110, 230, 0.25); border-radius: 10px; padding: 0 12px; }
                 QPushButton:hover { background: rgba(124, 110, 230, 0.2); border: 1px solid rgba(124, 110, 230, 0.5); }

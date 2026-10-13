@@ -59,7 +59,53 @@ def rgba(hex_color: str, alpha: float) -> str:
 SPACING = {"2xs": 4, "xs": 8, "sm": 12, "md": 16, "lg": 24, "xl": 32}
 RADII = {"sm": 8, "md": 12, "lg": 16, "xl": 24}
 BREAKPOINTS = {"compact": 720, "medium": 1100}
-TYPE = {"display": "Segoe UI", "body": "Segoe UI", "mono": "Consolas"}
+
+# Futuristic type. We bundle Orbitron (wide geometric display face) + Exo 2
+# (its legible body sibling) under assets/fonts and register them at startup.
+# If registration ever fails we fall back to the OS UI face so nothing breaks.
+FONT_DISPLAY = "Orbitron"
+FONT_BODY = "Exo 2"
+_FALLBACK_BODY = "Segoe UI"
+TYPE = {"display": FONT_DISPLAY, "body": FONT_BODY, "mono": "Consolas"}
+
+
+def register_fonts() -> dict:
+    """Load the bundled futuristic fonts into Qt and point TYPE at them.
+
+    Returns the families actually registered. Falls back to Segoe UI for the
+    body face when the files are missing or Qt rejects them, so the app is
+    never worse off than before.
+    """
+    from PyQt6.QtGui import QFontDatabase
+    import sys
+    from pathlib import Path
+
+    if getattr(sys, "frozen", False):
+        base = Path(sys.executable).parent
+    else:
+        base = Path(__file__).resolve().parent.parent
+    font_dir = base / "assets" / "fonts"
+
+    registered = []
+    db = QFontDatabase()
+    for fname, family in (("orbitron.ttf", FONT_DISPLAY), ("exo2.ttf", FONT_BODY)):
+        path = font_dir / fname
+        if path.is_file():
+            try:
+                fid = db.addApplicationFont(str(path))
+                if fid != -1:
+                    families = db.applicationFontFamilies(fid)
+                    if families:
+                        registered.append(families[0])
+            except Exception:
+                pass
+
+    # Only trust a family if Qt actually loaded it; otherwise keep the default.
+    have_body = FONT_BODY in registered
+    have_display = FONT_DISPLAY in registered
+    TYPE["body"] = FONT_BODY if have_body else _FALLBACK_BODY
+    TYPE["display"] = FONT_DISPLAY if have_display else TYPE["body"]
+    return TYPE
 
 
 def breakpoint(width_px: int) -> str:
@@ -159,6 +205,12 @@ def install(app: QApplication | None = None) -> bool:
         application = app or QApplication.instance()
         if application is None:
             return False
+        # Load the bundled futuristic fonts before the stylesheet references
+        # them, so the first paint already uses Orbitron/Exo 2.
+        try:
+            register_fonts()
+        except Exception:
+            pass
         application.setStyleSheet(build_stylesheet())
         if not _installed["on"]:
             _installed["on"] = True

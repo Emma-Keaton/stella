@@ -182,7 +182,7 @@ class InstallWizard(QWidget):
         
         # Title
         title = QLabel("Stella Setup")
-        title.setFont(QFont("Segoe UI", 24, QFont.Weight.Bold))
+        title.setFont(QFont("Exo 2", 24, QFont.Weight.Bold))
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         box_layout.addWidget(title)
 
@@ -195,14 +195,14 @@ class InstallWizard(QWidget):
         p1_layout = QVBoxLayout(self.page1)
         
         desc = QLabel("Welcome to the Stella Setup Wizard.\nClick Install to continue.")
-        desc.setFont(QFont("Segoe UI", 12))
+        desc.setFont(QFont("Exo 2", 12))
         desc.setAlignment(Qt.AlignmentFlag.AlignCenter)
         p1_layout.addWidget(desc)
         
         # Default Path
         self.install_path = os.path.join(os.environ.get('LOCALAPPDATA', os.environ['USERPROFILE']), 'Stella_Evo')
         path_label = QLabel(f"Destination Folder: {self.install_path}")
-        path_label.setFont(QFont("Segoe UI", 10))
+        path_label.setFont(QFont("Exo 2", 10))
         path_label.setStyleSheet("color: #aaa;")
         path_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         p1_layout.addWidget(path_label)
@@ -226,7 +226,7 @@ class InstallWizard(QWidget):
         p2_layout = QVBoxLayout(self.page2)
         
         self.lbl_status = QLabel("Preparing to install...")
-        self.lbl_status.setFont(QFont("Segoe UI", 12))
+        self.lbl_status.setFont(QFont("Exo 2", 12))
         self.lbl_status.setAlignment(Qt.AlignmentFlag.AlignCenter)
         p2_layout.addWidget(self.lbl_status)
         
@@ -243,7 +243,7 @@ class InstallWizard(QWidget):
         p3_layout = QVBoxLayout(self.page3)
         
         lbl_finish = QLabel("Installation Complete!")
-        lbl_finish.setFont(QFont("Segoe UI", 18, QFont.Weight.Bold))
+        lbl_finish.setFont(QFont("Exo 2", 18, QFont.Weight.Bold))
         lbl_finish.setAlignment(Qt.AlignmentFlag.AlignCenter)
         p3_layout.addWidget(lbl_finish)
         
