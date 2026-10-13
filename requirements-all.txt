@@ -1,0 +1,59 @@
+# Stella - full portable dependency set for every platform.
+#
+# This file is the union of the portable packages across all feature groups
+# (core, voice, web, vision, docs, cloud). It is what a developer or CI job
+# installs when they want every feature available without edition filtering.
+#
+# Windows-only packages (pycaw, comtypes, pywinauto, win10toast, pygetwindow)
+# live in requirements-windows.txt and must NOT be added here -- they break
+# `pip install` on Linux and macOS. stella_build.py adds them only when
+# targeting Windows.
+
+# --- core (UI + cloud AI + basics) ---
+PyQt6
+PyQt6-WebEngine
+requests
+pillow
+numpy
+psutil
+send2trash
+beautifulsoup4
+google-genai
+edge-tts
+python-dotenv
+
+# --- voice ---
+sounddevice
+piper-tts
+
+# --- web / search / browser ---
+playwright
+duckduckgo-search
+youtube-transcript-api
+
+# --- vision ---
+opencv-python
+mediapipe
+mss
+pyautogui
+pyperclip
+
+# --- documents / office ---
+openpyxl
+python-pptx
+python-docx
+reportlab
+matplotlib
+speedtest-cli
+qrcode[pil]
+
+# --- misc runtime (used across features) ---
+google-generativeai
+python-kasa
+instagrapi
+discord.py
+fastapi
+uvicorn[standard]
+cryptography
+python-multipart
+pyinstaller

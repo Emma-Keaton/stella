@@ -44,5 +44,18 @@ def test_web_background_instant_boot_no_document_write():
     assert "Math.max" in content
 
 def test_opengl_context_sharing_flag():
+    """The orb needs shared OpenGL contexts.
+
+    AA_ShareOpenGLContexts is process-global and only becomes true once the
+    module that sets it has been imported - so the test has to import that
+    module. Asserting against a bare `from PyQt6.QtCore import ...` would pass
+    or fail purely on test ordering, which is exactly the flake we are fixing.
+    """
+    import ui  # noqa: F401  - import side effect sets the attribute
+
     from PyQt6.QtCore import QCoreApplication, Qt
-    assert QCoreApplication.testAttribute(Qt.ApplicationAttribute.AA_ShareOpenGLContexts)
+
+    assert QCoreApplication.testAttribute(Qt.ApplicationAttribute.AA_ShareOpenGLContexts), (
+        "ui.py must set AA_ShareOpenGLContexts before QApplication is created, "
+        "otherwise the background orb cannot share GL contexts"
+    )

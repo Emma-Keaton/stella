@@ -6,3 +6,7 @@
 /build
 .kotlin
 app/build/
+
+# Personal K2 runtime staged for sideload builds (see app/build.gradle.kts).
+# Binary + 600MB+ GGUF must never reach git; the CI build ships neither.
+app/src/main/assets/k2/

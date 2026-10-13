@@ -1,3 +1,11 @@
+﻿# Stella - platform-portable runtime dependencies.
+#
+# Everything here installs on Windows, Linux and macOS. Windows-only packages
+# live in requirements-windows.txt and are added by stella_build.py only when
+# targeting Windows. Keeping them out of this file is what lets
+# `pip install -r requirements.txt` succeed on Linux instead of dying on
+# pycaw/comtypes and (worse, via `|| true`) silently producing a broken bundle.
+
 sounddevice
 google-genai
 google-generativeai
@@ -6,23 +14,14 @@ requests
 python-kasa
 beautifulsoup4
 duckduckgo-search
-playwright          
-pyautogui
+playwright
 pyperclip
-pygetwindow       
 opencv-python
 numpy
 mediapipe
-mss
-Pillow
 psutil
-comtypes
-pycaw               
 instagrapi
-win10toast          
-send2trash
 youtube-transcript-api
-pywinauto
 openpyxl
 python-pptx
 python-docx

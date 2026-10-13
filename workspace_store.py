@@ -12,9 +12,13 @@ from pathlib import Path
 from typing import Any
 
 import warnings
+# `genai.Client(...)` is the current google-genai API. Importing the legacy
+# `google.generativeai` shim for it was wrong twice over: that package is
+# deprecated, and shipping it as a dependency dragged a second, conflicting
+# SDK into the venv. google-genai is the one we already depend on.
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=FutureWarning)
-    import google.generativeai as genai
+    from google import genai
 
 
 def _base_dir() -> Path:

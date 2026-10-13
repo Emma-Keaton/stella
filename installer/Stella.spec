@@ -1,8 +1,53 @@
-# -*- mode: python ; coding: utf-8 -*-
+﻿# -*- mode: python ; coding: utf-8 -*-
+# Stella desktop bundle (PyInstaller onedir).
+#
+# Two variants come out of this one spec:
+#
+#   PUBLIC  (default) â€” no K2 runtime, no weights. The app detects the absence
+#           and suggests the user download the K2 package. This is what CI and
+#           the GitHub release ship.
+#
+#   PERSONAL K2 â€” set STELLA_K2_BUNDLE=1 before invoking PyInstaller, with
+#           STELLA_K2_MODEL / STELLA_K2_SERVER pointing at the local files:
+#             $env:STELLA_K2_BUNDLE   = "1"
+#             $env:STELLA_K2_MODEL    = "E:\...\K2-Horizon-0.9B-Q4_K_M.gguf"
+#             $env:STELLA_K2_SERVER   = "E:\...\llama-server.exe"
+#             pyinstaller installer\Stella.spec --noconfirm
+#           The weights land in k2/ next to the exe, where core/k2_runtime.py
+#           resolves them without touching the network.
+#
+# The GGUF is never committed: installer/Stella.spec reads it from an absolute
+# path outside the repo and .gitignore covers the staged copy.
 import os
 import sys
 
 cwd = os.path.abspath(os.getcwd())
+
+# ---------------------------------------------------------------------------
+# Personal K2 payload (opt-in; see header).
+# ---------------------------------------------------------------------------
+K2_ON = os.environ.get("STELLA_K2_BUNDLE", "").strip().lower() in ("1", "true", "yes", "on")
+K2_DIRNAME = "k2"
+k2_datas = []
+
+if K2_ON:
+    _model = os.environ.get("STELLA_K2_MODEL", "").strip()
+    _server = os.environ.get("STELLA_K2_SERVER", "").strip()
+    _missing = [p for p in (_model, _server) if not p or not os.path.isfile(p)]
+    if _missing:
+        raise SystemExit(
+            "STELLA_K2_BUNDLE=1 but these are missing/not files: "
+            + ", ".join(repr(m) for m in _missing)
+            + "\nSet STELLA_K2_MODEL and STELLA_K2_SERVER to absolute paths."
+        )
+
+    # llama-server ships as `llama-server` on Linux and `llama-server.exe`
+    # on Windows; keep the native suffix so ProcessBuilder finds it.
+    _server_name = os.path.basename(_server)
+    k2_datas = [
+        (_model, os.path.join(K2_DIRNAME, os.path.basename(_model))),
+        (_server, os.path.join(K2_DIRNAME, _server_name)),
+    ]
 
 a = Analysis(
     [os.path.join(cwd, 'main.py')],
@@ -12,6 +57,7 @@ a = Analysis(
         (os.path.join(cwd, 'assets'), 'assets'),
         (os.path.join(cwd, 'config'), 'config'),
         (os.path.join(cwd, 'core'), 'core'),
+        (os.path.join(cwd, 'agent'), 'agent'),
         (os.path.join(cwd, 'stella_connect'), 'stella_connect'),
         (os.path.join(cwd, 'actions'), 'actions'),
         (os.path.join(cwd, 'dashboard/static'), 'dashboard/static'),
@@ -23,13 +69,14 @@ a = Analysis(
         (os.path.join(cwd, 'README.md'), '.'),
         (os.path.join(cwd, 'requirements.txt'), '.'),
         (os.path.join(cwd, 'version.txt'), '.')
-    ],
+    ] + k2_datas,
     hiddenimports=[
         'mediapipe', 'cv2', 'instagrapi', 'google.genai', 'PyQt6', 'PyQt6.QtWebEngineCore',
         'PyQt6.QtWebEngineWidgets', 'PyQt6.QtWebChannel', 'pyautogui', 'sounddevice',
         'keyboard', 'docx', 'pptx', 'multipart', 'passlib', 'bcrypt', 'aiohttp', 'websockets',
         'uvicorn', 'fastapi', 'plyer', 'pydantic', 'typing_extensions', 'requests', 'beautifulsoup4',
-        'numpy'
+        'numpy', 'pyperclip', 'matplotlib', 'edge_tts', 'qrcode', 'psutil', 'speedtest',
+        'pycparser', 'cffi',
     ],
     hookspath=[],
     hooksconfig={},
@@ -58,7 +105,15 @@ excluded_files = [
     'devices.json'
 ]
 
-a.datas = [x for x in a.datas if not any(excl in x[0].replace('\\', '/') for excl in excluded_files)]
+_repo_norm = cwd.replace('\\', '/') + '/'
+a.datas = [
+    x for x in a.datas
+    # Personal K2 payloads live outside the repo; never let the personal-data
+    # filter match them by accident.
+    if not x[0].replace('\\', '/').startswith(_repo_norm)
+    or not any(excl in x[0].replace('\\', '/')
+               for excl in excluded_files)
+]
 
 pyz = PYZ(a.pure)
 
@@ -67,7 +122,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='StellaEvo',
+    name='Stella',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -89,5 +144,6 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='StellaEvo'
+    name='Stella'
 )
+

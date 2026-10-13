@@ -64,13 +64,97 @@ class StellaConnectForegroundService : Service() {
             ACTION_SEND_CHAT -> {
                 val text = intent.getStringExtra(EXTRA_CHAT_TEXT)
                 if (!text.isNullOrBlank()) {
-                    client.sendChatMessage(text)
+                    handleChatText(text)
                 }
                 return START_STICKY
             }
         }
         connectIfPossible()
         return START_STICKY
+    }
+
+    /**
+     * Chat entry point shared by the paired-PC path (relay a frame over the
+     * socket) and the standalone path (answer locally with the K2 runtime).
+     *
+     * A message is always echoed into the thread first so the composer never
+     * looks dead; only the transport differs.
+     */
+    private fun handleChatText(text: String) {
+        AgentStateStore.addChatMessage(
+            com.stella.connect.core.ChatMessage(
+                id = java.util.UUID.randomUUID().toString(),
+                role = "user",
+                text = text,
+                timestamp = System.currentTimeMillis(),
+                status = "Sent",
+            )
+        )
+        if (AgentStateStore.gateway.value != null) {
+            client.sendChatMessage(text)
+            return
+        }
+        AgentStateStore.setStatus("Thinking on-device...")
+        scope.launch {
+            val reply = answerLocally(text)
+            AgentStateStore.addChatMessage(
+                com.stella.connect.core.ChatMessage(
+                    id = java.util.UUID.randomUUID().toString(),
+                    role = "assistant",
+                    text = reply,
+                    timestamp = System.currentTimeMillis(),
+                    status = "Sent",
+                )
+            )
+            AgentStateStore.setStatus("Running on-device - connect to your PC any time")
+        }
+    }
+
+    /**
+     * Standalone answer: K2 local model if it is alive, otherwise an honest
+     * fallback that names the device's live state (bridge off, model state,
+     * pairing invitation) instead of inventing an answer.
+     *
+     * Never throws: worst case the user gets a stateful pointer card.
+     */
+    private suspend fun answerLocally(text: String): String {
+        val low = text.lowercase()
+        if (low.contains("pair") || low.contains("link") || low.contains("connect") || low.contains("pc")) {
+            return "Linking to your PC is optional. Tap \"Link to my PC\" on the home screen " +
+                "to scan the QR code, or keep chatting with me here on this phone."
+        }
+        if (low.contains("model") || low.contains("download") || low.contains("k2")) {
+            return k2StateLine()
+        }
+        return try {
+            val messages = org.json.JSONArray()
+                .put(org.json.JSONObject().put("role", "system").put("content",
+                    "You are Stella, a concise on-device assistant. No PC is linked. " +
+                    "Answer briefly. If you cannot answer on-device, say what is possible here."))
+                .put(org.json.JSONObject().put("role", "user").put("content", text))
+                .toString()
+            val out = com.stella.connect.core.K2Manager.chat(messages, 256)?.trim()
+            if (out.isNullOrBlank()) k2StateLine() else out
+        } catch (_: Exception) {
+            k2StateLine()
+        }
+    }
+
+    private fun k2StateLine(): String {
+        val ctx = applicationContext
+        return when {
+            com.stella.connect.core.K2Manager.isRunning() ->
+                "K2 is running on this phone. Ask me anything."
+            com.stella.connect.core.K2Manager.modelPresent(ctx) ->
+                "The on-device model is ready - I'm starting the local engine now. Ask again in a moment."
+            com.stella.connect.core.K2Manager.bundled ->
+                "I'm installing the bundled on-device model on first launch. Open the home screen " +
+                "and I'll finish setup there - no PC needed."
+            else ->
+                "No model downloaded yet and no PC linked. I can still help with device " +
+                "info and pairing - say \"pair\" and I'll walk you through linking, or download " +
+                "a model for full offline chat."
+        }
     }
 
     private fun connectIfPossible() {

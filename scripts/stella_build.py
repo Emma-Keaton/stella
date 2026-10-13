@@ -271,6 +271,16 @@ def _pyinstaller_build(edition: str, target: str, k2: bool = False) -> Path:
         raise RuntimeError(
             "PyInstaller not found in .venv. Run bootstrap first, then retry."
         )
+    # The frozen exe must contain every third-party module main.py imports at
+    # line 1 scope; anything missing here dies at startup with
+    # "ModuleNotFoundError" on the user's machine instead of ours.
+    try:
+        subprocess.run(
+            [sys.executable, str(REPO / "scripts" / "check_runtime_imports.py")],
+            cwd=REPO, check=False,
+        )
+    except Exception:
+        pass
     ed = EDITIONS[edition]
     spec = REPO / "installer" / "Stella.spec"
     if not spec.exists():
@@ -454,47 +464,63 @@ def _gradlew(target: str) -> str | None:
     return str(wrapper) if wrapper.exists() else None
 
 
+def _signing_paths() -> tuple[Path, Path]:
+    """The ONE keystore and its gitignored secret, both outside the repo.
+
+    We deliberately keep a single signing identity: one `.jks` plus one JSON
+    that records its password and alias. That JSON is what stops us hunting
+    for the key on every build - the keystore lives in the per-user toolchain
+    (gitignored) and the secret sits right beside it (also gitignored).
+    """
+    tc = Path.home() / ".stella-toolchain"
+    return tc / "stella-release.jks", tc / "stella-signing.json"
+
+
+def _load_secret() -> dict[str, str]:
+    """Read the persisted signing secret, or {} when absent/unreadable."""
+    _, secret = _signing_paths()
+    try:
+        if secret.is_file():
+            data = json.loads(secret.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                return {k: str(data.get(k, "")) for k in ("password", "alias")}
+    except Exception:
+        pass
+    return {}
+
+
 def _ensure_signing_key() -> dict[str, str] | None:
-    """Return gradle signing args, generating a local key when none exists.
+    """Return gradle signing args for the single keystore, creating it if needed.
 
     Android refuses to sideload an UNSIGNED release APK, so "no keystore"
-    does not mean "ship unsigned" - it means "the build is unusable". On a
-    personal machine we therefore mint a key once, stash it outside the repo,
-    and reuse it forever. That keeps every rebuild installable and upgradable
-    over the previous one (same signing identity = in-place update).
+    does not mean "ship unsigned" - it means "the build is unusable". We
+    therefore mint ONE key once, stash it outside the repo with its password
+    in a gitignored secret file, and reuse it forever. That keeps every
+    rebuild installable and upgradable over the previous one (same signing
+    identity = in-place update), and means we never have to go looking for the
+    key again.
+
+    Resolution order:
+      1. Environment variables (CI / explicit override) win outright.
+      2. Otherwise the persisted secret file supplies the password for the
+         toolchain keystore; a missing or mismatched secret triggers a clean
+         regeneration of both the keystore and the secret.
 
     Returns None only when no JDK keytool is available at all.
     """
-    store = os.environ.get("STELLA_ANDROID_KEYSTORE", "").strip()
-    password = os.environ.get("STELLA_ANDROID_KEYSTORE_PASSWORD", "").strip()
     alias = os.environ.get("STELLA_ANDROID_KEY_ALIAS", "stella").strip() or "stella"
+    env_store = os.environ.get("STELLA_ANDROID_KEYSTORE", "").strip()
+    env_pw = os.environ.get("STELLA_ANDROID_KEYSTORE_PASSWORD", "").strip()
 
-    if store and password and Path(store).is_file():
-        return {"store": store, "password": password, "alias": alias}
+    # 1) Explicit env override (CI, or a user pointing at their own key).
+    if env_store and env_pw and Path(env_store).is_file():
+        return {"store": env_store, "password": env_pw, "alias": alias}
 
-    # Otherwise look for - or create - our own key in the per-user toolchain.
-    # Personal builds sign with STELLA_PERSONAL_JKS; the public APK has no key
-    # (and will be unsigned), which is intentional - a public release APK can
-    # only be sideloaded while the machine owns its signature.
-    tc = Path.home() / ".stella-toolchain"
-    tc.mkdir(parents=True, exist_ok=True)
-    key = tc / "stella-personal.jks"
-    meta = tc / "stella-personal.json"
-    store = os.environ.get("STELLA_ANDROID_KEYSTORE", "").strip() or str(key)
-    password = os.environ.get("STELLA_ANDROID_KEYSTORE_PASSWORD", "").strip() or "stella-local-personal"
-    alias = os.environ.get("STELLA_ANDROID_KEY_ALIAS", "stella").strip() or "stella"
-
-    if Path(store).is_file():
-        # Trusted env path - just read it.
-        return {"store": store, "password": password, "alias": alias}
-
-    if key.is_file():
-        # A keystore with no password anywhere is dead weight: Android will
-        # never let us sign with it again, and `-genkeypair` cannot add a key to
-        # a file it cannot read. Replace it rather than fail the build.
-        print(f"  ({key.name} has no recorded password and cannot be opened - "
-              f"replacing it with a fresh local key)")
-        key.unlink(missing_ok=True)
+    # 2) The single toolchain keystore + its gitignored secret.
+    key, secret = _signing_paths()
+    key.parent.mkdir(parents=True, exist_ok=True)
+    stored = _load_secret()
+    password = env_pw or stored.get("password", "")
 
     keytool = _find_keytool()
     if not keytool:
@@ -502,27 +528,50 @@ def _ensure_signing_key() -> dict[str, str] | None:
               "cannot be installed)")
         return None
 
-    if not password:
-        # No human-chosen password, so generate a strong one. It lives only in
-        # the toolchain dir next to the key, never in the repo.
-        password = secrets.token_urlsafe(24)
-    print(f"==> keytool: creating release signing key {key.name}")
-    try:
-        subprocess.run(
-            [keytool, "-genkeypair", "-v",
-             "-keystore", str(key),
-             "-storepass", password, "-keypass", password,
-             "-alias", alias,
-             "-keyalg", "RSA", "-keysize", "4096",
-             "-validity", "10000",
-             "-dname", f"CN=Stella Local, OU=Stella, O=Stella, L=NA, S=NA, C=NA"],
-            check=True, capture_output=True, text=True, errors="replace",
-        )
-    except subprocess.CalledProcessError as exc:
-        print(f"  (keytool failed: {(exc.stderr or '')[:200]})")
-        return None
-    meta.write_text(json.dumps({"password": password, "alias": alias}, indent=2),
-                    encoding="utf-8")
+    # A keystore whose recorded secret does not open it is dead weight: Android
+    # will never let us sign with it again, and `-genkeypair` cannot add a key
+    # to a file it cannot read. Replace both cleanly rather than fail the build.
+    if key.is_file() and password and not _keystore_unlocks(keytool, key, password):
+        print(f"  ({key.name} does not open with the stored secret - "
+              f"regenerating a fresh signing key)")
+        key.unlink(missing_ok=True)
+        password = ""
+
+    if not key.is_file():
+        if not password:
+            # No human-chosen password, so generate a strong one. It lives only
+            # in the gitignored secret beside the key, never in the repo.
+            password = secrets.token_urlsafe(24)
+        print(f"==> keytool: creating release signing key {key.name}")
+        try:
+            subprocess.run(
+                [keytool, "-genkeypair", "-v",
+                 "-keystore", str(key),
+                 "-storepass", password, "-keypass", password,
+                 "-alias", alias,
+                 "-keyalg", "RSA", "-keysize", "4096",
+                 "-validity", "10000",
+                 "-dname", "CN=Stella Local, OU=Stella, O=Stella, L=NA, S=NA, C=NA"],
+                check=True, capture_output=True, text=True, errors="replace",
+            )
+        except subprocess.CalledProcessError as exc:
+            print(f"  (keytool failed: {(exc.stderr or '')[:200]})")
+            return None
+        # Persist the secret so the next build never has to ask again.
+        try:
+            secret.write_text(
+                json.dumps({"password": password, "alias": alias}, indent=2),
+                encoding="utf-8",
+            )
+        except Exception as exc:
+            print(f"  (could not write signing secret {secret.name}: {exc})")
+    elif not password:
+        # Keystore exists but we have no secret for it and no env password.
+        # We cannot open it, so regenerate from scratch.
+        print(f"  ({key.name} has no recorded secret - regenerating)")
+        key.unlink(missing_ok=True)
+        return _ensure_signing_key()
+
     return {"store": str(key), "password": password, "alias": alias}
 
 
@@ -591,18 +640,19 @@ def _build_android(edition: str, version: str, k2: bool = False) -> Path | None:
             f"-PstellaK2Model={model}",
             f"-PstellaK2Server={server}",
         ]
-    # Sideloading needs a signature. The personal build signs with
-    # STELLA_PERSONAL_JKS; the public APK intentionally stays unsigned (no
-    # keystore is bundled), which keeps it sideloadable anywhere.
-    signing = None
-    if k2:
-        signing = _ensure_signing_key()
-        if signing:
-            extra += [
-                f"-PstellaSigningStore={signing['store']}",
-                f"-PstellaSigningPassword={signing['password']}",
-                f"-PstellaSigningAlias={signing['alias']}",
-            ]
+    # Android REFUSES an unsigned release APK with
+    # INSTALL_PARSE_FAILED_NO_CERTIFICATES - it shows as "App not installed".
+    # So BOTH variants (public and K2) must be signed; leaving the public one
+    # unsigned on the theory that "no key = sideloadable anywhere" was wrong.
+    # The public build still gets a local key here for sideloading; CI re-signs
+    # its release copy with the repository keystore (see .github/workflows).
+    signing = _ensure_signing_key()
+    if signing:
+        extra += [
+            f"-PstellaSigningStore={signing['store']}",
+            f"-PstellaSigningPassword={signing['password']}",
+            f"-PstellaSigningAlias={signing['alias']}",
+        ]
     subprocess.run([gradlew, task, "-p", str(ANDROID_DIR)] + extra, check=True, env=env)
 
     # The two variants share one build dir, so we must pick by the exact name

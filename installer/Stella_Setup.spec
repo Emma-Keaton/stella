@@ -1,4 +1,4 @@
-# -*- mode: python ; coding: utf-8 -*-
+﻿# -*- mode: python ; coding: utf-8 -*-
 import os
 import sys
 
@@ -6,14 +6,14 @@ cwd = os.path.abspath(os.path.join(os.getcwd(), '..'))
 if not os.path.exists(os.path.join(cwd, 'installer')):
     cwd = os.path.abspath(os.getcwd()) # fallback
 
-source_dir = os.path.join(cwd, 'dist', 'StellaEvo')
+source_dir = os.path.join(cwd, 'dist', 'Stella')
 
 a = Analysis(
     [os.path.join(cwd, 'installer', 'install_wizard.py')],
     pathex=[],
     binaries=[],
     datas=[
-        (source_dir, 'StellaEvo'),
+        (source_dir, 'Stella'),
         (os.path.join(cwd, 'assets'), 'assets')
     ],
     hiddenimports=['PyQt6', 'shutil', 'PyQt6.QtWebEngineWidgets', 'PyQt6.QtWebEngineCore'],
@@ -32,7 +32,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='StellaEvo_Setup',
+    name='Stella_Setup',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -49,3 +49,4 @@ exe = EXE(
     icon=os.path.join(cwd, 'assets/stella_logo.ico') if os.path.exists(os.path.join(cwd, 'assets/stella_logo.ico')) else None,
     version=os.path.join(cwd, 'version_setup.txt') if os.path.exists(os.path.join(cwd, 'version_setup.txt')) else None
 )
+

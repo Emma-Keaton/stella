@@ -1,0 +1,26 @@
+# Stella - Windows-only runtime dependencies.
+#
+# These have no Linux/macOS implementation, which is exactly why they used to
+# break `pip install -r requirements.txt` on the Linux CI runner. Keep them
+# here and let stella_build.py add them only for a Windows target.
+#
+# install_windows_deps() in scripts/stella_build.py reads this file.
+
+# Desktop automation + window control
+pyautogui
+pygetwindow
+pywinauto
+
+# Screen capture
+mss
+
+# Win32 COM / audio / toast
+comtypes
+pycaw
+win10toast
+
+# Recycle-bin integration
+send2trash
+
+# Pillow is already in requirements.txt under its canonical name.
+pillow

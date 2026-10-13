@@ -1,0 +1,322 @@
+{
+  "timestamp": "2026-10-10T07:41:57.206883+00:00",
+  "suite": {
+    "total": 13,
+    "by_category": {
+      "tools": 3,
+      "files": 5,
+      "planning": 2,
+      "robustness": 3
+    }
+  },
+  "score": {
+    "passed": 7,
+    "total": 13,
+    "rate": 0.538
+  },
+  "by_category": {
+    "tools": {
+      "passed": 3,
+      "total": 3,
+      "rate": 1.0
+    },
+    "files": {
+      "passed": 2,
+      "total": 5,
+      "rate": 0.4
+    },
+    "planning": {
+      "passed": 0,
+      "total": 2,
+      "rate": 0.0
+    },
+    "robustness": {
+      "passed": 2,
+      "total": 3,
+      "rate": 0.667
+    }
+  },
+  "turns_avg": 4.85,
+  "elapsed_avg": 88.46,
+  "results": [
+    {
+      "task": "tool.time",
+      "category": "tools",
+      "backend": "k2-local",
+      "max_turns": 4,
+      "ok": true,
+      "passed": true,
+      "answer": "The current date and time is **2026-10-10 08:23:32 W. Central Africa Standard Time (Saturday)**.",
+      "turns": 2,
+      "tool_calls": 1,
+      "tools": [
+        "current_time"
+      ],
+      "errors": [],
+      "stopped_because": "completed",
+      "elapsed": 61.1
+    },
+    {
+      "task": "tool.arith",
+      "category": "tools",
+      "backend": "k2-local",
+      "max_turns": 4,
+      "ok": true,
+      "passed": true,
+      "answer": "17 * 23 = 391",
+      "turns": 2,
+      "tool_calls": 1,
+      "tools": [
+        "calculate"
+      ],
+      "errors": [],
+      "stopped_because": "completed",
+      "elapsed": 45.59
+    },
+    {
+      "task": "tool.arith2",
+      "category": "tools",
+      "backend": "k2-local",
+      "max_turns": 4,
+      "ok": true,
+      "passed": true,
+      "answer": "(144 / 12) + 5 = 17.0",
+      "turns": 3,
+      "tool_calls": 2,
+      "tools": [
+        "calculate",
+        "calculate"
+      ],
+      "errors": [],
+      "stopped_because": "completed",
+      "elapsed": 63.05
+    },
+    {
+      "task": "file.read",
+      "category": "files",
+      "backend": "k2-local",
+      "max_turns": 6,
+      "ok": false,
+      "passed": false,
+      "answer": "Stopped: ran out of turns before finishing.",
+      "turns": 6,
+      "tool_calls": 6,
+      "tools": [
+        "read_file",
+        "todo",
+        "read_file",
+        "system_info",
+        "read_file",
+        "todo"
+      ],
+      "errors": [
+        "read_file: not a file: C:\\Users\\USER\\AppData\\Local\\Temp\\stella-evals-wrplcz4y\\stella-eval-file.read-f3b11g0u\\notes.txt",
+        "read_file: not a file: C:\\Users\\USER\\AppData\\Local\\Temp\\stella-evals-wrplcz4y\\stella-eval-file.read-f3b11g0u\\notes.txt",
+        "read_file: not a file: C:\\Users\\USER\\AppData\\Local\\Temp\\stella-evals-wrplcz4y\\stella-eval-file.read-f3b11g0u\\notes.txt"
+      ],
+      "stopped_because": "turn_budget_exhausted",
+      "elapsed": 93.32
+    },
+    {
+      "task": "file.write",
+      "category": "files",
+      "backend": "k2-local",
+      "max_turns": 6,
+      "ok": true,
+      "passed": true,
+      "answer": "Done. `greeting.txt` contains exactly: `hello stella`",
+      "turns": 3,
+      "tool_calls": 2,
+      "tools": [
+        "write_file",
+        "read_file"
+      ],
+      "errors": [],
+      "stopped_because": "completed",
+      "elapsed": 52.87
+    },
+    {
+      "task": "file.edit",
+      "category": "files",
+      "backend": "k2-local",
+      "max_turns": 10,
+      "ok": false,
+      "passed": false,
+      "answer": "Stopped: ran out of turns before finishing.",
+      "turns": 10,
+      "tool_calls": 6,
+      "tools": [
+        "read_file",
+        "file_controller",
+        "file_controller",
+        "file_controller",
+        "file_controller",
+        "file_controller"
+      ],
+      "errors": [
+        "read_file: not a file: C:\\Users\\USER\\AppData\\Local\\Temp\\stella-evals-wrplcz4y\\stella-eval-file.edit-yjdodlg3\\notes.txt",
+        "file_controller: repeated identical call, stopped",
+        "file_controller: repeated identical call, stopped",
+        "file_controller: repeated identical call, stopped",
+        "file_controller: arguments were not valid JSON"
+      ],
+      "stopped_because": "turn_budget_exhausted",
+      "elapsed": 133.99
+    },
+    {
+      "task": "file.search",
+      "category": "files",
+      "backend": "k2-local",
+      "max_turns": 8,
+      "ok": true,
+      "passed": true,
+      "answer": "The file `src/two.py` contains the function `two()`.",
+      "turns": 5,
+      "tool_calls": 4,
+      "tools": [
+        "list_dir",
+        "read_file",
+        "read_file",
+        "read_file"
+      ],
+      "errors": [],
+      "stopped_because": "completed",
+      "elapsed": 88.18
+    },
+    {
+      "task": "file.count",
+      "category": "files",
+      "backend": "k2-local",
+      "max_turns": 8,
+      "ok": false,
+      "passed": false,
+      "answer": "HTTP 400 from k2-local",
+      "turns": 5,
+      "tool_calls": 3,
+      "tools": [
+        "list_dir",
+        "smart_organizer",
+        "smart_organizer"
+      ],
+      "errors": [
+        "HTTP 400 from k2-local"
+      ],
+      "stopped_because": "backend_error",
+      "elapsed": 83.07
+    },
+    {
+      "task": "plan.write_then_read",
+      "category": "planning",
+      "backend": "k2-local",
+      "max_turns": 8,
+      "ok": false,
+      "passed": false,
+      "answer": "Stopped: ran out of turns before finishing.",
+      "turns": 8,
+      "tool_calls": 3,
+      "tools": [
+        "todo",
+        "file_controller",
+        "file_controller"
+      ],
+      "errors": [
+        "file_controller: repeated identical call, stopped",
+        "file_controller: repeated identical call, stopped",
+        "file_controller: repeated identical call, stopped",
+        "file_controller: repeated identical call, stopped",
+        "file_controller: repeated identical call, stopped"
+      ],
+      "stopped_because": "turn_budget_exhausted",
+      "elapsed": 136.52
+    },
+    {
+      "task": "plan.multi",
+      "category": "planning",
+      "backend": "k2-local",
+      "max_turns": 12,
+      "ok": false,
+      "passed": false,
+      "answer": "k2-local unreachable: timed out",
+      "turns": 1,
+      "tool_calls": 0,
+      "tools": [],
+      "errors": [
+        "k2-local unreachable: timed out"
+      ],
+      "stopped_because": "backend_error",
+      "elapsed": 121.96
+    },
+    {
+      "task": "error.missing_file",
+      "category": "robustness",
+      "backend": "k2-local",
+      "max_turns": 6,
+      "ok": false,
+      "passed": false,
+      "answer": "Stopped: ran out of turns before finishing.",
+      "turns": 6,
+      "tool_calls": 4,
+      "tools": [
+        "read_file",
+        "file_controller",
+        "file_controller",
+        "file_controller"
+      ],
+      "errors": [
+        "read_file: not a file: C:\\Users\\USER\\AppData\\Local\\Temp\\stella-evals-wrplcz4y\\stella-eval-error.missing_file-21wf1w3j\\definitely-not-here.txt",
+        "file_controller: repeated identical call, stopped"
+      ],
+      "stopped_because": "turn_budget_exhausted",
+      "elapsed": 94.31
+    },
+    {
+      "task": "error.bad_regex",
+      "category": "robustness",
+      "backend": "k2-local",
+      "max_turns": 6,
+      "ok": false,
+      "passed": true,
+      "answer": "Stopped: ran out of turns before finishing.",
+      "turns": 6,
+      "tool_calls": 6,
+      "tools": [
+        "list_dir",
+        "search_text",
+        "search_text",
+        "read_file",
+        "read_file",
+        "read_file"
+      ],
+      "errors": [
+        "search_text: bad regex: unterminated character set at position 0",
+        "read_file: not a file: C:\\Users\\USER\\AppData\\Local\\Temp\\stella-evals-wrplcz4y\\stella-eval-error.bad_regex-awsh1faa\\notes\\f16 a.txt",
+        "read_file: not a file: C:\\Users\\USER\\AppData\\Local\\Temp\\stella-evals-wrplcz4y\\stella-eval-error.bad_regex-awsh1faa\\notes\\f13 b.txt",
+        "read_file: not a file: C:\\Users\\USER\\AppData\\Local\\Temp\\stella-evals-wrplcz4y\\stella-eval-error.bad_regex-awsh1faa\\notes\\f9 c.txt"
+      ],
+      "stopped_because": "turn_budget_exhausted",
+      "elapsed": 73.93
+    },
+    {
+      "task": "honest.unknown",
+      "category": "robustness",
+      "backend": "k2-local",
+      "max_turns": 6,
+      "ok": false,
+      "passed": true,
+      "answer": "Stopped: ran out of turns before finishing.",
+      "turns": 6,
+      "tool_calls": 6,
+      "tools": [
+        "web_search",
+        "web_search",
+        "web_search",
+        "web_search",
+        "web_search",
+        "web_search"
+      ],
+      "errors": [],
+      "stopped_because": "turn_budget_exhausted",
+      "elapsed": 102.07
+    }
+  ]
+}

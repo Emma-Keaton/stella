@@ -25,7 +25,12 @@ import tempfile
 from pathlib import Path
 from datetime import datetime
 
-import google.generativeai as genai
+# `google.generativeai` is imported lazily inside `_gemini_client()` below.
+# It used to be a top-level import, which crashed the whole packaged exe with
+# `ModuleNotFoundError: No module named 'google.generativeai'` on any machine
+# that does not have that (deprecated) package installed. Importing it only
+# when a Gemini call is actually attempted means the app always starts, and
+# file tools degrade to a clear "unavailable" message instead of killing launch.
 
 
 def _get_api_key() -> str:
@@ -35,6 +40,13 @@ def _get_api_key() -> str:
 
 
 def _gemini_client():
+    try:
+        import google.generativeai as genai
+    except Exception as e:
+        raise RuntimeError(
+            "google-generativeai is not installed in this build. "
+            "Run: pip install google-generativeai"
+        ) from e
     genai.configure(api_key=_get_api_key())
     return genai.GenerativeModel("gemini-2.5-flash")
 

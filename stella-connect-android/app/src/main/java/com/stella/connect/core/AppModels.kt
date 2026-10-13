@@ -27,22 +27,27 @@ data class PairingOffer(
     val pairingCode: String,
     val expiresInSeconds: Int,
     val createdAt: String,
+    val name: String = "",
+    val platform: String = "",
 ) {
     companion object {
         fun fromJson(json: JSONObject): PairingOffer {
             return PairingOffer(
-                service = json.optString("service"),
+                service = json.optString("service", StellaProtocol.SERVICE_TYPE),
                 host = json.optString("host"),
-                port = json.optInt("port"),
+                port = json.optInt("port", StellaProtocol.DEFAULT_PORT),
                 pairingToken = json.optString("pairing_token"),
                 pairingCode = json.optString("pairing_code"),
                 expiresInSeconds = json.optInt("expires"),
                 createdAt = json.optString("created_at"),
+                name = json.optString("name"),
+                platform = json.optString("platform"),
             )
         }
     }
 
     fun toJson(): JSONObject = JSONObject()
+        .put("stella", StellaProtocol.PAYLOAD_VERSION)
         .put("service", service)
         .put("host", host)
         .put("port", port)
@@ -50,6 +55,8 @@ data class PairingOffer(
         .put("pairing_code", pairingCode)
         .put("expires", expiresInSeconds)
         .put("created_at", createdAt)
+        .put("name", name)
+        .put("platform", platform)
 }
 
 data class DeviceCredential(
@@ -119,6 +126,10 @@ data class CommandResult(
 }
 
 object StellaProtocol {
+    const val SERVICE_TYPE = "_STELLA._tcp.local."
+    const val DEFAULT_PORT = 8765
+    const val PAYLOAD_VERSION = 1
+
     const val HELLO = "hello"
     const val PAIR_REQUEST = "pair_request"
     const val PAIR_APPROVED = "pair_approved"

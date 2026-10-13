@@ -4,4 +4,11 @@
         <item name="android:navigationBarColor">#020305</item>
         <item name="android:windowBackground">#020305</item>
     </style>
+
+    <style name="Theme.StellaConnect.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#020305</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_stella_launcher</item>
+        <item name="windowSplashScreenAnimationDuration">400</item>
+        <item name="postSplashScreenTheme">@style/Theme.StellaConnect</item>
+    </style>
 </resources>

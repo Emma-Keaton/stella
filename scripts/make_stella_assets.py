@@ -29,6 +29,41 @@ MINT = (56, 226, 184)
 ALABASTER = (244, 243, 239)
 
 
+def _squircle_mask(size: int, n: float = 4.0, supersample: int = 4) -> Image.Image:
+    """An 8-bit mask that is 255 inside the shared squircle and 0 outside.
+
+    The geometry comes from core.shapes so the raster icon pack is identical to
+    the runtime badge - one definition, every surface.
+    """
+    import sys
+    sys.path.insert(0, str(BASE))
+    from core.shapes import superellipse_points
+
+    big = size * supersample
+    mask = Image.new("L", (big, big), 0)
+    pts = superellipse_points(big / 2.0, big / 2.0, big / 2.0, big / 2.0, n=n)
+    ImageDraw.Draw(mask).polygon([(x, y) for x, y in pts], fill=255)
+    return mask.resize((size, size), Image.LANCZOS)
+
+
+def squircle_badge(size: int, star: Image.Image, *, n: float = 4.0,
+                   inset: float = 0.20, bg=VOID, ring=IRIS) -> Image.Image:
+    """The canonical icon tile: a squircle plate with the star centred on it."""
+    plate = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    fill = Image.new("RGBA", (size, size), (bg[0], bg[1], bg[2], 255))
+    plate.alpha_composite(fill)
+    if ring is not None:
+        ring_layer = Image.new("RGBA", (size, size), (ring[0], ring[1], ring[2], 90))
+        plate.alpha_composite(ring_layer)
+    mask = _squircle_mask(size, n=n)
+    plate.putalpha(mask)
+
+    inner = max(1, int(size * (1.0 - 2.0 * inset)))
+    mark = star.convert("RGBA").resize((inner, inner), Image.LANCZOS)
+    plate.alpha_composite(mark, ((size - inner) // 2, (size - inner) // 2))
+    return plate
+
+
 def key_out_background(img: Image.Image, thresh: int = 28) -> Image.Image:
     """Knock near-black background to transparent (luminance key)."""
     img = img.convert("RGBA")
@@ -77,12 +112,20 @@ def main() -> None:
     transparent = key_out_background(master.resize((512, 512), Image.LANCZOS))
     transparent.save(OUT / "stella_logo_transparent.png")
 
-    master.save(OUT / "favicon.ico", sizes=[(16, 16), (32, 32), (48, 48)])
+    # Canonical icon tile: the squircle. Every icon surface derives from this
+    # so the mark never appears in a circle anywhere.
+    badge512 = squircle_badge(512, transparent)
+    badge512.save(OUT / "stella_badge.png")
+    badge256 = squircle_badge(256, transparent)
+    badge256.save(OUT / "stella_icon_256.png")
+
+    badge256.save(OUT / "favicon.ico",
+                  sizes=[(16, 16), (32, 32), (48, 48), (256, 256)])
 
     # Top-level aliases expected by app + installer specs
     bg.save(BASE / "assets" / "stella_logo.png")
-    master.save(BASE / "assets" / "stella_logo.ico",
-                sizes=[(16, 16), (32, 32), (48, 48), (256, 256)])
+    badge256.save(BASE / "assets" / "stella_logo.ico",
+                  sizes=[(16, 16), (32, 32), (48, 48), (256, 256)])
 
     # Loading splash
     splash = Image.new("RGB", (1024, 600), VOID)
@@ -115,8 +158,9 @@ def main() -> None:
     text(d, (700, 485), "you'll ever need to train.", 26, (134, 137, 159))
     og.save(OUT / "stella_og.png")
 
-    # Android launcher
-    launcher = star.resize((192, 192), Image.LANCZOS)
+    # Android launcher: a squircle tile, so it does not depend on the OEM
+    # launcher mask (which is often a circle) for its shape.
+    launcher = squircle_badge(192, transparent)
     launcher.save(OUT / "ic_stella_launcher.png")
     and_res = (BASE / "stella-connect-android" / "app" / "src" / "main" /
                "res" / "drawable")

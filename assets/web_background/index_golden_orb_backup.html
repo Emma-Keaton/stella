@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Brahma Echo 3D WebGL Living AI Background</title>
+  <title>Stella Echo 3D WebGL Living AI Background</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { width: 100%; height: 100%; overflow: hidden; background: #050505; }
@@ -588,7 +588,7 @@
     const width = Math.max(1, container.clientWidth || window.innerWidth);
     const height = Math.max(1, container.clientHeight || window.innerHeight);
 
-    // ——— SCENE & CAMERA ———
+    // â€”â€”â€” SCENE & CAMERA â€”â€”â€”
     const scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x040302, 0.05);
 
@@ -602,7 +602,7 @@
     renderer.toneMappingExposure = 0.9;
     container.appendChild(renderer.domElement);
 
-    // ——— POST PROCESSING ———
+    // â€”â€”â€” POST PROCESSING â€”â€”â€”
     const composer = new THREE.EffectComposer(renderer);
     composer.addPass(new THREE.RenderPass(scene, camera));
 
@@ -657,7 +657,7 @@
     controls.zoomSpeed = 1.4;
     controls.enablePan = false;
 
-    // ——— COLORS ———
+    // â€”â€”â€” COLORS â€”â€”â€”
     const C_BRIGHT = 0xffbe1a;
     const C_MID    = 0xd4af37;
     const C_DIM    = 0xaa8010;
@@ -665,7 +665,7 @@
     const C_HOT    = 0xffea80;
     const C_CYAN   = 0xfff2a3;
 
-    // ——— BACKGROUND ATMOSPHERE (STARS, FAINT GRID & DUST) ———
+    // â€”â€”â€” BACKGROUND ATMOSPHERE (STARS, FAINT GRID & DUST) â€”â€”â€”
     const atmosphereGroup = new THREE.Group();
     scene.add(atmosphereGroup);
 
@@ -696,7 +696,7 @@
     const starPoints = new THREE.Points(starGeo, starMat);
     atmosphereGroup.add(starPoints);
 
-    // ——— HERO ORB GROUP ———
+    // â€”â€”â€” HERO ORB GROUP â€”â€”â€”
     const orbGroup = new THREE.Group();
     orbGroup.position.set(0, 0.18, 0);
     scene.add(orbGroup);
@@ -969,7 +969,7 @@
     const dustPoints = new THREE.Points(dustGeo, dustMat);
     orbGroup.add(dustPoints);
 
-    // ——— REACTIVE BRAHMA ECHO STATE CONTROLLER ———
+    // â€”â€”â€” REACTIVE Stella Echo STATE CONTROLLER â€”â€”â€”
     let currentState = "IDLE";
     let targetScale = 0.52;
     let currentScale = 0.52;
@@ -1001,10 +1001,10 @@
       if (v > liveAudioAmp) liveAudioAmp = v;
     };
 
-    window.setBrahmaState = function(state) {
+    window.setStellaState = function(state) {
       if (!state) return;
       currentState = String(state).toUpperCase();
-      console.log("Brahma Echo 3D StateChanged:", currentState);
+      console.log("Stella Echo 3D StateChanged:", currentState);
 
       const pal = STATE_COLORS[currentState] || STATE_COLORS.IDLE;
       targetColorHot = new THREE.Color(pal.hot);

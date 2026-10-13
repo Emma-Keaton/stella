@@ -1,4 +1,4 @@
-# build.ps1 — one command to build Stella on any host (Windows).
+﻿# build.ps1 â€” one command to build Stella on any host (Windows).
 # Thin wrapper over scripts/stella_build.py so the muscle memory matches
 # macOS/Linux. All arguments pass straight through.
 #
@@ -19,3 +19,4 @@ if (-not (Test-Path $py)) {
 
 & $py "scripts\stella_build.py" @Args
 exit $LASTEXITCODE
+

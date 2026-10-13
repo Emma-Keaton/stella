@@ -267,6 +267,30 @@ def _install_new_packages(manifest: dict) -> None:
             continue  # keep going; core packages are first in the list
 
 
+def _k2_needs_update(manifest: dict) -> bool:
+    """True only when the release carries a NEWER K2 runtime AND flags it.
+
+    App updates must never touch the server binary or the 600MB+ model unless
+    K2 itself changed — the k2/ tree lives outside any swapped install dir and
+    this gate is the only thing allowed to refresh it.
+    """
+    k2 = manifest.get("k2")
+    if not isinstance(k2, dict):
+        return False
+    if not k2.get("k2_release"):
+        return False
+    try:
+        from core import k2_runtime as kr
+        cur_server = getattr(kr, "K2_SERVER_VERSION", "")
+        cur_model = getattr(kr, "K2_MODEL_VERSION", "")
+    except Exception:
+        cur_server = cur_model = ""
+    new_server = str(k2.get("server_version", ""))
+    new_model = str(k2.get("model_version", ""))
+    return bool((new_server and new_server != cur_server)
+                or (new_model and new_model != cur_model))
+
+
 def apply_update_and_restart() -> None:
     """Download the new build, verify it, stage+swap, relaunch, then quit.
 

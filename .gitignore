@@ -31,7 +31,12 @@ stella-connect-android/.cxx/
 *.apk
 *.aab
 
-# Scratch & temporary logs
+# Build error logs and completion markers (regenerable, machine-specific).
+*.err
+*.done
+
+# Machine-local user settings (paths, local API/model picks).
+config/app_settings.json
 scratch/
 *.log
 

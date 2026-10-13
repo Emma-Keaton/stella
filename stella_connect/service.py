@@ -8,6 +8,8 @@ from pathlib import Path
 from typing import Any
 
 from .gateway.server import StellaGateway, StellaGatewayConfig
+from . import pairing_flow
+from .joiner import JoinResult, join as _join_target
 
 
 @dataclass(slots=True)
@@ -69,6 +71,24 @@ class StellaConnectService:
 
     def create_pairing_offer(self, *, device_name: str = "Unknown Device", platform: str = "unknown") -> dict[str, Any]:
         return self.gateway.create_pairing_offer(device_name=device_name, platform=platform)
+
+    def pairing_qr_payload(self, *, device_name: str = "Stella", platform: str = "unknown") -> dict[str, Any]:
+        """The versioned QR payload every edition understands (see pairing_flow)."""
+        offer = self.create_pairing_offer(device_name=device_name, platform=platform)
+        return pairing_flow.to_qr_payload(offer, name=device_name, platform=platform)
+
+    def discover_hosts(self, timeout: float = 3.0) -> list[dict[str, Any]]:
+        """Method 2: browse the LAN for Stella hosts (blocking; call off the UI thread)."""
+        return [target.to_dict() for target in pairing_flow.discover(timeout)]
+
+    def local_addresses(self) -> list[str]:
+        return pairing_flow.local_addresses()
+
+    def join_target(self, target: dict[str, Any] | pairing_flow.PairingTarget,
+                    identity: dict[str, Any] | None = None) -> JoinResult:
+        """Method 1/2/3 converge here: perform the outbound pairing handshake."""
+        return _join_target(target, identity)
+
 
     def list_devices(self) -> list[dict[str, Any]]:
         return self.gateway.device_manager.list_devices()

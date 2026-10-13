@@ -1,0 +1,1276 @@
+[
+  {
+    "created": "2026-10-11T09:18:36.807233+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "refusing to patch a non-Python file: .github/workflows/build-release.yml",
+    "needs_global_fix": true,
+    "patch": {
+      "file": ".github/workflows/build-release.yml",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:18:39.751564+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: ../../../etc/passwd.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "../../../etc/passwd.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:18:42.266167+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: ..\\..\\..\\windows\\system32\\evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "..\\..\\..\\windows\\system32\\evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:18:44.611016+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: core/../../evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "core/../../evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:18:46.857051+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: C:/Windows/Temp/evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "C:/Windows/Temp/evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:18:49.574464+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "refusing to patch a non-Python file: config/app_settings.json",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "config/app_settings.json",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:22:07.586795+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "refusing to patch a non-Python file: .github/workflows/build-release.yml",
+    "needs_global_fix": true,
+    "patch": {
+      "file": ".github/workflows/build-release.yml",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:22:10.312690+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: ../../../etc/passwd.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "../../../etc/passwd.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:22:12.966791+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: ..\\..\\..\\windows\\system32\\evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "..\\..\\..\\windows\\system32\\evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:22:15.681605+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: core/../../evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "core/../../evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:22:18.072657+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: C:/Windows/Temp/evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "C:/Windows/Temp/evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:22:20.269569+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "refusing to patch a non-Python file: config/app_settings.json",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "config/app_settings.json",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:33:17.210207+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "refusing to patch a non-Python file: .github/workflows/build-release.yml",
+    "needs_global_fix": true,
+    "patch": {
+      "file": ".github/workflows/build-release.yml",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:33:19.526018+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: ../../../etc/passwd.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "../../../etc/passwd.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:33:21.577572+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: ..\\..\\..\\windows\\system32\\evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "..\\..\\..\\windows\\system32\\evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:33:23.818781+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: core/../../evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "core/../../evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:33:26.282844+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: C:/Windows/Temp/evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "C:/Windows/Temp/evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:33:28.128954+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "refusing to patch a non-Python file: config/app_settings.json",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "config/app_settings.json",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:33:51.008782+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "refusing to patch a non-Python file: .github/workflows/build-release.yml",
+    "needs_global_fix": true,
+    "patch": {
+      "file": ".github/workflows/build-release.yml",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:33:52.997505+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: ../../../etc/passwd.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "../../../etc/passwd.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:33:55.072278+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: ..\\..\\..\\windows\\system32\\evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "..\\..\\..\\windows\\system32\\evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:33:57.286321+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: core/../../evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "core/../../evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:33:59.505841+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: C:/Windows/Temp/evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "C:/Windows/Temp/evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:34:02.257506+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "refusing to patch a non-Python file: config/app_settings.json",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "config/app_settings.json",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:34:34.029241+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "refusing to patch a non-Python file: .github/workflows/build-release.yml",
+    "needs_global_fix": true,
+    "patch": {
+      "file": ".github/workflows/build-release.yml",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:34:36.497327+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: ../../../etc/passwd.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "../../../etc/passwd.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:34:38.583237+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: ..\\..\\..\\windows\\system32\\evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "..\\..\\..\\windows\\system32\\evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:34:40.638204+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: core/../../evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "core/../../evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:34:42.715624+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: C:/Windows/Temp/evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "C:/Windows/Temp/evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:34:44.742030+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "refusing to patch a non-Python file: config/app_settings.json",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "config/app_settings.json",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:48:14.990635+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "refusing to patch a non-Python file: .github/workflows/build-release.yml",
+    "needs_global_fix": true,
+    "patch": {
+      "file": ".github/workflows/build-release.yml",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:48:16.707793+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: ../../../etc/passwd.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "../../../etc/passwd.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:48:18.563757+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: ..\\..\\..\\windows\\system32\\evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "..\\..\\..\\windows\\system32\\evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:53:14.580297+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "refusing to patch a non-Python file: .github/workflows/build-release.yml",
+    "needs_global_fix": true,
+    "patch": {
+      "file": ".github/workflows/build-release.yml",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:53:18.032140+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: ../../../etc/passwd.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "../../../etc/passwd.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:53:21.191005+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: ..\\..\\..\\windows\\system32\\evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "..\\..\\..\\windows\\system32\\evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:53:24.278234+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: core/../../evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "core/../../evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:53:29.672987+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: C:/Windows/Temp/evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "C:/Windows/Temp/evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:53:32.069101+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "refusing to patch a non-Python file: config/app_settings.json",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "config/app_settings.json",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:54:59.792075+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "refusing to patch a non-Python file: .github/workflows/build-release.yml",
+    "needs_global_fix": true,
+    "patch": {
+      "file": ".github/workflows/build-release.yml",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:55:01.147250+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: ../../../etc/passwd.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "../../../etc/passwd.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:55:02.291682+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: ..\\..\\..\\windows\\system32\\evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "..\\..\\..\\windows\\system32\\evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:55:03.637261+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: core/../../evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "core/../../evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:55:05.219538+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: C:/Windows/Temp/evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "C:/Windows/Temp/evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:55:07.306964+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "refusing to patch a non-Python file: config/app_settings.json",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "config/app_settings.json",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:57:01.607619+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "refusing to patch a non-Python file: .github/workflows/build-release.yml",
+    "needs_global_fix": true,
+    "patch": {
+      "file": ".github/workflows/build-release.yml",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:57:02.704281+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: ../../../etc/passwd.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "../../../etc/passwd.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:57:03.954334+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: ..\\..\\..\\windows\\system32\\evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "..\\..\\..\\windows\\system32\\evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:57:05.326836+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: core/../../evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "core/../../evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:57:26.294044+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "refusing to patch a non-Python file: .github/workflows/build-release.yml",
+    "needs_global_fix": true,
+    "patch": {
+      "file": ".github/workflows/build-release.yml",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:57:27.889271+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: ../../../etc/passwd.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "../../../etc/passwd.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:57:29.214666+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: ..\\..\\..\\windows\\system32\\evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "..\\..\\..\\windows\\system32\\evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:57:30.518935+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: core/../../evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "core/../../evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:57:32.746389+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: C:/Windows/Temp/evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "C:/Windows/Temp/evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T09:57:34.020611+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "refusing to patch a non-Python file: config/app_settings.json",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "config/app_settings.json",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T10:01:50.485223+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "refusing to patch a non-Python file: .github/workflows/build-release.yml",
+    "needs_global_fix": true,
+    "patch": {
+      "file": ".github/workflows/build-release.yml",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T10:01:51.595993+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: ../../../etc/passwd.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "../../../etc/passwd.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T10:01:52.709000+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: ..\\..\\..\\windows\\system32\\evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "..\\..\\..\\windows\\system32\\evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T10:01:53.881251+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: core/../../evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "core/../../evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T10:01:55.107354+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: C:/Windows/Temp/evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "C:/Windows/Temp/evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T10:02:08.305949+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "refusing to patch a non-Python file: .github/workflows/build-release.yml",
+    "needs_global_fix": true,
+    "patch": {
+      "file": ".github/workflows/build-release.yml",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T10:02:09.759371+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: ../../../etc/passwd.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "../../../etc/passwd.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T10:02:11.113813+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: ..\\..\\..\\windows\\system32\\evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "..\\..\\..\\windows\\system32\\evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T10:02:12.318965+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: core/../../evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "core/../../evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T10:02:13.506118+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: C:/Windows/Temp/evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "C:/Windows/Temp/evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T10:02:14.902065+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "refusing to patch a non-Python file: config/app_settings.json",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "config/app_settings.json",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T10:04:52.269729+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "refusing to patch a non-Python file: .github/workflows/build-release.yml",
+    "needs_global_fix": true,
+    "patch": {
+      "file": ".github/workflows/build-release.yml",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T10:04:53.370505+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: ../../../etc/passwd.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "../../../etc/passwd.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T10:04:54.495585+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: ..\\..\\..\\windows\\system32\\evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "..\\..\\..\\windows\\system32\\evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T10:04:55.581851+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: core/../../evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "core/../../evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T10:04:56.681495+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: C:/Windows/Temp/evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "C:/Windows/Temp/evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T10:05:36.235561+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "refusing to patch a non-Python file: .github/workflows/build-release.yml",
+    "needs_global_fix": true,
+    "patch": {
+      "file": ".github/workflows/build-release.yml",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T10:05:37.423094+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: ../../../etc/passwd.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "../../../etc/passwd.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T10:05:38.604295+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: ..\\..\\..\\windows\\system32\\evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "..\\..\\..\\windows\\system32\\evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T10:05:39.858854+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: core/../../evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "core/../../evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-11T10:05:41.199941+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: C:/Windows/Temp/evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "C:/Windows/Temp/evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-12T15:55:32.557934+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "refusing to patch a non-Python file: .github/workflows/build-release.yml",
+    "needs_global_fix": true,
+    "patch": {
+      "file": ".github/workflows/build-release.yml",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-12T15:55:33.827867+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: ../../../etc/passwd.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "../../../etc/passwd.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-12T15:55:35.096331+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: ..\\..\\..\\windows\\system32\\evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "..\\..\\..\\windows\\system32\\evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-12T15:56:53.357245+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "refusing to patch a non-Python file: .github/workflows/build-release.yml",
+    "needs_global_fix": true,
+    "patch": {
+      "file": ".github/workflows/build-release.yml",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-12T15:56:54.684444+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: ../../../etc/passwd.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "../../../etc/passwd.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-12T15:56:56.063458+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: ..\\..\\..\\windows\\system32\\evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "..\\..\\..\\windows\\system32\\evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-12T15:56:57.428184+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: core/../../evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "core/../../evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-12T15:56:58.952223+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: C:/Windows/Temp/evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "C:/Windows/Temp/evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-12T15:57:00.221903+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "refusing to patch a non-Python file: config/app_settings.json",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "config/app_settings.json",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-12T16:09:43.172340+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "refusing to patch a non-Python file: .github/workflows/build-release.yml",
+    "needs_global_fix": true,
+    "patch": {
+      "file": ".github/workflows/build-release.yml",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-12T16:09:44.610528+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: ../../../etc/passwd.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "../../../etc/passwd.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-12T16:09:45.767049+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: ..\\..\\..\\windows\\system32\\evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "..\\..\\..\\windows\\system32\\evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-12T16:09:46.888260+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: core/../../evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "core/../../evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-12T16:09:48.265454+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "patch target escapes repo: C:/Windows/Temp/evil.py",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "C:/Windows/Temp/evil.py",
+      "old": "a",
+      "new": "b"
+    }
+  },
+  {
+    "created": "2026-10-12T16:09:49.558904+00:00",
+    "outcome": "unsafe",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "refusing to patch a non-Python file: config/app_settings.json",
+    "needs_global_fix": true,
+    "patch": {
+      "file": "config/app_settings.json",
+      "old": "a",
+      "new": "b"
+    }
+  }
+]

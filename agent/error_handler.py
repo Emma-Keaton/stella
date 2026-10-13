@@ -17,13 +17,73 @@ API_CONFIG_PATH = get_user_data_dir() / "config" / "api_keys.json"
 
 
 class ErrorDecision(Enum):
-    RETRY       = "retry"      
-    SKIP        = "skip"       
-    REPLAN      = "replan"     
-    ABORT       = "abort"    
+    RETRY       = "retry"
+    SKIP        = "skip"
+    REPLAN      = "replan"
+    ABORT       = "abort"
 
 
-ERROR_ANALYST_PROMPT = """You are the error recovery module of Stella AI - Lite AI assistant.
+# ---------------------------------------------------------------------------
+# Cloud analysis is OPTIONAL.
+#
+# This module exists to recover from failures, so it must never be the thing
+# that fails. Gemini being uninstalled, offline, or un-keyed used to raise out
+# of analyze_error() and take the whole recovery path down. Now it degrades to
+# a deterministic local heuristic, which is also what an offline-first device
+# actually wants.
+# ---------------------------------------------------------------------------
+
+_TRANSIENT = re.compile(
+    r"timed? ?out|timeout|connection (reset|aborted|refused)|temporarily|"
+    r"try again|rate limit|429|503|502|file is locked|being used by another",
+    re.IGNORECASE,
+)
+_NOT_FOUND = re.compile(
+    r"no such file|not found|does not exist|enoent", re.IGNORECASE
+)
+
+
+def _local_decision(step: dict, error: str, attempt: int, max_attempts: int) -> dict:
+    """Offline heuristic used when no LLM can be consulted."""
+    if attempt >= max_attempts:
+        return {
+            "decision":     ErrorDecision.REPLAN,
+            "reason":       f"Failed {attempt} times: {error[:100]}",
+            "fix_suggestion": "Try a different approach or tool",
+            "max_retries":  0,
+            "user_message": "Trying a different approach.",
+        }
+
+    if _NOT_FOUND.search(error):
+        decision, retries, reason = (
+            (ErrorDecision.REPLAN if step.get("critical") else ErrorDecision.SKIP),
+            0, "The target does not exist",
+        )
+    elif _TRANSIENT.search(error) and attempt < max_attempts:
+        decision, retries, reason = ErrorDecision.RETRY, 1, "Transient error"
+    else:
+        decision, retries, reason = ErrorDecision.REPLAN, 0, "The approach failed"
+
+    return {
+        "decision":       decision,
+        "reason":         reason,
+        "fix_suggestion": "Try an alternative approach or tool",
+        "max_retries":    retries,
+        "user_message":   "Encountered an issue, adjusting approach.",
+    }
+
+
+def _gemini(model_name: str, system_instruction: str | None = None):
+    """Return a configured Gemini model, or None when unavailable."""
+    from core.gemini_optional import gemini_model
+    return gemini_model(model_name, system_instruction)
+
+
+def _strip_fence(text: str) -> str:
+    return re.sub(r"```(?:json|python)?", "", text or "").strip().rstrip("`").strip()
+
+
+ERROR_ANALYST_PROMPT = """You are the error recovery module of Stella.
 
 A task step has failed. Analyze the error and decide what to do.
 
@@ -51,8 +111,9 @@ Return ONLY valid JSON:
 
 
 def _get_api_key() -> str:
-    with open(API_CONFIG_PATH, "r", encoding="utf-8") as f:
-        return json.load(f)["gemini_api_key"]
+    """Read the Gemini key, tolerating a missing/partial config."""
+    from core.gemini_optional import get_api_key
+    return get_api_key()
 
 
 def analyze_error(
@@ -79,26 +140,16 @@ def analyze_error(
             "user_message": str
         }
     """
-    import warnings
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=FutureWarning)
-        import google.generativeai as genai
-
     if attempt >= max_attempts:
-        print(f"[ErrorHandler] ⚠️ Max attempts reached for step {step.get('step')} — forcing replan")
-        return {
-            "decision":      ErrorDecision.REPLAN,
-            "reason":        f"Failed {attempt} times: {error[:100]}",
-            "fix_suggestion": "Try a completely different approach or tool",
-            "max_retries":   0,
-            "user_message":  "Trying a different approach, sir."
-        }
+        print(f"[ErrorHandler] Max attempts reached for step {step.get('step')} - forcing replan")
+        return _local_decision(step, error, attempt, max_attempts)
 
-    genai.configure(api_key=_get_api_key())
-    model = genai.GenerativeModel(
-        model_name="gemini-3.1-flash-lite",
-        system_instruction=ERROR_ANALYST_PROMPT
-    )
+    model = _gemini("gemini-3.1-flash-lite", ERROR_ANALYST_PROMPT)
+    if model is None:
+        # No cloud (offline / no key / package missing): decide locally.
+        result = _local_decision(step, error, attempt, max_attempts)
+        print(f"[ErrorHandler] No cloud analyst - local decision: {result['decision'].value}")
+        return result
 
     prompt = f"""Failed step:
 Tool: {step.get('tool')}
@@ -129,20 +180,14 @@ Attempt number: {attempt}"""
 
         if step.get("critical") and result["decision"] == ErrorDecision.SKIP:
             result["decision"]     = ErrorDecision.REPLAN
-            result["user_message"] = "This step is critical — finding alternative approach, sir."
+            result["user_message"] = "This step is critical - finding another approach."
 
-        print(f"[ErrorHandler] Decision: {result['decision'].value} — {result.get('reason', '')}")
+        print(f"[ErrorHandler] Decision: {result['decision'].value} - {result.get('reason', '')}")
         return result
 
     except Exception as e:
-        print(f"[ErrorHandler] ⚠️ Analysis failed: {e} — defaulting to replan")
-        return {
-            "decision":       ErrorDecision.REPLAN,
-            "reason":         str(e),
-            "fix_suggestion": "Try alternative approach",
-            "max_retries":    1,
-            "user_message":   "Encountered an issue, adjusting approach, sir."
-        }
+        print(f"[ErrorHandler] Analysis failed: {e} - falling back to local decision")
+        return _local_decision(step, error, attempt, max_attempts)
 
 
 def generate_fix(step: dict, error: str, fix_suggestion: str) -> dict:
@@ -152,13 +197,20 @@ def generate_fix(step: dict, error: str, fix_suggestion: str) -> dict:
 
     Returns a modified step dict.
     """
-    import warnings
-    with warnings.catch_warnings():
-        warnings.filterwarnings("ignore", category=FutureWarning)
-        import google.generativeai as genai
+    def _fallback() -> dict:
+        return {
+            "step":        step.get("step"),
+            "tool":        "generated_code",
+            "description": f"Fallback for: {step.get('description')}",
+            "parameters":  {"description": step.get("description", "")},
+            "depends_on":  step.get("depends_on", []),
+            "critical":    step.get("critical", False),
+        }
 
-    genai.configure(api_key=_get_api_key())
-    model = genai.GenerativeModel(model_name="gemini-2.5-flash")
+    model = _gemini("gemini-2.5-flash")
+    if model is None:
+        print("[ErrorHandler] No cloud available - using fallback step")
+        return _fallback()
 
     prompt = f"""A task step failed. Generate a replacement step.
 
@@ -175,8 +227,9 @@ Return ONLY the Python code, no explanation."""
 
     try:
         response = model.generate_content(prompt)
-        code = response.text.strip()
-        code = re.sub(r"```(?:python)?", "", code).strip().rstrip("`").strip()
+        code = _strip_fence(response.text)
+        if not code:
+            return _fallback()
 
         return {
             "step":        step.get("step"),
@@ -190,12 +243,5 @@ Return ONLY the Python code, no explanation."""
         }
 
     except Exception as e:
-        print(f"[ErrorHandler] ⚠️ Fix generation failed: {e}")
-        return {
-            "step":        step.get("step"),
-            "tool":        "generated_code",
-            "description": f"Fallback for: {step.get('description')}",
-            "parameters":  {"description": step.get("description", "")},
-            "depends_on":  step.get("depends_on", []),
-            "critical":    step.get("critical", False)
-        }
+        print(f"[ErrorHandler] Fix generation failed: {e}")
+        return _fallback()

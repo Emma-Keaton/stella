@@ -17,6 +17,16 @@ private val StellaDarkColors = darkColorScheme(
     error = Color(0xFFFF6B6B),
 )
 
+/**
+ * Brand tokens kept out of the Material scheme so the logo spinner and any
+ * future marketing surface can use them without inheriting theme semantics.
+ */
+object StellaBrand {
+    val primary = Color(0xFF00E5FF)
+    val accent = Color(0xFFFFFFFF)
+    val ink = Color(0xFF020305)
+}
+
 @Composable
 fun StellaConnectTheme(content: @Composable () -> Unit) {
     MaterialTheme(

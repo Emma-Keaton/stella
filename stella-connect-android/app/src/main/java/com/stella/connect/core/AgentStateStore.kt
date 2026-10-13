@@ -29,6 +29,13 @@ object AgentStateStore {
     private val _chatHistory = MutableStateFlow<List<ChatMessage>>(emptyList())
     val chatHistory: StateFlow<List<ChatMessage>> = _chatHistory.asStateFlow()
 
+    /**
+     * Ids of the capabilities the user has actually granted, refreshed from
+     * MainActivity.onResume() (special permissions are toggled in Settings).
+     */
+    private val _grantedPermissions = MutableStateFlow<Set<String>>(emptySet())
+    val grantedPermissions: StateFlow<Set<String>> = _grantedPermissions.asStateFlow()
+
     fun setConnectionState(state: ConnectionState) {
         _connectionState.value = state
     }
@@ -66,6 +73,10 @@ object AgentStateStore {
 
     fun setChatHistory(messages: List<ChatMessage>) {
         _chatHistory.value = messages
+    }
+
+    fun setGrantedPermissions(ids: Set<String>) {
+        _grantedPermissions.value = ids
     }
 }
 

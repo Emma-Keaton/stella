@@ -1,4 +1,4 @@
-param(
+﻿param(
     [switch]$SkipInstaller = $false
 )
 
@@ -21,7 +21,7 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
-# 1. Main application (collect-mode; produces dist\StellaEvo\)
+# 1. Main application (collect-mode; produces dist\Stella\)
 & $PYI installer\Stella.spec --noconfirm
 
 if ($LASTEXITCODE -ne 0) {
@@ -35,7 +35,7 @@ if ($SkipInstaller) {
 }
 
 Write-Host "Main Application built successfully. Now building Setup Wizard..." -ForegroundColor Cyan
-# 2. Setup wizard (one-file; embeds dist\StellaEvo\ as its payload)
+# 2. Setup wizard (one-file; embeds dist\Stella\ as its payload)
 & $PYI installer\Stella_Setup.spec --noconfirm
 
 if ($LASTEXITCODE -ne 0) {
@@ -43,4 +43,5 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
-Write-Host "Build complete! Setup is located in dist\StellaEvo_Setup.exe" -ForegroundColor Green
+Write-Host "Build complete! Setup is located in dist\Stella_Setup.exe" -ForegroundColor Green
+

@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,10 +29,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -55,9 +58,12 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import com.stella.connect.StellaConnectForegroundService
 import com.stella.connect.core.AgentStateStore
+import com.stella.connect.core.BridgeSettings
+import com.stella.connect.core.ChatMessage
 import com.stella.connect.core.ConnectionState
 import com.stella.connect.core.DeviceCredential
 import com.stella.connect.core.GatewayEndpoint
+import com.stella.connect.core.K2Manager
 import com.stella.connect.core.PairingOffer
 import com.stella.connect.core.PermissionManager
 import com.stella.connect.network.StellaGatewayDiscovery
@@ -82,6 +88,8 @@ import androidx.compose.animation.core.*
 import androidx.compose.material3.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Send
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 
 
 
@@ -147,10 +155,18 @@ fun StellaConnectApp(
 
     val navController = rememberNavController()
 
-    // Determine start destination
+    // The PC bridge is a setting, not a build flag: available in both
+    // variants, on by default only for the personal K2 build.
+    var bridgeOn by rememberSaveable {
+        mutableStateOf(BridgeSettings.isEnabled(context))
+    }
+
+    // Determine start destination. With the bridge on and nothing paired yet,
+    // the user most likely wants to reach their PC, so offer that first.
     val startDest = when {
         setupMissing.isNotEmpty() -> "permissions"
         credential != null -> "home"
+        bridgeOn -> "connect"
         else -> "welcome"
     }
 
@@ -193,7 +209,15 @@ fun StellaConnectApp(
             }
             composable("about") {
                 AboutScreen(
-                    onNext = { navController.navigate("connect") }
+                    bridgeOn = bridgeOn,
+                    onBridgeChange = { value ->
+                        bridgeOn = value
+                        BridgeSettings.setEnabled(context, value)
+                    },
+                    onNext = {
+                        if (bridgeOn) navController.navigate("connect")
+                        else navController.navigate("home")
+                    },
                 )
             }
             composable("connect") {
@@ -239,6 +263,21 @@ fun StellaConnectApp(
                                 },
                                 onError = { AgentStateStore.setError(it) }
                             )
+                        },
+                        // Just defer: bridge stays armed, so pairing is still one
+                        // tap away from home next time.
+                        onSkipForNow = {
+                            AgentStateStore.setStatus("Running on-device - connect to your PC any time")
+                            navController.navigate("home") { popUpTo(0) }
+                        },
+                        // Opt out permanently. This is what actually stops startup
+                        // routing here - without it the K2 build defaults the
+                        // bridge on and the user has no way past this screen.
+                        onNeverAsk = {
+                            bridgeOn = false
+                            BridgeSettings.setEnabled(context, false)
+                            AgentStateStore.setStatus("PC bridge off - you can turn it on in Settings")
+                            navController.navigate("home") { popUpTo(0) }
                         }
                     )
                 }
@@ -270,6 +309,11 @@ fun StellaConnectApp(
                 )
             }
             composable("home") {
+                // `credential` is only set once paired with a PC. Skipping the
+                // bridge leaves it null, and that used to render literally
+                // nothing on top of the animated background. Standalone home
+                // now exists: on-device status, K2 readiness, entry points
+                // into chat and settings, bridge re-arm included.
                 if (credential != null) {
                     ConnectedScreen(
                         credential = credential!!,
@@ -290,7 +334,22 @@ fun StellaConnectApp(
                             }
                             context.startActivity(intent)
                         },
-                        onOpenChat = { navController.navigate("chat") }
+                        onOpenChat = { navController.navigate("chat") },
+                        onOpenLocalModels = { navController.navigate("local_models") }
+                    )
+                } else {
+                    StandaloneHomeScreen(
+                        status = status,
+                        onOpenChat = { navController.navigate("chat") },
+                        onOpenLocalModels = { navController.navigate("local_models") },
+                        onOpenSettings = {
+                            val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                data = Uri.fromParts("package", context.packageName, null)
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            context.startActivity(intent)
+                        },
+                        onPairPc = { navController.navigate("connect") }
                     )
                 }
             }
@@ -305,6 +364,9 @@ fun StellaConnectApp(
                         context.startService(intent)
                     }
                 )
+            composable("local_models") {
+                LocalModelsScreen(onBack = { navController.popBackStack() })
+            }
             }
         }
     }
@@ -345,31 +407,79 @@ fun WelcomeScreen(onNext: () -> Unit) {
 }
 
 @Composable
-fun AboutScreen(onNext: () -> Unit) {
-    Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+fun AboutScreen(
+    bridgeOn: Boolean,
+    onBridgeChange: (Boolean) -> Unit,
+    onNext: () -> Unit,
+) {
+Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
         GlassCard {
             Text("Hardware Bridge", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
             Spacer(modifier = Modifier.height(16.dp))
-            Text("This agent acts as a secure physical bridge between your Android device and your PC's Stella AI.", color = androidx.compose.ui.graphics.Color.White, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+            Text("This agent acts as a secure bridge between your Android device and your PC's Stella.", color = androidx.compose.ui.graphics.Color.White, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+            Spacer(modifier = Modifier.height(16.dp))
+            Text("Turn this on when you want your phone to use the larger models running on your PC - most phones can't run them locally.", color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.65f), textAlign = androidx.compose.ui.text.style.TextAlign.Center, style = MaterialTheme.typography.bodySmall)
+            Spacer(modifier = Modifier.height(16.dp))
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text("Connect to my PC", color = androidx.compose.ui.graphics.Color.White)
+                Switch(
+                    checked = bridgeOn,
+                    onCheckedChange = onBridgeChange,
+                )
+            }
             Spacer(modifier = Modifier.height(24.dp))
             Button(onClick = onNext, modifier = Modifier.fillMaxWidth()) {
-                Text("Next")
+                Text(if (bridgeOn) "Next" else "Continue without bridge")
             }
         }
     }
 }
 
 @Composable
-fun ConnectChoiceScreen(onScanQr: () -> Unit, onEnterIp: () -> Unit, onFindLocal: () -> Unit) {
-    Column(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+fun ConnectChoiceScreen(
+    onScanQr: () -> Unit,
+    onEnterIp: () -> Unit,
+    onFindLocal: () -> Unit,
+    onSkipForNow: () -> Unit,
+    onNeverAsk: () -> Unit,
+) {
+    Column(
+        modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
         GlassCard {
             Text("Pair Device", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                "Linking to your PC is optional. Stella runs fully on this device until you connect.",
+                color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.65f),
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                style = MaterialTheme.typography.bodySmall,
+            )
             Spacer(modifier = Modifier.height(24.dp))
             Button(onClick = onScanQr, modifier = Modifier.fillMaxWidth()) { Text("Scan QR Code") }
             Spacer(modifier = Modifier.height(12.dp))
             OutlinedButton(onClick = onFindLocal, modifier = Modifier.fillMaxWidth()) { Text("Auto Discover") }
             Spacer(modifier = Modifier.height(12.dp))
-            TextButton(onClick = onEnterIp) { Text("Enter IP Manually", color = androidx.compose.ui.graphics.Color.White) }
+            TextButton(onClick = onEnterIp, modifier = Modifier.fillMaxWidth()) { Text("Enter IP Manually", color = androidx.compose.ui.graphics.Color.White) }
+
+            Spacer(modifier = Modifier.height(24.dp))
+            HorizontalDivider(color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.12f))
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // "Skip for now" keeps the bridge armed for a later launch.
+            // "Not now" is the real exit: it also stops startup asking again.
+            Button(onClick = onSkipForNow, modifier = Modifier.fillMaxWidth()) {
+                Text("Skip for now - use Stella on this phone")
+            }
+            TextButton(onClick = onNeverAsk, modifier = Modifier.fillMaxWidth()) {
+                Text("Don't ask me at startup", color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.7f))
+            }
         }
     }
 }
@@ -607,6 +717,7 @@ private fun ConnectedScreen(
     onDisconnect: () -> Unit,
     onOpenPermissions: () -> Unit,
     onOpenChat: () -> Unit,
+    onOpenLocalModels: () -> Unit,
 ) {
     Column(
         modifier = Modifier.fillMaxSize().padding(24.dp).background(androidx.compose.ui.graphics.Color.Transparent).verticalScroll(rememberScrollState()),
@@ -657,6 +768,10 @@ private fun ConnectedScreen(
         
         Button(onClick = onDisconnect, modifier = Modifier.fillMaxWidth()) { Text("Disconnect") }
         Spacer(Modifier.height(12.dp))
+        FilledTonalButton(onClick = onOpenLocalModels, modifier = Modifier.fillMaxWidth()) {
+            Text("Local Model")
+        }
+        Spacer(Modifier.height(12.dp))
         OutlinedButton(
             onClick = onOpenPermissions, 
             modifier = Modifier.fillMaxWidth(),
@@ -673,6 +788,312 @@ private fun ConnectedScreen(
         logs.takeLast(8).forEach { line ->
             Text(line, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
+    }
+}
+
+/**
+ * Local model manager - the mobile counterpart of the desktop "Local AI"
+ * block, redesigned for a small screen: one action per full-width card.
+ *
+ * Three ways to get a running on-device model:
+ *   1. Already on the phone -> pick a .gguf from device storage and Stella
+ *      copies it in. No download, no network. This is what desktop had and
+ *      mobile was missing.
+ *   2. Download K2 Horizon  -> the one-tap pull (public, non-bundled build).
+ *   3. Remove               -> free the space back.
+ *
+ * Everything routes through K2Manager so llama-server picks the file up the
+ * same way however it arrived.
+ */
+@Composable
+private fun LocalModelsScreen(onBack: () -> Unit) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val k2Status by K2Manager.statusLine.collectAsState()
+    val progress by K2Manager.downloadProgress.collectAsState()
+    val present = remember { mutableStateOf(K2Manager.modelPresent(context)) }
+
+    LaunchedEffect(k2Status, progress) {
+        if (progress !in 0f..0.999f) present.value = K2Manager.modelPresent(context)
+    }
+
+    val picker = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            try {
+                context.contentResolver.takePersistableUriPermission(
+                    uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            } catch (_: Exception) {}
+            scope.launch {
+                val ok = K2Manager.importLocalModel(context, uri)
+                present.value = K2Manager.modelPresent(context)
+                if (ok) K2Manager.start(context)
+            }
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(20.dp)
+            .background(androidx.compose.ui.graphics.Color.Transparent)
+            .verticalScroll(rememberScrollState()),
+    ) {
+        Text(
+            "LOCAL MODEL",
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Black,
+            color = androidx.compose.ui.graphics.Color.White,
+        )
+        Spacer(Modifier.height(6.dp))
+        Text(
+            "Run Stella fully on this phone. Load a model you already have, or " +
+                "download one.",
+            style = MaterialTheme.typography.bodySmall,
+            color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.65f),
+        )
+        Spacer(Modifier.height(16.dp))
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.55f),
+                contentColor = androidx.compose.ui.graphics.Color.White,
+            ),
+            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)),
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Column(Modifier.padding(16.dp)) {
+                Text("Status", fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    when {
+                        progress in 0f..0.999f -> "Loading ${(progress * 100).toInt()}%"
+                        present.value -> "Model ready - on-device"
+                        K2Manager.bundled -> k2Status
+                        else -> "No model installed yet"
+                    },
+                    color = if (present.value) MaterialTheme.colorScheme.primary
+                    else androidx.compose.ui.graphics.Color.White.copy(alpha = 0.7f),
+                )
+                Text(
+                    if (K2Manager.bundled) "Build: on-device runtime bundled"
+                    else "Build: download runtime",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.45f),
+                )
+            }
+        }
+        Spacer(Modifier.height(16.dp))
+        if (progress in 0f..0.999f) {
+            LinearProgressIndicator(
+                progress = { progress.coerceIn(0f, 1f) },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(16.dp))
+        }
+        LocalModelsActions(
+            present = present.value,
+            progress = progress,
+            onPick = { picker.launch(arrayOf("*/*")) },
+            onDownload = {
+                scope.launch {
+                    if (K2Manager.prepare(context)) K2Manager.start(context)
+                    present.value = K2Manager.modelPresent(context)
+                }
+            },
+            onRemove = {
+                K2Manager.deleteLocalModel(context)
+                present.value = false
+            },
+        )
+        Spacer(Modifier.height(24.dp))
+        OutlinedButton(onClick = onBack, modifier = Modifier.fillMaxWidth()) {
+            Text("Back", color = androidx.compose.ui.graphics.Color.White)
+        }
+    }
+}
+
+
+@Composable
+private fun LocalModelsActions(
+    present: Boolean,
+    progress: Float,
+    onPick: () -> Unit,
+    onDownload: () -> Unit,
+    onRemove: () -> Unit,
+) {
+    val busy = progress in 0f..0.999f
+    Button(onClick = onPick, modifier = Modifier.fillMaxWidth(), enabled = !busy) {
+        Text("Load a model from this phone")
+    }
+    Spacer(Modifier.height(8.dp))
+    Text(
+        "Pick any .gguf file already on your device (Downloads, Files, SD " +
+            "card). Stella copies it in - nothing is uploaded.",
+        style = MaterialTheme.typography.labelSmall,
+        color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.5f),
+    )
+    Spacer(Modifier.height(20.dp))
+    if (!K2Manager.bundled) {
+        FilledTonalButton(
+            onClick = onDownload,
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !busy,
+        ) {
+            Text("Download K2 Horizon (~0.6 GB)")
+        }
+        Spacer(Modifier.height(20.dp))
+    }
+    OutlinedButton(
+        onClick = onRemove,
+        modifier = Modifier.fillMaxWidth(),
+        enabled = present && !busy,
+    ) {
+        Text("Remove local model")
+    }
+}
+
+
+/**
+ * Standalone home: what the user sees when they skipped / dismissed the PC
+ * bridge. Status card (K2 + bridge state), greeting, chat entry, settings
+ * entry, and a route back into pairing.
+ *
+ * On first entry we also seed a greeting into the chat history so opening
+ * "Stella Chat" feels alive instead of an empty thread. The guard is local
+ * to this composable (rememberSaveable): rotation won't double-post it.
+ */
+@Composable
+private fun StandaloneHomeScreen(
+    status: String,
+    onOpenChat: () -> Unit,
+    onOpenLocalModels: () -> Unit,
+    onOpenSettings: () -> Unit,
+    onPairPc: () -> Unit,
+) {
+    val context = LocalContext.current
+    val k2Mode by K2Manager.mode.collectAsState()
+    val k2Status by K2Manager.statusLine.collectAsState()
+    val k2Progress by K2Manager.downloadProgress.collectAsState()
+    var greeted by rememberSaveable { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        if (greeted) return@LaunchedEffect
+        greeted = true
+        if (K2Manager.bundled) {
+            if (K2Manager.modelPresent(context)) {
+                K2Manager.start(context)
+            } else {
+                kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+                    if (K2Manager.prepare(context)) K2Manager.start(context)
+                }
+            }
+        }
+        val welcomes = listOf(
+            "Hey, I'm Stella - running right here on your phone.",
+            "No PC needed. Ask me anything, or open Chat to talk.",
+        )
+        val now = java.util.UUID.randomUUID().toString()
+        AgentStateStore.addChatMessage(
+            ChatMessage(
+                id = "stella-hello-$now",
+                role = "assistant",
+                text = welcomes.joinToString(" "),
+                timestamp = System.currentTimeMillis(),
+                status = "sent",
+            )
+        )
+        AgentStateStore.addLog("Stella: standalone home shown (bridge skipped)")
+    }
+
+    val k2Line = when {
+        k2Progress in 0f..0.999f -> "K2 model downloading ${(k2Progress * 100).toInt()}%"
+        K2Manager.bundled && (k2Mode == "LOCAL") -> "K2 on-device ready"
+        K2Manager.bundled -> k2Status
+        else -> "On-device. No PC linked."
+    }
+
+    Column(
+        modifier = Modifier.fillMaxSize().padding(24.dp).verticalScroll(rememberScrollState()),
+    ) {
+        Text("STELLA", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, color = androidx.compose.ui.graphics.Color.White)
+        Spacer(Modifier.height(8.dp))
+        Text("● On this device", color = MaterialTheme.colorScheme.primary)
+        Spacer(Modifier.height(20.dp))
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.55f),
+                contentColor = androidx.compose.ui.graphics.Color.White
+            ),
+            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
+        ) {
+            Column(Modifier.padding(16.dp)) {
+                Text("Running on this phone", fontWeight = FontWeight.Bold)
+                Text(k2Line)
+                Text(status)
+            }
+        }
+        Spacer(Modifier.height(16.dp))
+        if (k2Progress in 0f..0.999f) {
+            LinearProgressIndicator(
+                progress = { k2Progress.coerceIn(0f, 1f) },
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(16.dp))
+        }
+
+        Card(
+            onClick = onOpenChat,
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                contentColor = MaterialTheme.colorScheme.primary
+            ),
+            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.4f))
+        ) {
+            Row(
+                modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text("Stella Chat", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                    Spacer(Modifier.height(4.dp))
+                    Text(
+                        "Talk to Stella on this phone",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                    )
+                }
+                Icon(
+                    imageVector = androidx.compose.material.icons.Icons.Default.Send,
+                    contentDescription = "Open Chat",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+        Spacer(Modifier.height(16.dp))
+
+        Button(onClick = onPairPc, modifier = Modifier.fillMaxWidth()) { Text("Link to my PC") }
+        Spacer(Modifier.height(12.dp))
+        FilledTonalButton(onClick = onOpenLocalModels, modifier = Modifier.fillMaxWidth()) {
+            Text("Local Model")
+        }
+        Spacer(Modifier.height(12.dp))
+        OutlinedButton(
+            onClick = onOpenSettings,
+            modifier = Modifier.fillMaxWidth(),
+            colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
+                containerColor = androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.5f),
+                contentColor = androidx.compose.ui.graphics.Color.White
+            )
+        ) {
+            Text("Permissions", color = androidx.compose.ui.graphics.Color.White)
+        }
+        Spacer(Modifier.height(20.dp))
+        Text("Recent Logs", fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(8.dp))
     }
 }
 

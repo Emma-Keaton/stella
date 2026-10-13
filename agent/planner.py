@@ -404,30 +404,27 @@ def _rewrite_generated_step(step: dict, goal: str) -> None:
 
 
 def create_plan(goal: str, context: str = "") -> dict:
-    import google.generativeai as genai
+    from core.gemini_optional import first_available
 
-    genai.configure(api_key=_get_api_key())
     system_prompt = _planner_system_prompt()
     candidates = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-3.1-flash-lite", "gemini-flash-latest"]
-    
+
     user_input = f"Goal: {goal}"
     if context:
         user_input += f"\n\nContext: {context}"
 
+    model, model_name = first_available(candidates, system_prompt)
+    if model is None:
+        print("[Planner] No cloud planner available - using fallback plan")
+        return _fallback_plan(goal)
+
     text = None
-    for model_name in candidates:
-        try:
-            model = genai.GenerativeModel(
-                model_name=model_name,
-                system_instruction=system_prompt
-            )
-            response = model.generate_content(user_input)
-            if response.text:
-                text = response.text.strip()
-                break
-        except Exception as e:
-            print(f"[Planner] ⚠️ {model_name} planning error: {e}")
-            continue
+    try:
+        response = model.generate_content(user_input)
+        if response.text:
+            text = response.text.strip()
+    except Exception as e:
+        print(f"[Planner] {model_name} planning error: {e}")
 
     if not text:
         return _fallback_plan(goal)
@@ -486,9 +483,8 @@ def _fallback_plan(goal: str) -> dict:
 
 
 def replan(goal: str, completed_steps: list, failed_step: dict, error: str) -> dict:
-    import google.generativeai as genai
+    from core.gemini_optional import first_available
 
-    genai.configure(api_key=_get_api_key())
     system_prompt = _planner_system_prompt()
     candidates = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-3.1-flash-lite", "gemini-flash-latest"]
 
@@ -501,37 +497,35 @@ def replan(goal: str, completed_steps: list, failed_step: dict, error: str) -> d
 Already completed:
 {completed_summary if completed_summary else '  (none)'}
 
-Failed step: [{failed_step.get('tool')}] {failed_step.get('description')}
+Failed step: [{failed_step.get('tool')}] {failed_step.get('description')}]
 Error: {error}
 
 Create a REVISED plan for the remaining work only. Do not repeat completed steps."""
 
+    model, model_name = first_available(candidates, system_prompt)
+    if model is None:
+        print("[Planner] No cloud model available - using fallback plan")
+        return _fallback_plan(goal)
+
     text = None
-    for model_name in candidates:
-        try:
-            model = genai.GenerativeModel(
-                model_name=model_name,
-                system_instruction=system_prompt
-            )
-            response = model.generate_content(prompt)
-            if response.text:
-                text = response.text.strip()
-                break
-        except Exception as e:
-            print(f"[Planner] ⚠️ {model_name} replan error: {e}")
-            continue
+    try:
+        response = model.generate_content(prompt)
+        if response.text:
+            text = response.text.strip()
+    except Exception as e:
+        print(f"[Planner] {model_name} replan error: {e}")
 
     try:
         if not text:
-            raise ValueError("All models failed during replanning")
+            raise ValueError("replanning produced no text")
         text = re.sub(r"```(?:json)?", "", text).strip().rstrip("`").strip()
         plan = json.loads(text)
 
         for step in plan.get("steps", []):
             _rewrite_generated_step(step, goal)
 
-        print(f"[Planner] 🔄 Revised plan: {len(plan['steps'])} steps")
+        print(f"[Planner] Revised plan: {len(plan['steps'])} steps")
         return plan
     except Exception as e:
-        print(f"[Planner] ⚠️ Replan failed: {e}")
+        print(f"[Planner] Replan failed: {e}")
         return _fallback_plan(goal)

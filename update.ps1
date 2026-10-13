@@ -1,4 +1,4 @@
-# update.ps1 — update an installed Stella to the latest published version.
+﻿# update.ps1 â€” update an installed Stella to the latest published version.
 # Uses scripts/stella_update.py (manifest-driven, resumable, SHA-256 verified).
 #
 #   .\update.ps1              # check + update if newer
@@ -23,3 +23,4 @@ $call += $Rest
 
 & $py "scripts\stella_update.py" @call
 exit $LASTEXITCODE
+
