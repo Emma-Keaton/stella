@@ -15566,18 +15566,33 @@ class StellaUI:
                 return
         except Exception:
             pass
-        greeting = (
-            "Welcome to Stella. I'm online and ready. "
-            "Use the prompt box below to type, attach files, or hit Voice to speak - "
-            "or jump straight into Dashboard, Devices and Settings from the nav above. "
-            "How can I help?"
-        )
+        try:
+            from core import intro
+            name = intro.owner_name() or None
+            greeting = intro.build_greeting(name)
+            first_run = intro.is_first_run()
+        except Exception:
+            greeting = (
+                "Welcome to Stella. I'm online and ready. "
+                "Use the prompt box below to type, attach files, or hit Voice to speak - "
+                "or jump straight into Dashboard, Devices and Settings from the nav above. "
+                "How can I help?"
+            )
+            first_run = False
+        # On first run, append the onboarding ask (name + voice) to the card.
+        card_summary = greeting
+        if first_run:
+            try:
+                from core import intro as _intro
+                card_summary = greeting + "\n\n" + _intro.build_intro_questions()
+            except Exception:
+                pass
         # Card shows the greeting immediately; the live chat reply streams it
         # token-by-token so it animates in like a normal response.
         try:
             self._win._hud_deliverable_sig.emit({
                 "title": "STELLA ONLINE",
-                "summary": greeting,
+                "summary": card_summary,
                 "bullets": [],
                 "kind": "greeting",
                 "actions": [],
@@ -15587,7 +15602,7 @@ class StellaUI:
             pass
         # Stream the same text into the live reply bubble for the animated effect.
         try:
-            for word in greeting.split(" "):
+            for word in card_summary.split(" "):
                 self.stream_reply_chunk(word + " ")
         except Exception:
             pass
@@ -16015,6 +16030,29 @@ class StellaUI:
             self._toggle_workspace_on_startup(not current)
 
     def _submit_command(self, text: str):
+        # First-run onboarding: capture the user's name (and optional voice)
+        # from their first message so Stella can address them personally from
+        # then on. The message is consumed by onboarding, not sent as a query.
+        try:
+            from core import intro
+            if intro.is_first_run():
+                name = (text or "").strip()
+                if name:
+                    # A trailing "my name is X" / "call me X" is common; strip it.
+                    low = name.lower()
+                    for prefix in ("my name is ", "call me ", "i'm ", "i am ", "this is "):
+                        if low.startswith(prefix):
+                            name = name[len(prefix):].strip()
+                            break
+                    thanks = intro.complete_intro(name)
+                    try:
+                        for word in thanks.split(" "):
+                            self.stream_reply_chunk(word + " ")
+                    except Exception:
+                        pass
+                    return
+        except Exception:
+            pass
         self._win.submit_command(text)
 
     def _browse_attachment(self):

@@ -351,8 +351,48 @@ def _cleanup_current_audio() -> None:
         _current_audio_path = None
 
 
+def _speak_powershell_sapi(text: str, prefer_female: bool = True) -> None:
+    """Offline speech via the Windows .NET SpeechSynthesizer (no pip deps).
+
+    Every modern Windows box ships System.Speech, so this works with zero
+    third-party packages — the reliable offline voice when neither Piper,
+    Edge TTS, nor pywin32/SAPI-COM are available. Fire-and-forget; the
+    subprocess speaks and exits.
+    """
+    text = (text or "").strip()
+    if not text:
+        return
+    if os.name != "nt":
+        return
+    # Single-quote the text for PowerShell; double any embedded single quotes.
+    safe = text.replace("'", "''")
+    ps = (
+        "Add-Type -AssemblyName System.Speech; "
+        "$s = New-Object System.Speech.Synthesis.SpeechSynthesizer; "
+        "try { $v = $s.GetInstalledVoices() | Where-Object { $_.Enabled } | "
+        "ForEach-Object { $_.VoiceInfo }; "
+        + ("$pick = $v | Where-Object { $_.Name -match 'Zira|Eva|Linda|Jenny|Aria|Female' } | Select-Object -First 1; " if prefer_female else "$pick = $null; ")
+        + "if ($pick) { $s.SelectVoice($pick.Name) }; "
+        "} catch {}; "
+        f"$s.Speak('{safe}')"
+    )
+    try:
+        flags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
+        subprocess.Popen(
+            ["powershell", "-NoProfile", "-NonInteractive", "-Command", ps],
+            creationflags=flags,
+        )
+    except Exception as exc:  # pragma: no cover
+        print(f"[AttentionMonitor] PowerShell SAPI failed: {exc}")
+
+
 def _speak_sapi_male(text: str) -> None:
-    """Speaks using an offline native Windows male voice (Microsoft George / David)."""
+    """Speaks using an offline native Windows voice.
+
+    Prefers pywin32 SAPI-COM when present (richer voice selection); otherwise
+    falls back to the built-in .NET SpeechSynthesizer, which needs no
+    third-party packages and therefore always works offline on Windows.
+    """
     try:
         import win32com.client
         import pythoncom
@@ -389,7 +429,9 @@ def _speak_sapi_male(text: str) -> None:
 
         v.Speak(text)
     except Exception as exc:
-        print(f"[AttentionMonitor] Offline male speech failed: {exc}")
+        print(f"[AttentionMonitor] Offline male speech failed: {exc}. "
+              f"Using .NET SpeechSynthesizer fallback.")
+        _speak_powershell_sapi(text, prefer_female=True)
 
 
 _speak_lock = threading.Lock()
