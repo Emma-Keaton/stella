@@ -7,6 +7,7 @@
 # pycaw/comtypes and (worse, via `|| true`) silently producing a broken bundle.
 
 sounddevice
+SpeechRecognition
 google-genai
 google-generativeai
 pillow

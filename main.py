@@ -5000,13 +5000,26 @@ class StellaLive:
                                 if len(captured) > (SEND_SAMPLE_RATE * 2 * 0.5):
                                     def _process_local_speech(pcm_bytes):
                                         try:
-                                            import speech_recognition as sr
-                                            r = sr.Recognizer()
-                                            audio_data = sr.AudioData(pcm_bytes, SEND_SAMPLE_RATE, 2)
-                                            text_cmd = r.recognize_google(audio_data)
+                                            # One resilient entry point: cloud STT when
+                                            # online, offline command match otherwise.
+                                            from core import stt
+                                            res = stt.transcribe(
+                                                pcm_bytes,
+                                                sample_rate=SEND_SAMPLE_RATE,
+                                                sample_width=2,
+                                                allow_cloud=True,
+                                            )
+                                            text_cmd = res.get("text")
                                             if text_cmd and len(text_cmd.strip()) > 1:
-                                                print(f"[Local AI Voice] ðŸŽ™ï¸ Heard: {text_cmd}")
+                                                print(f"[Local AI Voice] Heard ({res.get('engine')}): {text_cmd}")
                                                 self._on_text_command(text_cmd, source="mic")
+                                            elif res.get("engine") == "none":
+                                                # Heard audio but can't transcribe it
+                                                # (offline, no model). Tell the user once.
+                                                try:
+                                                    self.ui.write_log("SYS: " + stt.offline_notice())
+                                                except Exception:
+                                                    pass
                                         except Exception:
                                             pass
                                     threading.Thread(target=_process_local_speech, args=(captured,), daemon=True).start()
