@@ -59,9 +59,9 @@ fun ChatScreen(
             CenterAlignedTopAppBar(
                 title = { 
                     Text(
-                        "Stella Agent", 
+                        "Stella", 
                         color = Color.White, 
-                        fontWeight = FontWeight.Bold,
+                        fontWeight = FontWeight.Black,
                         style = MaterialTheme.typography.titleLarge
                     ) 
                 },
@@ -172,7 +172,7 @@ fun ChatMessageBubble(message: ChatMessage) {
                     .border(1.dp, Color.White.copy(alpha = 0.2f), CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                Text("B", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text("S", color = Color.Black, fontWeight = FontWeight.Black, fontSize = 18.sp)
             }
             Spacer(modifier = Modifier.width(8.dp))
         }
