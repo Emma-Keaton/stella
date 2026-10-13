@@ -2,6 +2,7 @@ package com.stella.connect.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -11,7 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -30,17 +31,43 @@ import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChatScreen(
-    onBack: () -> Unit,
-    onSendMessage: (String) -> Unit
+    onSendMessage: (String) -> Unit,
+    bottomInset: androidx.compose.ui.unit.Dp = 0.dp,
 ) {
     val chatHistory by AgentStateStore.chatHistory.collectAsState()
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     var inputText by remember { mutableStateOf("") }
+    var attached by remember { mutableStateOf("") }
+
+    // Attach button opens the system document picker (any image/doc), so the
+    // user can hand Stella a file for context without leaving the chat.
+    val attachLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) {
+            val name = uri.lastPathSegment?.substringAfterLast('/') ?: "attached file"
+            attached = name
+        }
+    }
+
+    // One send path for both the keyboard action and the send button. If a file
+    // is attached, its name rides along as context for Stella.
+    val submit: () -> Unit = {
+        val typed = inputText.trim()
+        if (typed.isNotEmpty()) {
+            val payload = if (attached.isNotEmpty()) "$typed\n[attached: $attached]" else typed
+            onSendMessage(payload)
+            inputText = ""
+            attached = ""
+        }
+    }
 
     LaunchedEffect(chatHistory.size) {
         if (chatHistory.isNotEmpty()) {
@@ -55,8 +82,10 @@ fun ChatScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Color.Black.copy(alpha = 0.7f))
+                .padding(bottom = bottomInset)
         ) {
-            // Top Bar
+            // Top Bar — brand only. No back button: chat is a root destination,
+            // reached from the bottom nav, so there is nothing to go back to.
             CenterAlignedTopAppBar(
                 title = { 
                     Text(
@@ -65,11 +94,6 @@ fun ChatScreen(
                         fontWeight = FontWeight.Black,
                         style = MaterialTheme.typography.titleLarge
                     ) 
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
-                    }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = Color.Transparent,
@@ -100,11 +124,58 @@ fun ChatScreen(
                     .padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                OutlinedTextField(
+                // Attach button — pick a file/image for context + instructions.
+                IconButton(
+                    onClick = { attachLauncher.launch(arrayOf("*/*")) },
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF1A1A1A))
+                ) {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = "Attach file",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Column(modifier = Modifier.weight(1f)) {
+                    // Attachment chip — shows the picked file, tap X to drop it.
+                    if (attached.isNotEmpty()) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .padding(bottom = 4.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
+                                .padding(horizontal = 8.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                "\uD83D\uDCCE $attached",
+                                color = MaterialTheme.colorScheme.primary,
+                                fontSize = 12.sp
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                "\u2715",
+                                color = Color.White.copy(alpha = 0.6f),
+                                fontSize = 12.sp,
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .background(Color.White.copy(alpha = 0.08f))
+                                    .clickable { attached = "" }
+                                    .padding(2.dp)
+                            )
+                        }
+                    }
+                    OutlinedTextField(
                     value = inputText,
                     onValueChange = { inputText = it },
                     modifier = Modifier
-                        .weight(1f)
+                        .fillMaxWidth()
                         .clip(RoundedCornerShape(24.dp))
                         .background(Color(0xFF1A1A1A)),
                     placeholder = { Text("Message Stella...", color = Color.Gray) },
@@ -118,24 +189,15 @@ fun ChatScreen(
                         unfocusedContainerColor = Color.Transparent
                     ),
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                    keyboardActions = KeyboardActions(onSend = {
-                        if (inputText.isNotBlank()) {
-                            onSendMessage(inputText)
-                            inputText = ""
-                        }
-                    }),
+                    keyboardActions = KeyboardActions(onSend = { submit() }),
                     maxLines = 4
                 )
+                }
                 
                 Spacer(modifier = Modifier.width(8.dp))
                 
                 IconButton(
-                    onClick = {
-                        if (inputText.isNotBlank()) {
-                            onSendMessage(inputText)
-                            inputText = ""
-                        }
-                    },
+                    onClick = submit,
                     modifier = Modifier
                         .size(48.dp)
                         .clip(CircleShape)

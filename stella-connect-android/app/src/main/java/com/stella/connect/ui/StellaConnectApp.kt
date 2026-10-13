@@ -88,8 +88,15 @@ import androidx.compose.animation.core.*
 import androidx.compose.material3.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.navigation.compose.currentBackStackEntryAsState
 
 
 
@@ -154,6 +161,13 @@ fun StellaConnectApp(
     }
 
     val navController = rememberNavController()
+    // Track the current destination so the bottom nav knows what to highlight
+    // and only shows on the main (root) screens.
+    val currentBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = currentBackStackEntry?.destination?.route
+    val navBarHeight = 64.dp
+    val mainRoutes = setOf("chat", "local_models")
+    val showBottomNav = currentRoute in mainRoutes
 
     // The PC bridge is a setting, not a build flag: available in both
     // variants, on by default only for the personal K2 build.
@@ -355,18 +369,56 @@ fun StellaConnectApp(
             }
             composable("chat") {
                 ChatScreen(
-                    onBack = { navController.popBackStack() },
                     onSendMessage = { text ->
                         val intent = Intent(context, StellaConnectForegroundService::class.java).apply {
                             action = StellaConnectForegroundService.ACTION_SEND_CHAT
                             putExtra(StellaConnectForegroundService.EXTRA_CHAT_TEXT, text)
                         }
                         context.startService(intent)
-                    }
+                    },
+                    bottomInset = if (showBottomNav) navBarHeight else 0.dp
                 )
             composable("local_models") {
                 LocalModelsScreen(onBack = { navController.popBackStack() })
             }
+            }
+        }
+
+        // Bottom nav — the single way to move between the main screens. The
+        // prompt box in Chat/Models lifts itself above this bar via bottomInset.
+        if (showBottomNav) {
+            NavigationBar(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .height(navBarHeight),
+                containerColor = androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.92f),
+                tonalElevation = 0.dp
+            ) {
+                NavigationBarItem(
+                    selected = currentRoute == "chat" || currentRoute == "home",
+                    onClick = { navController.navigate("chat") { popUpTo(0) { saveState = true }; launchSingleTop = true; restoreState = true } },
+                    icon = { Icon(Icons.Default.Send, contentDescription = "Chat") },
+                    label = { Text("Chat") }
+                )
+                NavigationBarItem(
+                    selected = currentRoute == "local_models",
+                    onClick = { navController.navigate("local_models") { popUpTo(0) { saveState = true }; launchSingleTop = true; restoreState = true } },
+                    icon = { Icon(Icons.Default.List, contentDescription = "Models") },
+                    label = { Text("Models") }
+                )
+                NavigationBarItem(
+                    selected = false,
+                    onClick = {
+                        val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                            data = Uri.fromParts("package", context.packageName, null)
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        context.startActivity(intent)
+                    },
+                    icon = { Icon(Icons.Default.Settings, contentDescription = "Settings") },
+                    label = { Text("Settings") }
+                )
             }
         }
     }
