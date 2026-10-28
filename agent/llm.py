@@ -14,6 +14,8 @@ import urllib.request
 from dataclasses import dataclass, field
 from typing import Any
 
+from core.model_ladder import ModelLadder, DEFAULT_LADDER
+
 SYSTEM_PREAMBLE = (
     "You are Stella, an autonomous assistant running on the user's own machine.\n"
     "Work the problem rather than describing how you would solve it.\n\n"
@@ -137,20 +139,34 @@ class Backend:
 
     Order matters: local K2 first (free, private, offline), then the hosted
     providers. `candidates` is built once at construction.
+
+    The ModelLadder wraps this with per-rung cooldowns: a failed backend is
+    locked out for its cooldown period, and the ladder picks the lowest-tier
+    available model. Honesty: a model in cooldown is never silently retried.
     """
 
     def __init__(self, backends: list[LLM]) -> None:
-        self.backends = backends
-        self.active: LLM | None = None
+        self._backends: list[LLM] = list(backends)
+        self._active: LLM | None = None
+        self._ladder = ModelLadder.from_config()
 
     def resolve(self) -> LLM | None:
-        if self.active is not None and self.active.available():
-            return self.active
-        for backend in self.backends:
-            if backend.available():
-                self.active = backend
-                return backend
-        self.active = None
+        """Pick the best available model via the ModelLadder.
+
+        Falls back to first-available if the ladder has no available rungs.
+        """
+        pick = self._ladder.pick()
+        if pick is not None:
+            for b in self._backends:
+                if b.name == pick.name and b.available():
+                    self._active = b
+                    return b
+        # Fallback: first available backend (ladder has nothing available)
+        for b in self._backends:
+            if b.available():
+                self._active = b
+                return b
+        self._active = None
         return None
 
     def chat(self, messages: list[dict], tools: list[dict] | None = None,
@@ -161,7 +177,12 @@ class Backend:
                 error="no LLM backend is reachable (local K2 is down and no "
                       "hosted provider is configured)"
             )
-        return backend.chat(messages, tools, **kw)
+        result = backend.chat(messages, tools, **kw)
+        if result.ok:
+            self._ladder.report_success(backend.name)
+        else:
+            self._ladder.report_failure(backend.name)
+        return result
 
 
 class CloudLLM:

@@ -1,0 +1,44 @@
+# Social Monitor Workflow — "Read social for you"
+#
+# Inspired by Grok Bot Workflow 1: "Grok Bot reads X for you"
+# Read-only monitoring of social accounts, topics, and hashtags.
+# Does NOT post — read-only, like Grok Bot's X reader.
+#
+# Usage: stella execute workflow social_monitor --query "AI news" --platforms x,linkedin --limit 10
+
+name: social_monitor
+description: Read-only social media monitoring — scan accounts, topics, and hashtags across platforms. Read-only, never posts.
+category: social
+version: 1.0.0
+
+steps:
+  - id: monitor_query
+    skill: social
+    operation: monitor
+    parameters:
+      query: "{{query}}"
+      platforms: "{{platforms}}"
+      limit: "{{limit}}"
+
+  - id: format_results
+    skill: writing
+    operation: document
+    parameters:
+      title: "Social Monitor: {{query}}"
+      sections:
+        - heading: "Query"
+          body: "{{query}}"
+        - heading: "Platforms"
+          body: "{{platforms}}"
+        - heading: "Mode"
+          body: "read-only (no posts made)"
+      include_conclusion: true
+
+outputs:
+  - monitor_query
+  - format_results
+
+schedule:
+  # Optional: run on a schedule
+  # cron: "0 9 * * *"  # Every day at 9 AM
+  enabled: false

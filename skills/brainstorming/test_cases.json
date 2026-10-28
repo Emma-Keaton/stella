@@ -1,0 +1,56 @@
+{
+    "name": "brainstorming",
+    "version": "1.0.0",
+    "test_cases": [
+        {
+            "name": "sources",
+            "operation": "sources",
+            "expect_ok": true,
+            "expect_keys": ["source", "dependencies", "note"]
+        },
+        {
+            "name": "explore without topic",
+            "operation": "explore",
+            "expect_ok": false
+        },
+        {
+            "name": "explore with topic",
+            "operation": "explore",
+            "topic": "a new chat feature",
+            "expect_ok": true,
+            "expect_keys": ["topic", "first_step", "hard_gate"]
+        },
+        {
+            "name": "questions",
+            "operation": "questions",
+            "topic": "a new chat feature",
+            "expect_ok": true,
+            "expect_keys": ["topic", "questions", "count"]
+        },
+        {
+            "name": "approaches",
+            "operation": "approaches",
+            "topic": "a new chat feature",
+            "expect_ok": true,
+            "expect_keys": ["topic", "approaches", "count"]
+        },
+        {
+            "name": "design",
+            "operation": "design",
+            "topic": "a new chat feature",
+            "expect_ok": true,
+            "expect_keys": ["topic", "sections", "note"]
+        },
+        {
+            "name": "checklist",
+            "operation": "checklist",
+            "expect_ok": true,
+            "expect_keys": ["checklist", "count", "hard_gate"]
+        },
+        {
+            "name": "unknown operation",
+            "operation": "frobnicate",
+            "expect_ok": false
+        }
+    ]
+}

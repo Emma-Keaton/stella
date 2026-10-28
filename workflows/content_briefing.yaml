@@ -1,0 +1,59 @@
+# Content Briefing Workflow — "Your own local newsletter"
+#
+# Inspired by Grok Bot Workflow 3: "Your own local newsletter"
+# Scans social platforms + web for a topic, writes a briefing, and sends to
+# multiple destinations (like Google Docs, Slack, email, Notion).
+#
+# Usage: stella execute workflow content_briefing --topic "AI news" --area "global" --interests "technology,AI" --destinations "slack,email"
+
+name: content_briefing
+description: Scan social + web for a topic, write a briefing, and send to multiple destinations. Modeled on Grok Bot's local newsletter.
+category: content
+version: 1.0.0
+
+steps:
+  - id: scan_social
+    skill: social
+    operation: monitor
+    parameters:
+      query: "{{topic}} {{interests}}"
+      platforms: "x,linkedin"
+      limit: 10
+
+  - id: write_briefing
+    skill: writing
+    operation: document
+    parameters:
+      title: "Briefing: {{topic}} — {{date}}"
+      tone: "professional"
+      audience: "general reader"
+      sections:
+        - heading: "Topic"
+          body: "{{topic}}"
+        - heading: "Area"
+          body: "{{area}}"
+        - heading: "Interests"
+          body: "{{interests}}"
+        - heading: "Summary"
+          body: "Briefing generated from social monitoring of {{topic}} across platforms."
+      include_conclusion: true
+
+  - id: send_destinations
+    skill: writing
+    operation: email
+    parameters:
+      to: "{{email}}"
+      subject: "Briefing: {{topic}} — {{date}}"
+      body: "See attached briefing for {{topic}} generated on {{date}}."
+      tone: "professional"
+      purpose: "briefing"
+
+outputs:
+  - scan_social
+  - write_briefing
+  - send_destinations
+
+schedule:
+  # Example: every morning at 7 AM
+  # cron: "0 7 * * *"
+  enabled: false

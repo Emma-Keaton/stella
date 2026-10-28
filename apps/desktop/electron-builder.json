@@ -1,0 +1,20 @@
+{
+  "appId": "com.stella.desktop",
+  "productName": "Stella",
+  "directories": {
+    "output": "release"
+  },
+  "files": [
+    "src/**/*",
+    "package.json"
+  ],
+  "mac": {
+    "target": "dmg"
+  },
+  "win": {
+    "target": "nsis"
+  },
+  "linux": {
+    "target": "AppImage"
+  }
+}

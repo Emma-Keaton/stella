@@ -1,6 +1,0 @@
-qt.multimedia.plugin: Qt Multimedia requires a QCoreApplication instance
-qt.multimedia.ffmpeg: Using Qt multimedia with FFmpeg version 7.1.5 LGPL version 2.1 or later
-qt.core.qobject.connect: QObject::connect(QObject, Unknown): invalid nullptr parameter
-qt.core.qobject.connect: QObject::connect(QObject, Unknown): invalid nullptr parameter
-qt.core.qobject.connect: QObject::connect(QObject, Unknown): invalid nullptr parameter
-QWaitCondition: Destroyed while threads are still waiting

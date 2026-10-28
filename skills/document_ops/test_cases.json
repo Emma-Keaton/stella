@@ -1,0 +1,34 @@
+{
+    "name": "document_ops",
+    "version": "1.0.0",
+    "test_cases": [
+        {
+            "name": "sources",
+            "operation": "sources",
+            "expect_ok": true,
+            "expect_keys": ["library", "available", "operations"]
+        },
+        {
+            "name": "create without authorized",
+            "operation": "create",
+            "path": "test.docx",
+            "expect_ok": false
+        },
+        {
+            "name": "read missing path",
+            "operation": "read",
+            "expect_ok": false
+        },
+        {
+            "name": "read nonexistent file",
+            "operation": "read",
+            "path": "nonexistent.docx",
+            "expect_ok": false
+        },
+        {
+            "name": "unknown operation",
+            "operation": "frobnicate",
+            "expect_ok": false
+        }
+    ]
+}

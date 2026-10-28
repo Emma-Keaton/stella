@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from ._imports import *
 from .common import *
+from .chat import TaskCard, ConversationFeed
 
 from workspace_store import store as workspace_store
 
@@ -180,6 +181,12 @@ class WorkspaceSidebar(QWidget):
         self._tree.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self._tree.customContextMenuRequested.connect(self._show_context_menu)
         content.addWidget(self._tree, 1)
+
+        self._feed = ConversationFeed(self)
+        content.addWidget(self._feed)
+
+        self._memory_items = None
+        self._memory_frame = None
 
         root.addWidget(self._content, stretch=1)
 
@@ -490,8 +497,10 @@ class WorkspaceSidebar(QWidget):
         self._memory_frame.show()
 
     def _hide_memory_banner(self):
-        self._memory_items.setText("")
-        self._memory_frame.hide()
+        if hasattr(self, '_memory_items') and self._memory_items:
+            self._memory_items.setText("")
+        if hasattr(self, '_memory_frame') and self._memory_frame:
+            self._memory_frame.hide()
 
     def _build_chat_tab(self) -> QWidget:
         page = QWidget()
@@ -821,6 +830,26 @@ class InlineChatWorkspace(QFrame):
         voice_signals().voice_activated_changed.connect(self._on_voice_activated_changed)
         voice_signals().mic_allowed_changed.connect(self._on_mic_allowed_changed)
         voice_signals().audio_level.connect(self._on_audio_level)
+
+    def apply_task_workspace(self, event: object):
+        data = event if isinstance(event, dict) else {}
+        action = (data.get("action") or "update").strip().lower()
+        if action == "start":
+            command = data.get("command") or ""
+            plan = data.get("plan") or []
+            self._task_card.show()
+            self._task_card.start_workspace(command, plan, data.get("source") or "local")
+        elif action == "update":
+            self._task_card.show()
+            self._task_card.update_workspace(
+                data.get("plan") or [],
+                data.get("step", ""),
+                data.get("status", ""),
+                data.get("note", "")
+            )
+        elif action == "complete":
+            self._task_card.show()
+            self._task_card.complete_workspace(data.get("result", ""))
 
     def _on_voice_activated_changed(self, active: bool):
         self._voice_lbl.setVisible(active)

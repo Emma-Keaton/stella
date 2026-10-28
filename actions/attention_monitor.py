@@ -13,22 +13,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 import xml.etree.ElementTree as ET
-import ctypes
-from ctypes import wintypes
 import subprocess
 
-
-import pyautogui
 
 try:
     import psutil
 except Exception:  # pragma: no cover
     psutil = None
-
-try:
-    from pywinauto import Desktop
-except Exception:  # pragma: no cover
-    Desktop = None
 
 
 _APP_ALIASES: dict[str, tuple[str, ...]] = {
@@ -177,605 +168,286 @@ def _proc_name(pid: int | None) -> str:
 
 
 def _match_app(text: str, proc_name: str) -> str | None:
-    hay = f"{text} {proc_name}".lower()
-    for canonical, aliases in _APP_ALIASES.items():
-        if any(alias in hay for alias in aliases):
-            return canonical
+    hay = f"{text or ''} {proc_name or ''}".lower()
+    for app, aliases in _APP_ALIASES.items():
+        for alias in aliases:
+            if alias in hay:
+                return app.title()
     return None
 
 
-def _collect_text_snapshot(win, limit: int = 18) -> list[str]:
-    out: list[str] = []
-    try:
-        title = _norm(win.window_text())
-        if title:
-            out.append(title)
-    except Exception:
-        pass
-
-    try:
-        desc = win.descendants()
-    except Exception:
-        desc = []
-
-    for child in desc:
-        text = ""
-        for attr in ("window_text",):
-            try:
-                text = getattr(child, attr)() or ""
-            except Exception:
-                text = ""
-            if text:
-                break
-        if not text:
-            try:
-                text = getattr(getattr(child, "element_info", None), "name", "") or ""
-            except Exception:
-                text = ""
-        text = _norm(text)
-        if text and text not in out:
-            out.append(text)
-        if len(out) >= limit:
-            break
-
-    return out
+def _contains_any(hay: str, hints: tuple[str, ...]) -> bool:
+    return any(h in hay for h in hints)
 
 
-def _is_notification_shape(win) -> bool:
-    try:
-        rect = win.rectangle()
-        width = abs(rect.right - rect.left)
-        height = abs(rect.bottom - rect.top)
-        return width <= 720 and height <= 320
-    except Exception:
-        return False
+# ── Lazy-imported heavy deps (Mark-LVI pattern) ──
 
 
-def _contains_any(hay: str, needles: tuple[str, ...]) -> bool:
-    return any(needle in hay for needle in needles)
+def _ctypes_windll():
+    import ctypes
+    return ctypes.windll
 
 
-def _window_title(hwnd: int) -> str:
-    buf = ctypes.create_unicode_buffer(512)
-    try:
-        ctypes.windll.user32.GetWindowTextW(hwnd, buf, len(buf))
-    except Exception:
-        return ""
-    return _norm(buf.value)
+def _ctypes_create_unicode_buffer(size: int):
+    import ctypes
+    return ctypes.create_unicode_buffer(size)
 
 
-def _window_class(hwnd: int) -> str:
-    buf = ctypes.create_unicode_buffer(256)
-    try:
-        ctypes.windll.user32.GetClassNameW(hwnd, buf, len(buf))
-    except Exception:
-        return ""
-    return _norm(buf.value)
+def _ctypes_wintypes():
+    import ctypes
+    from ctypes import wintypes
+    return wintypes
 
 
-def _window_pid(hwnd: int) -> int:
-    pid = wintypes.DWORD()
-    try:
-        ctypes.windll.user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
-    except Exception:
-        return 0
-    return int(pid.value)
+def _pyautogui():
+    import pyautogui
+    return pyautogui
+
+
+def _desktop():
+    from pywinauto import Desktop
+    return Desktop
+
+
+# ── Window enumeration (ctypes, lazy) ──
 
 
 def _enum_visible_windows() -> list[dict]:
-    results: list[dict] = []
-    user32 = ctypes.windll.user32
+    """Enumerate visible windows using ctypes (lazy import)."""
+    user32 = _ctypes_windll().user32
+    wintypes = _ctypes_wintypes()
+
     enum_proc = ctypes.WINFUNCTYPE(ctypes.c_bool, wintypes.HWND, wintypes.LPARAM)
+
+    windows: list[dict] = []
 
     @enum_proc
     def callback(hwnd, lparam):
-        try:
-            if not user32.IsWindowVisible(hwnd):
-                return True
-            title = _window_title(hwnd)
-            if not title:
-                return True
-            results.append({
-                "hwnd": int(hwnd),
+        if user32.IsWindowVisible(hwnd):
+            buf = _ctypes_create_unicode_buffer(512)
+            user32.GetWindowTextW(hwnd, buf, len(buf))
+            title = buf.value
+
+            class_buf = _ctypes_create_unicode_buffer(256)
+            user32.GetClassNameW(hwnd, class_buf, len(class_buf))
+            cls = class_buf.value
+
+            pid = ctypes.c_ulong()
+            user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+
+            windows.append({
+                "hwnd": hwnd,
                 "title": title,
-                "class": _window_class(hwnd),
-                "pid": _window_pid(hwnd),
+                "class": cls,
+                "pid": pid.value,
+            })
+        return True
+
+    user32.EnumWindows(callback, 0)
+    return windows
+
+
+def _get_foreground_window_info() -> dict | None:
+    """Get the foreground window info using ctypes (lazy import)."""
+    user32 = _ctypes_windll().user32
+    hwnd = user32.GetForegroundWindow()
+    if not hwnd:
+        return None
+
+    buf = _ctypes_create_unicode_buffer(512)
+    user32.GetWindowTextW(hwnd, buf, len(buf))
+    title = buf.value
+
+    class_buf = _ctypes_create_unicode_buffer(256)
+    user32.GetClassNameW(hwnd, class_buf, len(class_buf))
+    cls = class_buf.value
+
+    pid = ctypes.c_ulong()
+    user32.GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
+
+    return {
+        "hwnd": hwnd,
+        "title": title,
+        "class": cls,
+        "pid": pid.value,
+    }
+
+
+# ── Media control (ctypes winmm, lazy) ──
+
+
+_CURRENT_PLAYER_ALIAS = "stella_media"
+
+
+def _media_stop() -> None:
+    import ctypes
+    ctypes.windll.winmm.mciSendStringW(f"stop {_CURRENT_PLAYER_ALIAS}", None, 0, None)
+
+
+def _media_close() -> None:
+    import ctypes
+    ctypes.windll.winmm.mciSendStringW(f"close {_CURRENT_PLAYER_ALIAS}", None, 0, None)
+
+
+# ── Desktop automation (pywinauto, lazy) ──
+
+
+def _enum_desktop_windows() -> list:
+    """Enumerate desktop windows using pywinauto (lazy import)."""
+    Desktop = _desktop()
+    if Desktop is None:
+        return []
+    desktop = Desktop(backend="uia")
+    results = []
+    for win in desktop.windows():
+        try:
+            results.append({
+                "title": win.window_text(),
+                "class": win.class_name(),
             })
         except Exception:
             pass
-        return True
-
-    try:
-        user32.EnumWindows(callback, 0)
-    except Exception:
-        pass
     return results
 
 
-def _extract_preview(lines: list[str], app: str) -> str:
-    cleaned: list[str] = []
-    app_l = app.lower()
-    for line in lines:
-        if not line:
-            continue
-        if line == app_l:
-            continue
-        if line in {"message", "notification", "new message"}:
-            continue
-        cleaned.append(line)
-    if not cleaned:
-        return ""
-    if len(cleaned) >= 2 and cleaned[0] in _APP_ALIASES:
-        cleaned = cleaned[1:]
-    return " ".join(cleaned[:3]).strip()
+# ── Key presses (pyautogui, lazy) ──
 
 
-_current_player_alias = None
-_current_audio_path = None
-_speech_sink: Callable[[str], None] | None = None
+def _press_key(key: str) -> None:
+    pyautogui = _pyautogui()
+    pyautogui.press(key)
 
 
-def set_speech_sink(sink: Callable[[str], None] | None) -> None:
-    global _speech_sink
-    _speech_sink = sink
+# ── Action registry (TOOL dict) ──
 
-_current_speech_proc: Optional[subprocess.Popen] = None
-
-
-def _cleanup_current_audio() -> None:
-    global _current_player_alias, _current_audio_path, _current_speech_proc
-    if _current_speech_proc is not None:
-        try:
-            _current_speech_proc.terminate()
-        except Exception:
-            pass
-        _current_speech_proc = None
-
-    if _current_player_alias is not None:
-        try:
-            ctypes.windll.winmm.mciSendStringW(f"stop {_current_player_alias}", None, 0, None)
-        except Exception:
-            pass
-        try:
-            ctypes.windll.winmm.mciSendStringW(f"close {_current_player_alias}", None, 0, None)
-        except Exception:
-            pass
-        _current_player_alias = None
-
-    if _current_audio_path is not None:
-        try:
-            if os.path.exists(_current_audio_path):
-                os.remove(_current_audio_path)
-        except Exception:
-            pass
-        _current_audio_path = None
-
-
-def _speak_powershell_sapi(text: str, prefer_female: bool = True) -> None:
-    """Offline speech via the Windows .NET SpeechSynthesizer (no pip deps).
-
-    Every modern Windows box ships System.Speech, so this works with zero
-    third-party packages — the reliable offline voice when neither Piper,
-    Edge TTS, nor pywin32/SAPI-COM are available. Fire-and-forget; the
-    subprocess speaks and exits.
-    """
-    text = (text or "").strip()
-    if not text:
-        return
-    if os.name != "nt":
-        return
-    # Single-quote the text for PowerShell; double any embedded single quotes.
-    safe = text.replace("'", "''")
-    ps = (
-        "Add-Type -AssemblyName System.Speech; "
-        "$s = New-Object System.Speech.Synthesis.SpeechSynthesizer; "
-        "try { $v = $s.GetInstalledVoices() | Where-Object { $_.Enabled } | "
-        "ForEach-Object { $_.VoiceInfo }; "
-        + ("$pick = $v | Where-Object { $_.Name -match 'Zira|Eva|Linda|Jenny|Aria|Female' } | Select-Object -First 1; " if prefer_female else "$pick = $null; ")
-        + "if ($pick) { $s.SelectVoice($pick.Name) }; "
-        "} catch {}; "
-        f"$s.Speak('{safe}')"
-    )
-    try:
-        flags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
-        subprocess.Popen(
-            ["powershell", "-NoProfile", "-NonInteractive", "-Command", ps],
-            creationflags=flags,
-        )
-    except Exception as exc:  # pragma: no cover
-        print(f"[AttentionMonitor] PowerShell SAPI failed: {exc}")
-
-
-def _speak_sapi_male(text: str) -> None:
-    """Speaks using an offline native Windows voice.
-
-    Prefers pywin32 SAPI-COM when present (richer voice selection); otherwise
-    falls back to the built-in .NET SpeechSynthesizer, which needs no
-    third-party packages and therefore always works offline on Windows.
-    """
-    try:
-        import win32com.client
-        import pythoncom
-        pythoncom.CoInitialize()
-        v = win32com.client.Dispatch("SAPI.SpVoice")
-        v.Volume = 100
-
-        # Prioritize Windows Speech OneCore male voices (e.g. George, David, Mark)
-        selected = False
-        try:
-            category = win32com.client.Dispatch("SAPI.SpObjectTokenCategory")
-            category.SetId(r"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Speech_OneCore\Voices")
-            tokens = category.EnumerateTokens()
-            for i in range(tokens.Count):
-                token = tokens.Item(i)
-                desc = token.GetDescription().lower()
-                if any(m in desc for m in ("george", "david", "mark", "male", "guy")):
-                    v.Voice = token
-                    selected = True
-                    break
-        except Exception:
-            pass
-
-        # Fallback to standard SAPI voices if OneCore not available
-        if not selected:
-            voices = v.GetVoices()
-            for i in range(voices.Count):
-                token = voices.Item(i)
-                desc = token.GetDescription().lower()
-                if any(m in desc for m in ("david", "george", "mark", "male")):
-                    v.Voice = token
-                    selected = True
-                    break
-
-        v.Speak(text)
-    except Exception as exc:
-        print(f"[AttentionMonitor] Offline male speech failed: {exc}. "
-              f"Using .NET SpeechSynthesizer fallback.")
-        _speak_powershell_sapi(text, prefer_female=True)
-
-
-_speak_lock = threading.Lock()
-
-
-def _speak_edge_native(text: str, force_edge: bool = False) -> None:
-    global _current_player_alias, _current_audio_path
-    text = (text or "").strip()
-    if not text:
-        return
-
-    # When entered fully local mode from settings, use the offline native male voice unless force_edge requested
-    if not force_edge:
-        try:
-            from memory import config_manager
-            cfg = config_manager.load_settings()
-            if cfg.get("offline_mode_enabled", False):
-                _speak_sapi_male(text)
-                return
-        except Exception:
-            pass
-
-    with _speak_lock:
-        voice = "en_US-lessac-medium"
-        try:
-            from memory import config_manager
-            cfg = config_manager.load_settings()
-            voice = cfg.get("tts_voice", "en_US-lessac-medium")
-        except Exception:
-            pass
-
-        voice_dir = Path(__file__).resolve().parent.parent / ".venv" / "piper" / "voices"
-        model_path = voice_dir / f"{voice}.onnx"
-        if not model_path.exists():
-            model_path = voice_dir / "en_US-lessac-medium.onnx"
-
-        if model_path.exists():
-            try:
-                import piper
-                _cleanup_current_audio()
-                audio_path = os.path.join(tempfile.gettempdir(), f"stella_piper_tts_{uuid.uuid4().hex}.wav")
-                with open(model_path, "rb") as mf:
-                    model = piper.PiperVoice.load(mf)
-                with open(audio_path, "wb") as af:
-                    model.synthesize(text, af)
-                _current_audio_path = audio_path
-                cmd = [
-                    "powershell", "-NoProfile", "-NonInteractive", "-Command",
-                    f"Add-Type -AssemblyName presentationCore; $p = New-Object System.Windows.Media.MediaPlayer; $p.Open([System.Uri]'{audio_path}'); $p.Play(); Start-Sleep -Milliseconds 400; while($p.NaturalDuration.HasTimeSpan -and $p.Position -lt $p.NaturalDuration.TimeSpan){{Start-Sleep -Milliseconds 80}}"
-                ]
-                flags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
-                _current_speech_proc = subprocess.Popen(cmd, creationflags=flags)
-                _current_speech_proc.wait()
-                _current_speech_proc = None
-                _cleanup_current_audio()
-                return
-            except Exception as exc:
-                print(f"[AttentionMonitor] Piper TTS failed: {exc}. Falling back to Edge TTS.")
-
-        try:
-            import edge_tts
-            _cleanup_current_audio()
-            audio_path = os.path.join(tempfile.gettempdir(), f"stella_edge_tts_{uuid.uuid4().hex}.mp3")
-            try:
-                communicator = edge_tts.Communicate(text, voice="en-US-GuyNeural")
-                communicator.save_sync(audio_path)
-            except Exception as exc:
-                print(f"[AttentionMonitor] Edge TTS generation failed: {exc}. Falling back to offline male voice.")
-                _cleanup_current_audio()
-                _speak_sapi_male(text)
-                return
-
-            _current_audio_path = audio_path
-            try:
-                cmd = [
-                    "powershell", "-NoProfile", "-NonInteractive", "-Command",
-                    f"Add-Type -AssemblyName presentationCore; $p = New-Object System.Windows.Media.MediaPlayer; $p.Open([System.Uri]'{audio_path}'); $p.Play(); Start-Sleep -Milliseconds 400; while($p.NaturalDuration.HasTimeSpan -and $p.Position -lt $p.NaturalDuration.TimeSpan){{Start-Sleep -Milliseconds 80}}"
-                ]
-                flags = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
-                _current_speech_proc = subprocess.Popen(cmd, creationflags=flags)
-                _current_speech_proc.wait()
-                _current_speech_proc = None
-            except Exception as exc:
-                print(f"[AttentionMonitor] MediaPlayer playback failed: {exc}. Falling back to offline male voice.")
-                _speak_sapi_male(text)
-            finally:
-                _cleanup_current_audio()
-            return
-        except ImportError:
-            print("[AttentionMonitor] Edge TTS not available. Falling back to offline male voice.")
-            _speak_sapi_male(text)
-
-
-
-_speech_sink = None
-
-
-def set_speech_sink(sink_fn) -> None:
-    global _speech_sink
-    _speech_sink = sink_fn
-
-
-def speak_native(text: str, force_edge: bool = False) -> None:
-    text = (text or "").strip()
-    if not text:
-        return
-    if _speech_sink is not None:
-        try:
-            _speech_sink(text)
-        except Exception:
-            _speak_edge_native(text, force_edge=force_edge)
-    else:
-        _speak_edge_native(text, force_edge=force_edge)
-
-
-def stop_native_speech() -> None:
-    _cleanup_current_audio()
-
-
-def _focus_window_by_app(app: str) -> bool:
-    if Desktop is None:
-        return False
-    try:
-        desktop = Desktop(backend="uia")
-        for win in desktop.windows():
-            title = _norm(win.window_text())
-            proc = _proc_name(getattr(win, "process_id", lambda: None)())
-            if _match_app(title, proc) == app:
-                try:
-                    win.set_focus()
-                except Exception:
-                    pass
-                try:
-                    win.restore()
-                except Exception:
-                    pass
-                return True
-    except Exception:
-        pass
-    return False
-
-
-def _click_best_button(app: str, action: str) -> bool:
-    if Desktop is None:
-        return False
-    hints = _ACCEPT_HINTS if action == "accept" else _DECLINE_HINTS
-    try:
-        desktop = Desktop(backend="uia")
-        for win in desktop.windows():
-            title = _norm(win.window_text())
-            proc = _proc_name(getattr(win, "process_id", lambda: None)())
-            if _match_app(title, proc) != app and app not in title:
-                continue
-            try:
-                for ctrl in win.descendants():
-                    try:
-                        text = _norm(ctrl.window_text() or getattr(getattr(ctrl, "element_info", None), "name", ""))
-                    except Exception:
-                        text = ""
-                    if text and _contains_any(text, hints):
-                        try:
-                            ctrl.click_input()
-                            return True
-                        except Exception:
-                            pass
-            except Exception:
-                pass
-    except Exception:
-        pass
-    return False
-
-
-def handle_call_action(event: dict, action: str) -> str:
-    app = _norm(event.get("app") or "")
-    if not app:
-        return "No app was detected for that call."
-
-    if action in {"pick_up", "answer", "accept"}:
-        if _click_best_button(app, "accept"):
-            return f"Picked up the call on {event.get('app', 'the app')}."
-        if _focus_window_by_app(app):
-            try:
-                pyautogui.press("enter")
-                return f"Tried to pick up the call on {event.get('app', 'the app')}."
-            except Exception:
-                pass
-        return f"I found the call on {event.get('app', 'the app')}, but could not confirm the answer button."
-
-    if action in {"ignore", "decline", "reject", "cut"}:
-        if _click_best_button(app, "decline"):
-            return f"Declined the call on {event.get('app', 'the app')}."
-        if _focus_window_by_app(app):
-            try:
-                pyautogui.press("esc")
-                return f"Tried to decline the call on {event.get('app', 'the app')}."
-            except Exception:
-                pass
-        return f"I found the call on {event.get('app', 'the app')}, but could not confirm the decline button."
-
-    return "Unknown call action."
-
-
-def read_event_preview(event: dict) -> str:
-    preview = (event.get("preview") or "").strip()
-    app = (event.get("app") or "the app").strip()
-    if preview:
-        return f"You received a message on {app}. {preview}"
-    return f"You received a message on {app}."
-
-
-@dataclass
-class _WindowState:
-    signature: str = ""
-    last_seen: float = 0.0
+TOOL = {
+    "name": "attention_monitor",
+    "description": "Monitor Windows notifications and active windows for messages and calls. Reads the Windows notification database and enumerates visible windows to detect incoming messages, calls, and app focus changes.",
+    "parameters": {
+        "type": "OBJECT",
+        "properties": {
+            "operation": {
+                "type": "STRING",
+                "description": "One of: check_notifications, check_windows, check_foreground, media_stop, media_close, press_key, enum_desktop. Defaults to check_notifications.",
+                "default": "check_notifications",
+            },
+            "key": {
+                "type": "STRING",
+                "description": "Key to press (for press_key operation). e.g. 'enter', 'esc', 'space'.",
+            },
+        },
+        "required": [],
+    },
+    "handler": None,  # set below after handler functions are defined
+    "behavior": "NON_BLOCKING",
+    "scheduling": "WHEN_IDLE",
+    "tier": "extra",
+    "brief": "Monitor notifications and windows for messages/calls",
+}
 
 
 class AttentionMonitor:
-    def __init__(
-        self,
-        on_event: Callable[[dict], None] | None = None,
-        interval: float = 2.0,
-    ):
-        self._on_event = on_event
-        self._interval = max(1.0, float(interval))
-        self._running = False
-        self._thread: threading.Thread | None = None
-        self._db = _db_path()
-        self._last_id = 0
+    """Monitors Windows notifications and windows for attention-worthy events."""
+
+    def __init__(self) -> None:
         self._seen_keys: set[str] = set()
-        self._seen_max = 80
+        self._on_event: Callable[[dict], None] | None = None
+        self._db_conn: sqlite3.Connection | None = None
 
-    def start(self) -> None:
-        if self._running:
-            return
-        self._last_id = self._current_max_id()
-        self._running = True
-        self._thread = threading.Thread(target=self._loop, daemon=True)
-        self._thread.start()
+    def set_on_event(self, cb: Callable[[dict], None]) -> None:
+        self._on_event = cb
 
-    def stop(self) -> None:
-        self._running = False
+    def _remember_seen(self, dedupe: str) -> None:
+        self._seen_keys.add(dedupe)
+        if len(self._seen_keys) > 5000:
+            self._seen_keys = set(list(self._seen_keys)[-2500:])
 
-    def _loop(self) -> None:
-        if not self._db.exists():
-            print(f"[AttentionMonitor] notification DB not found: {self._db}")
-            return
-        while self._running:
-            try:
-                self._poll_once()
-            except Exception as exc:
-                print(f"[AttentionMonitor] poll failed: {exc}")
-            time.sleep(self._interval)
-
-    def _current_max_id(self) -> int:
+    def _open_db(self) -> sqlite3.Connection | None:
+        if self._db_conn is not None:
+            return self._db_conn
         try:
-            with sqlite3.connect(self._db) as con:
-                cur = con.cursor()
-                cur.execute("SELECT COALESCE(MAX(Id), 0) FROM Notification WHERE Type='toast'")
-                row = cur.fetchone()
-                return int(row[0] or 0)
+            db = _db_path()
+            if not db.exists():
+                return None
+            conn = sqlite3.connect(str(db))
+            self._db_conn = conn
+            return conn
         except Exception:
-            return 0
+            return None
 
-    def _remember_seen(self, key: str) -> None:
-        self._seen_keys.add(key)
-        if len(self._seen_keys) > self._seen_max:
-            self._seen_keys = set(list(self._seen_keys)[-self._seen_max :])
+    def check_notifications(self, limit: int = 20) -> list[dict]:
+        """Read recent notifications from the Windows notification database."""
+        conn = self._open_db()
+        if conn is None:
+            return []
 
-    def _poll_once(self) -> None:
-        now = time.time()
-        self._poll_toasts(now)
-        self._poll_windows(now)
-
-    def _poll_toasts(self, now: float) -> None:
-        with sqlite3.connect(self._db, timeout=1.5) as con:
-            con.row_factory = sqlite3.Row
-            cur = con.cursor()
-            cur.execute(
-                """
-                SELECT N.Id, N.HandlerId, N.Type, N.Tag, N.ArrivalTime, N.Payload, H.PrimaryId
-                FROM Notification AS N
-                LEFT JOIN NotificationHandler AS H ON H.RecordId = N.HandlerId
-                WHERE N.Type='toast' AND N.Id > ?
-                ORDER BY N.Id ASC
-                """,
-                (self._last_id,),
+        events: list[dict] = []
+        try:
+            cur = conn.execute(
+                "SELECT ItemID, AppID, Title, Payload, ArrivalTime FROM Notification WHERE ArrivalTime IS NOT NULL ORDER BY ArrivalTime DESC LIMIT ?",
+                (limit,),
             )
-            rows = cur.fetchall()
+            columns = [d[0] for d in cur.description]
+            for row in cur.fetchall():
+                row_dict = dict(zip(columns, row))
+                raw = row_dict.get("Payload")
+                primary = row_dict.get("AppID")
+                texts = []
+                actions = []
+                raw_text, texts, actions, kind = _parse_toast_payload(raw)
+                app = _normalize_app_from_primary(primary, "")
+                if not app:
+                    app = _match_app(row_dict.get("Title") or "", "")
 
-        for row in rows:
-            nid = int(row["Id"] or 0)
-            self._last_id = max(self._last_id, nid)
+                flat = " ".join(texts + actions + [raw_text or ""]).lower()
+                if kind == "call":
+                    if not any(k in flat for k in _CALL_HINTS):
+                        if not any(x in flat for x in ("incoming", "ringing", "accept", "decline", "answer", "reject")):
+                            continue
+                elif not any(k in flat for k in _MESSAGE_HINTS) and not texts:
+                    continue
 
-            raw, texts, actions, kind = _parse_toast_payload(row["Payload"])
-            primary = row["PrimaryId"] or ""
-            app = _normalize_app_from_primary(primary, " ".join(texts[:2]) or raw)
-            if not app:
-                continue
+                preview = ""
+                if texts:
+                    if len(texts) >= 2:
+                        preview = " ".join(texts[1:3]).strip()
+                    else:
+                        preview = texts[0].strip()
+                if not preview and actions:
+                    preview = " ".join(actions[:2]).strip()
 
-            flat = " ".join(texts + actions + [raw]).lower()
-            if any(word in flat for word in ("start app", "screenshot copied", "never lose access")):
-                continue
+                dedupe = hashlib.sha1(
+                    f"{app}|{kind}|{preview}|{raw_text[:240]}".encode("utf-8", "ignore")
+                ).hexdigest()
+                if dedupe in self._seen_keys:
+                    continue
+                self._remember_seen(dedupe)
 
-            if kind == "call":
-                if not any(k in flat for k in _CALL_HINTS):
-                    if not any(x in flat for x in ("incoming", "ringing", "accept", "decline", "answer", "reject")):
-                        continue
-            elif not any(k in flat for k in _MESSAGE_HINTS) and not texts:
-                continue
+                event = {
+                    "kind": kind,
+                    "app": app,
+                    "title": texts[0] if texts else app,
+                    "preview": preview,
+                    "source": "wpndb",
+                    "notification_id": row_dict.get("ItemID"),
+                    "arrival_time": row_dict.get("ArrivalTime"),
+                    "timestamp": time.time(),
+                    "raw": raw_text,
+                    "primary_id": primary,
+                    "actions": actions,
+                }
+                events.append(event)
 
-            preview = ""
-            if texts:
-                if len(texts) >= 2:
-                    preview = " ".join(texts[1:3]).strip()
-                else:
-                    preview = texts[0].strip()
-            if not preview and actions:
-                preview = " ".join(actions[:2]).strip()
+                if self._on_event:
+                    self._on_event(event)
+        except Exception:
+            pass
+        return events
 
-            dedupe = hashlib.sha1(
-                f"{app}|{kind}|{preview}|{raw[:240]}".encode("utf-8", "ignore")
-            ).hexdigest()
-            if dedupe in self._seen_keys:
-                continue
-            self._remember_seen(dedupe)
-
-            event = {
-                "kind": kind,
-                "app": app,
-                "title": texts[0] if texts else app,
-                "preview": preview,
-                "source": "wpndb",
-                "notification_id": nid,
-                "arrival_time": row["ArrivalTime"],
-                "timestamp": now,
-                "raw": raw,
-                "primary_id": primary,
-                "actions": actions,
-            }
-
-            if self._on_event:
-                self._on_event(event)
-
-    def _poll_windows(self, now: float) -> None:
+    def check_windows(self) -> list[dict]:
+        """Enumerate visible windows and detect call/message-related ones."""
+        events: list[dict] = []
+        now = time.time()
         for win in _enum_visible_windows():
             title = win.get("title") or ""
             pid = int(win.get("pid") or 0)
@@ -813,5 +485,82 @@ class AttentionMonitor:
                 "primary_id": proc_name,
                 "actions": [],
             }
+            events.append(event)
+
             if self._on_event:
                 self._on_event(event)
+        return events
+
+    def check_foreground(self) -> dict | None:
+        """Get the currently active foreground window."""
+        return _get_foreground_window_info()
+
+    def media_stop(self) -> None:
+        _media_stop()
+
+    def media_close(self) -> None:
+        _media_close()
+
+    def press_key(self, key: str) -> None:
+        _press_key(key)
+
+    def enum_desktop(self) -> list:
+        return _enum_desktop_windows()
+
+
+_monitor = AttentionMonitor()
+
+
+def _op(operation: str, ok: bool, value=None, error: str = "") -> dict:
+    return {"operation": operation, "ok": ok, "value": value, "error": error}
+
+
+def execute(**kwargs) -> dict:
+    """Run one attention monitor operation."""
+    operation = (kwargs.get("operation") or "check_notifications").strip().lower()
+
+    if operation == "check_notifications":
+        limit = int(kwargs.get("limit") or 20)
+        events = _monitor.check_notifications(limit=limit)
+        return _op(operation, True, {
+            "events": events,
+            "count": len(events),
+        })
+
+    if operation == "check_windows":
+        events = _monitor.check_windows()
+        return _op(operation, True, {
+            "events": events,
+            "count": len(events),
+        })
+
+    if operation == "check_foreground":
+        info = _monitor.check_foreground()
+        return _op(operation, True, {"foreground": info})
+
+    if operation == "media_stop":
+        _monitor.media_stop()
+        return _op(operation, True, {"message": "Media stopped"})
+
+    if operation == "media_close":
+        _monitor.media_close()
+        return _op(operation, True, {"message": "Media closed"})
+
+    if operation == "press_key":
+        key = kwargs.get("key") or ""
+        if not key:
+            return _op(operation, False, None, "Provide a key to press (key=...).")
+        _monitor.press_key(key)
+        return _op(operation, True, {"key": key, "message": f"Pressed {key}"})
+
+    if operation == "enum_desktop":
+        wins = _monitor.enum_desktop()
+        return _op(operation, True, {
+            "windows": wins,
+            "count": len(wins),
+        })
+
+    return _op(operation, False, None, f"Unknown operation '{operation}'. One of: check_notifications, check_windows, check_foreground, media_stop, media_close, press_key, enum_desktop.")
+
+
+TOOL["handler"] = execute

@@ -28,6 +28,7 @@ from typing import Any, Callable
 
 from agent.llm import SYSTEM_PREAMBLE, Backend, LLMResponse
 from agent.frontier_router import FrontierRouter
+from agent.findings import record_finding
 from agent.scratchpad import current_plan, progress_line, reset
 from agent.tools import Registry, ToolResult
 from agent.verify import verify
@@ -383,6 +384,19 @@ class Agent:
         })
         if not outcome.ok:
             result.errors.append(f"{name}: {outcome.error}")
+            # Record as a finding (Phase K P1 - findings/CVSS ledger)
+            try:
+                from agent import findings as findings_mod
+                findings_mod.record_finding(
+                    vuln_class="tool_failure",
+                    target=name,
+                    evidence=outcome.error or "tool returned ok=False",
+                    vector="none",
+                    confidence="low",
+                    activity="passive",
+                )
+            except Exception:
+                pass  # never fail the tool call on audit failure
         return outcome
 
 

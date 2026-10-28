@@ -1,0 +1,21 @@
+{
+  "name": "stella-desktop",
+  "productName": "Stella",
+  "version": "2.0.0",
+  "description": "Stella AI Assistant - Desktop Application",
+  "main": "src/main/index.js",
+  "author": "Stella AI",
+  "license": "MIT",
+  "scripts": {
+    "dev": "electron .",
+    "build": "electron-builder",
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.0.0"
+  },
+  "dependencies": {
+    "solid-js": "^1.8.0"
+  }
+}

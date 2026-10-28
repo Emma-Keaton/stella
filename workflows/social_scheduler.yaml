@@ -1,0 +1,48 @@
+# Social Scheduler Workflow — Schedule and publish content
+#
+# Inspired by Grok Bot Workflow 3: "Your own local newsletter" — sends to multiple
+# destinations. This workflow schedules posts across platforms and can send drafts
+# to review destinations before publishing.
+#
+# Usage: stella execute workflow social_scheduler --content "Hello world" --platforms x,linkedin --schedule_at "tomorrow at 9 AM"
+
+name: social_scheduler
+description: Schedule and publish social media posts across multiple platforms with draft review.
+category: social
+version: 1.0.0
+
+steps:
+  - id: create_draft
+    skill: social
+    operation: draft
+    parameters:
+      content: "{{content}}"
+      platforms: "{{platforms}}"
+      tags: "{{tags}}"
+
+  - id: schedule_post
+    skill: social
+    operation: schedule
+    parameters:
+      content: "{{content}}"
+      platforms: "{{platforms}}"
+      schedule_at: "{{schedule_at}}"
+      repeat: "{{repeat}}"
+      tags: "{{tags}}"
+
+  - id: notify_ready
+    skill: writing
+    operation: note
+    parameters:
+      title: "Social Post Scheduled"
+      content: "Post scheduled for {{schedule_at}} across {{platforms}}. Content: {{content}}"
+      priority: "normal"
+      tags: ["social", "scheduled"]
+
+outputs:
+  - create_draft
+  - schedule_post
+  - notify_ready
+
+schedule:
+  enabled: false

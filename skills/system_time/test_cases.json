@@ -1,0 +1,63 @@
+{
+    "name": "system_time",
+    "version": "1.0.0",
+    "test_cases": [
+        {
+            "name": "backends listing",
+            "operation": "backends",
+            "expect_ok": true,
+            "expect_keys": ["backends", "stella_rea_available"]
+        },
+        {
+            "name": "current_time default",
+            "operation": "current_time",
+            "expect_ok": true,
+            "expect_keys": ["time", "timezone", "iso", "timestamp"]
+        },
+        {
+            "name": "current_time with timezone",
+            "operation": "current_time",
+            "target_timezone": "UTC",
+            "expect_ok": true,
+            "expect_keys": ["time", "timezone", "iso", "timestamp"]
+        },
+        {
+            "name": "convert_timezone missing target",
+            "operation": "convert_timezone",
+            "expect_ok": false
+        },
+        {
+            "name": "convert_timezone UTC to Tokyo",
+            "operation": "convert_timezone",
+            "source_time": "2024-01-15T14:30:00",
+            "source_timezone": "UTC",
+            "target_timezone": "Asia/Tokyo",
+            "expect_ok": true,
+            "expect_keys": ["source_time", "target_time", "timezone"]
+        },
+        {
+            "name": "list_timezones",
+            "operation": "list_timezones",
+            "expect_ok": true,
+            "expect_keys": ["timezones", "count"]
+        },
+        {
+            "name": "list_timezones filtered",
+            "operation": "list_timezones",
+            "filter": "America",
+            "expect_ok": true,
+            "expect_keys": ["timezones", "count", "filter"]
+        },
+        {
+            "name": "system_info",
+            "operation": "system_info",
+            "expect_ok": true,
+            "expect_keys": ["local_time", "utc_time", "local_timezone", "timezone_available"]
+        },
+        {
+            "name": "unknown operation",
+            "operation": "frobnicate",
+            "expect_ok": false
+        }
+    ]
+}

@@ -1,0 +1,71 @@
+[
+    {
+        "name": "toolchain is probed, not assumed",
+        "query": "what wireless tools are installed",
+        "operation": "tools",
+        "expect": "ok",
+        "note": "Read-only: works with no authorisation and no target."
+    },
+    {
+        "name": "interfaces are listed read-only",
+        "query": "what wifi interfaces do I have",
+        "operation": "interfaces",
+        "expect": "ok_or_reason",
+        "note": "On a machine with no wireless tool it names what to install."
+    },
+    {
+        "name": "monitor capability reports the driver's own answer",
+        "query": "can I capture packets on wlan0",
+        "operation": "monitor",
+        "expect": "ok_or_reason",
+        "note": "Injection is reported as unknown rather than assumed."
+    },
+    {
+        "name": "survey is read-only",
+        "query": "what wifi networks are around",
+        "operation": "survey",
+        "expect": "ok_or_reason",
+        "note": "A scan needs a scan tool; it never injects."
+    },
+    {
+        "name": "capture without authorisation is refused",
+        "query": "capture the wpa handshake",
+        "operation": "capture_handshake",
+        "expect": "refused",
+        "note": "authorized=true and confirm=true are both required, plus a bssid."
+    },
+    {
+        "name": "capture without a bssid is refused",
+        "query": "capture handshake on wlan0",
+        "operation": "capture_handshake",
+        "authorized": true,
+        "confirm": true,
+        "expect": "refused",
+        "note": "An unnamed AP would record every network in range."
+    },
+    {
+        "name": "deauth without a client is refused",
+        "query": "deauth the clients",
+        "operation": "deauth",
+        "authorized": true,
+        "confirm": true,
+        "expect": "refused",
+        "note": "Broadcast deauth disconnects networks that are not the target."
+    },
+    {
+        "name": "rogue AP needs an essid and its own policy rule",
+        "query": "set up an evil twin",
+        "operation": "rogue_ap",
+        "authorized": true,
+        "confirm": true,
+        "expect": "refused",
+        "note": "The second gate: a rogue AP answers to strangers."
+    },
+    {
+        "name": "unknown operation is refused",
+        "query": "jam the spectrum",
+        "operation": "jam_spectrum",
+        "expect": "refused",
+        "note": "Only the declared operations exist."
+    }
+]

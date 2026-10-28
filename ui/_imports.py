@@ -59,6 +59,7 @@ from PyQt6.QtWidgets import (
     QGraphicsDropShadowEffect,
     QStyle, QSystemTrayIcon, QVBoxLayout, QWidget, QProgressBar,
     QStackedWidget, QInputDialog, QMessageBox, QListWidget, QListWidgetItem,
+    QTreeWidget, QTreeWidgetItem, QHeaderView,
 )
 
 try:

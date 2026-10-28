@@ -14,7 +14,7 @@ fun ProviderSelector(
     context: Context,
     modifier: Modifier = Modifier,
 ) {
-    val aiProviders = listOf("groq", "gemini", "openai", "anthropic", "openrouter", "ollama", "lmstudio", "custom")
+    val aiProviders = listOf("groq", "gemini", "openai", "anthropic", "openrouter", "ollama", "lmstudio", "nvidia", "custom")
     val cloudProviders = listOf("google_drive", "onedrive", "dropbox")
 
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {

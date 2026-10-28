@@ -1,0 +1,210 @@
+{
+  "version": 1,
+  "skills": {
+    "anatomy": {
+      "hash": "f26645aacdcc",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "brainstorming": {
+      "hash": "e0c898381950",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "dependency_manager": {
+      "hash": "dbc40ea38df8",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "device_cleanup": {
+      "hash": "de88f4552fda",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "doc_forensics": {
+      "hash": "f615634555cc",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "document_ops": {
+      "hash": "b06ff029038b",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "domain_intel": {
+      "hash": "7267dc66d05a",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "hash_cracker": {
+      "hash": "f91344187c50",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "media_streams": {
+      "hash": "9190d2ebae47",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "memory_inspector": {
+      "hash": "c337864a4cc4",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "network_audit": {
+      "hash": "e625d3425d4d",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "nvidia_api": {
+      "hash": "3c43cece1eb8",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "osint_sweep": {
+      "hash": "2ad31d0f24a9",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "pentest_lab": {
+      "hash": "2869f3286363",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "presentation_ops": {
+      "hash": "790898e3750d",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "rea": {
+      "hash": "a91fb7435337",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "self_evolution": {
+      "hash": "322cf44e0349",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "show_gif": {
+      "hash": "560521a75b8b",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "skill_add": {
+      "hash": "31f35c062099",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "skill_build": {
+      "hash": "056863852c17",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "skill_catalog": {
+      "hash": "c48d1e3b5329",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "skill_update": {
+      "hash": "f1d8b1e57fad",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "sound_check": {
+      "hash": "715601845c6c",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "system_monitor_ascii": {
+      "hash": "7387610bad40",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "system_time": {
+      "hash": "6330fceb3757",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "wireless_audit": {
+      "hash": "f79c35cbcdc1",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "world_watch": {
+      "hash": "5fd8193ef415",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "writing_plans": {
+      "hash": "0af9f45b6089",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "check_current_stock_prices": {
+      "hash": "cde9c17ddf81",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "circuit_schematic": {
+      "hash": "d97acb9cf048",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "crypto_live_price": {
+      "hash": "39cdceba076e",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "flights_specific_area": {
+      "hash": "0f8f8990d67f",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "internet_speed_test": {
+      "hash": "8a40aa2248fc",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "live_cricket_scores": {
+      "hash": "4435d66e2136",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "make_stickman_dance_when": {
+      "hash": "3e0c2a702c2c",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "market_analysis": {
+      "hash": "433997e97024",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "spotify_mcp": {
+      "hash": "adb70746bc5c",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "tracks_international_space_station": {
+      "hash": "9e49625caeb9",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "writing": {
+      "hash": "writing-skill-v1",
+      "version": "1.0.0",
+      "source": "stella"
+    },
+    "social": {
+      "hash": "social-skill-v1",
+      "version": "1.0.0",
+      "source": "stella"
+    },
+    "coding": {
+      "hash": "coding-skill-v1",
+      "version": "1.0.0",
+      "source": "stella"
+    }
+  }
+}

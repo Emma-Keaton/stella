@@ -450,7 +450,7 @@ class ConversationFeed(QScrollArea):
 
         # Holographic avatar - floating above the conversation
         self._holo = StellaHologramWidget(self._content, size=200)
-        self._holo.setState("idle")
+        self._holo.set_state("idle")
         self._holo.move(0, 0)
         self._holo.hide()
         self._layout.addWidget(self._holo, alignment=Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop)
@@ -463,7 +463,7 @@ class ConversationFeed(QScrollArea):
             self._holo.hide()
 
     def set_holo_state(self, state: str):
-        self._holo.setState(state)
+        self._holo.set_state(state)
 
     def set_audio_level(self, level: float):
         self._holo.set_audio_level(level)

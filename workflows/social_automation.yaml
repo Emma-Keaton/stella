@@ -1,0 +1,53 @@
+# Social Automation Workflow — Complete social media handling
+#
+# Combines monitoring, drafting, scheduling, and analytics into one workflow.
+# Use this for end-to-end social media automation with human review at each step.
+#
+# Usage: stella execute workflow social_automation --topic "product launch" --platforms x,linkedin --schedule_at "tomorrow at 9 AM"
+
+name: social_automation
+description: End-to-end social media automation — monitor, draft, schedule, publish, and analyze.
+category: social
+version: 1.0.0
+
+steps:
+  - id: monitor_topic
+    skill: social
+    operation: monitor
+    parameters:
+      query: "{{topic}}"
+      platforms: "{{platforms}}"
+      limit: 10
+
+  - id: draft_post
+    skill: social
+    operation: draft
+    parameters:
+      content: "{{content}}"
+      platforms: "{{platforms}}"
+      tags: ["automation", "{{topic}}"]
+
+  - id: schedule_post
+    skill: social
+    operation: schedule
+    parameters:
+      content: "{{content}}"
+      platforms: "{{platforms}}"
+      schedule_at: "{{schedule_at}}"
+      repeat: "{{repeat}}"
+      tags: ["automation", "{{topic}}"]
+
+  - id: log_analytics
+    skill: social
+    operation: analytics
+    parameters:
+      limit: 5
+
+outputs:
+  - monitor_topic
+  - draft_post
+  - schedule_post
+  - log_analytics
+
+schedule:
+  enabled: false

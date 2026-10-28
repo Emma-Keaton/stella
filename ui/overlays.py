@@ -1,6 +1,12 @@
 from ._imports import *
 from .common import *
 
+def _icon_pixmap(name: str, size: int = 20) -> QPixmap:
+    """Simple placeholder icon - returns empty pixmap."""
+    from PyQt6.QtGui import QPixmap
+    return QPixmap(size, size)
+
+
 class BackgroundWidget(QWidget):
     _state_sig = pyqtSignal(str)
     _audio_sig = pyqtSignal(float)

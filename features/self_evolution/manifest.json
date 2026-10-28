@@ -1,0 +1,58 @@
+{
+    "name": "self_evolution",
+    "aliases": ["self_evolution", "self_evolve", "self improve", "self improvement", "self evolve", "evolve skill", "self improve loop", "self-improvement"],
+    "description": "Self-evolving agent loop inspired by Dr. Zero. Proposes questions/problems, solves them using available tools, and evolves through iteration - no training data required. Reports progress, findings, and self-improvement metrics. Nothing is read from or symlinked to another folder; everything is written inside this project.",
+    "triggers": [
+        "self evolve", "self evolution", "self improve", "self improvement", "self-improvement",
+        "self evolving", "self evolve agent", "auto improve", "auto improve agent",
+        "self evolve loop", "proposer solver", "self train", "self train agent",
+        "self learn", "self learn agent"
+    ],
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "operation": {
+                "type": "string",
+                "description": "One of: sources | sources_list | backends | evolve | evolve_once | run_evolution | self_evolve | sources_list. Defaults to sources.",
+                "default": "sources"
+            },
+            "concept": {
+                "type": "string",
+                "description": "Topic/concept to evolve a question about (for evolve operation)."
+            },
+            "domain": {
+                "type": "string",
+                "description": "Knowledge domain for evolve operation (e.g. science, coding, security, math)."
+            },
+            "skill": {
+                "type": "string",
+                "description": "Skill name to evolve with (for evolve operation)."
+            },
+            "max_iterations": {
+                "type": "integer",
+                "description": "Maximum evolution iterations. Defaults to 3."
+            },
+            "authorized": {
+                "type": "boolean",
+                "description": "Must be true for operations that contact external sources or write to disk."
+            },
+            "confirm": {
+                "type": "boolean",
+                "description": "Must be true to actually run evolution (not just preview)."
+            },
+            "limit": {
+                "type": "integer",
+                "description": "Maximum items to return. Defaults to 20."
+            }
+        },
+        "required": []
+    },
+    "version": "1.0.0",
+    "active": true,
+    "author": "Stella",
+    "category": "system",
+    "surface": "both",
+    "requires": [],
+    "optional_dependencies": [],
+    "notes": "Read-only sources/manifest queries are free. Evolving requires authorized=true + confirm=true. Nothing is symlinked or read from another folder; everything is written inside this project."
+}

@@ -10,6 +10,7 @@ sounddevice
 SpeechRecognition
 google-genai
 google-generativeai
+websockets
 pillow
 requests
 python-kasa

@@ -1,0 +1,236 @@
+/* apps/desktop/src/renderer/style.css — Stella desktop styles
+   Tokens derived from themes.json (Void theme = default brand).
+   Fonts: Exo2 (body), Orbitron (HUD/display) from assets/fonts/
+*/
+
+/* ── Font faces ── */
+@font-face {
+  font-family: "Exo2";
+  src: url("../../../../assets/fonts/exo2.ttf") format("truetype");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Orbitron";
+  src: url("../../../../assets/fonts/orbitron.ttf") format("truetype");
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ── Theme: Void (default, from themes.json) ── */
+:root {
+  --theme-id: void;
+  --theme-mode: dark;
+
+  --token-bg: #0C0D14;
+  --token-surface: #12141F;
+  --token-surface-raised: #161926;
+  --token-glass: rgba(18, 20, 31, 0.72);
+  --token-glass-border: rgba(255, 255, 255, 0.08);
+  --token-text-primary: #F4F6F8;
+  --token-text-secondary: #8A93A6;
+  --token-text-muted: #7E879B;
+  --token-border: #1E2233;
+  --token-border-strong: #5C637A;
+  --token-primary: #00E5A3;
+  --token-on-primary: #020305;
+  --token-secondary: #00F0FF;
+  --token-on-secondary: #020305;
+  --token-tertiary: #8D80F0;
+  --token-on-tertiary: #020305;
+  --token-success: #00E5A3;
+  --token-on-success: #020305;
+  --token-warning: #FFB300;
+  --token-on-warning: #020305;
+  --token-error: #FF6B6B;
+  --token-on-error: #020305;
+  --token-focus-ring: #00F0FF;
+  --token-bubble-user: #13141E;
+  --token-bubble-stella: rgba(18, 20, 30, 0.75);
+  --token-bubble-user-text: #F4F6F8;
+  --token-bubble-stella-text: #F4F6F8;
+  --token-button-content: #020305;
+  --token-button-content-disabled: #5C6478;
+  --token-scrim: rgba(2, 3, 5, 0.55);
+  --token-glow: 0 0 16px rgba(0, 240, 255, 0.35);
+  --token-elevation-shadow: 0 8px 32px rgba(0, 0, 0, 0.60);
+}
+
+/* ── Theme: OLED True Black ── */
+body[data-theme="oled"] {
+  --token-bg: #000000;
+  --token-surface: #0A0A0C;
+  --token-surface-raised: #121215;
+  --token-glass: rgba(10, 10, 12, 0.85);
+  --token-glass-border: rgba(255, 255, 255, 0.10);
+  --token-text-primary: #F4F6F8;
+  --token-text-secondary: #8A93A6;
+  --token-text-muted: #7E879B;
+  --token-border: #1A1A1E;
+  --token-border-strong: #5C637A;
+  --token-primary: #00E5A3;
+  --token-on-primary: #020305;
+  --token-secondary: #00F0FF;
+  --token-on-secondary: #020305;
+  --token-tertiary: #8D80F0;
+  --token-on-tertiary: #020305;
+  --token-success: #00E5A3;
+  --token-on-success: #020305;
+  --token-warning: #FFB300;
+  --token-on-warning: #020305;
+  --token-error: #FF6B6B;
+  --token-on-error: #020305;
+  --token-focus-ring: #00F0FF;
+  --token-bubble-user: #0A0A0C;
+  --token-bubble-stella: rgba(18, 18, 21, 0.85);
+  --token-bubble-user-text: #F4F6F8;
+  --token-bubble-stella-text: #F4F6F8;
+  --token-button-content: #020305;
+  --token-button-content-disabled: #5C6478;
+  --token-scrim: rgba(0, 0, 0, 0.65);
+  --token-glow: 0 0 8px rgba(0, 229, 163, 0.18);
+  --token-elevation-shadow: 0 8px 32px rgba(0, 0, 0, 0.80);
+}
+
+/* ── Theme: Aurora ── */
+body[data-theme="aurora"] {
+  --token-bg: #0B0A14;
+  --token-surface: #14122A;
+  --token-surface-raised: #1B1836;
+  --token-glass: rgba(20, 18, 42, 0.75);
+  --token-glass-border: rgba(141, 128, 240, 0.22);
+  --token-text-primary: #F2F0FF;
+  --token-text-secondary: #9C95C4;
+  --token-text-muted: #8C85B4;
+  --token-border: #241F45;
+  --token-border-strong: #6A6390;
+  --token-primary: #6C5EE0;
+  --token-on-primary: #FFFFFF;
+  --token-secondary: #00E5A3;
+  --token-on-secondary: #020305;
+  --token-tertiary: #00F0FF;
+  --token-on-tertiary: #020305;
+  --token-success: #00E5A3;
+  --token-on-success: #020305;
+  --token-warning: #FFB300;
+  --token-on-warning: #020305;
+  --token-error: #FF6B6B;
+  --token-on-error: #020305;
+  --token-focus-ring: #00F0FF;
+  --token-bubble-user: #1B1836;
+  --token-bubble-stella: rgba(20, 18, 42, 0.80);
+  --token-bubble-user-text: #F2F0FF;
+  --token-bubble-stella-text: #F2F0FF;
+  --token-button-content: #FFFFFF;
+  --token-button-content-disabled: #6A648F;
+  --token-scrim: rgba(6, 4, 16, 0.60);
+  --token-glow: 0 0 16px rgba(141, 128, 240, 0.35);
+  --token-elevation-shadow: 0 8px 32px rgba(4, 2, 14, 0.65);
+}
+
+/* ── Theme: Light ── */
+body[data-theme="light"] {
+  --token-bg: #F4F7F5;
+  --token-surface: #FFFFFF;
+  --token-surface-raised: #EAF1EE;
+  --token-glass: rgba(255, 255, 255, 0.75);
+  --token-glass-border: rgba(12, 13, 20, 0.08);
+  --token-text-primary: #0C0D14;
+  --token-text-secondary: #46544D;
+  --token-text-muted: #5E6B64;
+  --token-border: #C7D2CC;
+  --token-border-strong: #7E8783;
+  --token-primary: #007A57;
+  --token-on-primary: #FFFFFF;
+  --token-secondary: #007C8A;
+  --token-on-secondary: #FFFFFF;
+  --token-tertiary: #5A4BD1;
+  --token-on-tertiary: #FFFFFF;
+  --token-success: #0F7B4F;
+  --token-on-success: #FFFFFF;
+  --token-warning: #8A5A00;
+  --token-on-warning: #FFFFFF;
+  --token-error: #B3261E;
+  --token-on-error: #FFFFFF;
+  --token-focus-ring: #007A57;
+  --token-bubble-user: #E7F6F1;
+  --token-bubble-stella: #FFFFFF;
+  --token-bubble-user-text: #0C0D14;
+  --token-bubble-stella-text: #0C0D14;
+  --token-button-content: #FFFFFF;
+  --token-button-content-disabled: #8A9490;
+  --token-scrim: rgba(12, 13, 20, 0.40);
+  --token-glow: none;
+  --token-elevation-shadow: 0 2px 8px rgba(12, 13, 20, 0.10);
+}
+
+/* ── Base reset ── */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  font-family: "Exo2", "Segoe UI", system-ui, -apple-system, sans-serif;
+  background: var(--token-bg);
+  color: var(--token-text-primary);
+  overflow: hidden;
+}
+
+#root {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Utility: theme tokens as CSS vars for components ── */
+.stella-surface {
+  background: var(--token-surface);
+  border: 1px solid var(--token-border);
+  border-radius: 12px;
+}
+
+.stella-surface-raised {
+  background: var(--token-surface-raised);
+  border: 1px solid var(--token-border-strong);
+  border-radius: 12px;
+  box-shadow: var(--token-elevation-shadow);
+}
+
+.stella-glass {
+  background: var(--token-glass);
+  border: 1px solid var(--token-glass-border);
+  border-radius: 12px;
+  backdrop-filter: blur(12px);
+}
+
+.stella-text-primary { color: var(--token-text-primary); }
+.stella-text-secondary { color: var(--token-text-secondary); }
+.stella-text-muted { color: var(--token-text-muted); }
+
+.stella-primary {
+  background: var(--token-primary);
+  color: var(--token-on-primary);
+}
+
+.stella-secondary {
+  background: var(--token-secondary);
+  color: var(--token-on-secondary);
+}
+
+.stella-border { border-color: var(--token-border); }
+.stella-focus-ring {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--token-focus-ring);
+}
+
+.stella-glow {
+  box-shadow: var(--token-glow);
+}
