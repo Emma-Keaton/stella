@@ -1,0 +1,79 @@
+{
+    "name": "skill_add",
+    "aliases": ["skill_add", "add skill", "skill add", "create skill",
+                "new skill", "make skill", "build skill from spec",
+                "skill creator", "add a skill", "create a skill"],
+    "description": "Skill creator: builds new Stella skill packages from a spec. Generates manifest.json, skill.py, test_cases.json, and __init__.py following Stella's skill contract (FEATURE_METADATA + execute(**kwargs)). Supports built-in templates (read_only_tool, read_write_tool, passive_osint, active_audit) or a fully custom spec. Validates the spec before writing, previews what will be created, and never overwrites an existing skill. Writes into features/<name>/, so creating a skill needs authorized=true plus confirm=true plus a policy allow rule. No symlinks or external PC references - everything is written fresh inside this project.",
+    "triggers": [
+        "add skill", "skill add", "create skill", "new skill", "make skill",
+        "build skill from spec", "skill creator", "add a skill",
+        "create a skill", "new skill from spec", "create skill package",
+        "generate skill", "scaffold skill"
+    ],
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "operation": {
+                "type": "string",
+                "description": "One of: sources | list_templates | validate | preview | create. Defaults to sources."
+            },
+            "name": {
+                "type": "string",
+                "description": "The new skill name (e.g. my_custom_skill). Required for create/preview/validate."
+            },
+            "description": {
+                "type": "string",
+                "description": "Human-readable description of what the skill does."
+            },
+            "category": {
+                "type": "string",
+                "description": "Skill category: system | security | osint | memory | docs | development | general. Defaults to general."
+            },
+            "surface": {
+                "type": "string",
+                "description": "Surface: desktop | android | both. Defaults to both."
+            },
+            "triggers": {
+                "type": "string",
+                "description": "JSON array of trigger phrases, or a comma-separated list."
+            },
+            "parameters": {
+                "type": "string",
+                "description": "JSON object of parameter definitions for the skill's execute()."
+            },
+            "operations": {
+                "type": "string",
+                "description": "JSON array of operation names the skill supports (e.g. [\"sources\", \"run\"])."
+            },
+            "requires": {
+                "type": "string",
+                "description": "JSON array of requirement strings (e.g. [\"docx\", \"node\"])."
+            },
+            "template": {
+                "type": "string",
+                "description": "Built-in template to start from: read_only_tool | read_write_tool | passive_osint | active_audit. Overrides description/parameters/operations if given."
+            },
+            "authorized": {
+                "type": "boolean",
+                "description": "Must be true to actually create skill files."
+            },
+            "confirm": {
+                "type": "boolean",
+                "description": "Must be true to actually write skill files."
+            },
+            "limit": {
+                "type": "integer",
+                "description": "Maximum items to return. Defaults to 20."
+            }
+        },
+        "required": []
+    },
+    "version": "1.0.0",
+    "active": true,
+    "author": "Stella",
+    "category": "system",
+    "surface": "both",
+    "requires": [],
+    "optional_dependencies": [],
+    "notes": "Writes into features/<name>/. Validates before writing; preview shows what will be created without writing. Never overwrites an existing skill. Requires authorized=true + confirm=true + an allow rule."
+}

@@ -6,13 +6,20 @@ Description: Fetches the live price of a specified cryptocurrency in USD using C
 FEATURE_METADATA = {
     "name": "crypto_live_price",
     "description": "Fetches the live price of a specified cryptocurrency in USD using CoinGecko's public API. Defaults to Bitcoin.",
-    "parameters": {"type": "OBJECT", "properties": {"coin_id": {"type": "STRING", "description": "The CoinGecko ID of the cryptocurrency (e.g., 'bitcoin', 'ethereum', 'solana'). Defaults to 'bitcoin'."}}, "required": []},
+    "parameters": {
+        "type": "OBJECT",
+        "properties": {
+            "coin_id": {
+                "type": "STRING",
+                "description": "The CoinGecko ID of the cryptocurrency (e.g., 'bitcoin', 'ethereum', 'solana'). Defaults to 'bitcoin'.",
+            },
+        },
+        "required": [],
+    },
     "version": "1.0.0",
-    "active": True
+    "active": True,
 }
 
-import urllib.request
-import json
 
 def execute(**kwargs):
     """
@@ -26,8 +33,11 @@ def execute(**kwargs):
         dict: A dictionary containing the coin ID, its live price in USD, and the currency.
               Returns an error message if the price cannot be fetched.
     """
-    coin_id = kwargs.get('coin_id', 'bitcoin').lower()
-    currency = 'usd'
+    import urllib.request
+    import json
+
+    coin_id = kwargs.get("coin_id", "bitcoin").lower()
+    currency = "usd"
     api_url = f"https://api.coingecko.com/api/v3/simple/price?ids={coin_id}&vs_currencies={currency}"
 
     try:
@@ -40,7 +50,7 @@ def execute(**kwargs):
                 "coin_id": coin_id,
                 "price": price,
                 "currency": currency,
-                "message": f"The live price of {coin_id.capitalize()} is {price} {currency.upper()}."
+                "message": f"The live price of {coin_id.capitalize()} is {price} {currency.upper()}.",
             }
         else:
             return {

@@ -1,0 +1,39 @@
+{
+    "name": "skill_build",
+    "aliases": ["skill_build", "build skill", "skill build", "validate skill",
+                "check skill", "compile skill", "test skill", "skill test",
+                "skill checker", "build a skill", "verify skill"],
+    "description": "Skill builder: validates, compiles, and runs test_cases for a Stella skill package. Checks manifest.json validity, FEATURE_METADATA/manifest agreement, compiles skill.py with py_compile, and runs the skill's test_cases.json against its execute(). Reports per-test pass/fail with reasons. Reads only - never writes to skill files. Use skill_add to create and skill_update to modify; skill_build is the verify step in the add → build → update lifecycle. No symlinks or external PC references.",
+    "triggers": [
+        "build skill", "skill build", "validate skill", "check skill",
+        "compile skill", "test skill", "skill test", "skill checker",
+        "build a skill", "verify skill", "run skill tests",
+        "skill test cases", "compile skill.py"
+    ],
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "operation": {
+                "type": "string",
+                "description": "One of: sources | list | inspect | validate | compile | test | build. Defaults to sources."
+            },
+            "skill": {
+                "type": "string",
+                "description": "The skill name to build/validate/test (e.g. anatomy, brainstorming). Required for inspect/validate/compile/test/build."
+            },
+            "limit": {
+                "type": "integer",
+                "description": "Maximum items to return. Defaults to 20."
+            }
+        },
+        "required": []
+    },
+    "version": "1.0.0",
+    "active": true,
+    "author": "Stella",
+    "category": "system",
+    "surface": "both",
+    "requires": [],
+    "optional_dependencies": [],
+    "notes": "Read-only: compiles skill.py and runs test_cases.json against execute(). Never writes to skill files. Use skill_add to create and skill_update to modify."
+}

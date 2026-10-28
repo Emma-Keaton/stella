@@ -1,0 +1,92 @@
+{
+  "groq": {
+    "ok": true,
+    "models": [
+      "m1"
+    ],
+    "fetched_at": 1793081208.6445143,
+    "source": "test",
+    "provider": "groq",
+    "cached": false
+  },
+  "gemini": {
+    "ok": true,
+    "models": [
+      "m1"
+    ],
+    "fetched_at": 1793081208.6580505,
+    "source": "test",
+    "provider": "gemini",
+    "cached": false
+  },
+  "openai": {
+    "ok": true,
+    "models": [
+      "m1"
+    ],
+    "fetched_at": 1793081208.6713858,
+    "source": "test",
+    "provider": "openai",
+    "cached": false
+  },
+  "anthropic": {
+    "ok": true,
+    "models": [
+      "m1"
+    ],
+    "fetched_at": 1793081208.6873705,
+    "source": "test",
+    "provider": "anthropic",
+    "cached": false
+  },
+  "openrouter": {
+    "ok": true,
+    "models": [
+      "m1"
+    ],
+    "fetched_at": 1793081208.703537,
+    "source": "test",
+    "provider": "openrouter",
+    "cached": false
+  },
+  "nvidia": {
+    "ok": true,
+    "models": [
+      "m1"
+    ],
+    "fetched_at": 1793081208.7165644,
+    "source": "test",
+    "provider": "nvidia",
+    "cached": false
+  },
+  "ollama": {
+    "ok": true,
+    "models": [
+      "m1"
+    ],
+    "fetched_at": 1793081208.7338722,
+    "source": "test",
+    "provider": "ollama",
+    "cached": false
+  },
+  "lmstudio": {
+    "ok": true,
+    "models": [
+      "m1"
+    ],
+    "fetched_at": 1793081208.7470818,
+    "source": "test",
+    "provider": "lmstudio",
+    "cached": false
+  },
+  "custom": {
+    "ok": true,
+    "models": [
+      "m1"
+    ],
+    "fetched_at": 1793081208.760969,
+    "source": "test",
+    "provider": "custom",
+    "cached": false
+  }
+}

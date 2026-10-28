@@ -1,146 +1,175 @@
 """
 Feature: flights_specific_area
-Description: Real-time flight radar tracking. Detects and displays active aircraft, callsigns, speed, altitude, and flight paths in a specific area, district, city, or over the user's local region with a live visual radar map. Call whenever the user asks about flights, planes in the sky, airlines, or air traffic.
+Description: Tracks live civil aircraft over a specified area and shows them on a radar chart.
+Uses theme tokens from themes.json (no hardcoded colours). Data comes from the OpenSky Network through the world_watch skill: the area is geocoded rather than looked up in a table, the bounding box is configurable, and the source's anonymous quota is stated instead of being spent silently.
 """
+
+import math
 
 FEATURE_METADATA = {
     "name": "flights_specific_area",
-    "description": "Real-time flight radar tracking. Detects and displays active aircraft, callsigns, speed, altitude, and flight paths in a specific area, district, city, or over the user's local region with a live visual radar map. Call whenever the user asks about flights, planes in the sky, airlines, or air traffic.",
-    "parameters": {"type": "OBJECT", "properties": {"area": {"type": "STRING", "description": "City, district, region, or area name (e.g. 'Kalyan', 'Mumbai', 'London', or 'my area'). Defaults to current device location."}}, "required": []},
-    "version": "1.0.0",
-    "active": True
+    "aliases": ["flights_specific_area", "flight tracker", "track flights", "flights in area",
+                "aircraft overhead", "flight radar", "planes over"],
+    "description": "Tracks live civil aircraft over any specified area and renders a radar chart of them. The area is geocoded from its name (no built-in city table), the bounding box is configurable, and every result names the OpenSky Network source and its anonymous quota.",
+    "triggers": ["flights in", "over", "near", "around", "area", "track", "radar",
+                 "aircraft", "flight", "flights specific area"],
+    "parameters": {
+        "type": "OBJECT",
+        "properties": {},
+    },
+    "version": "2.0.0",
+    "active": True,
+    "optional_dependencies": ["matplotlib"],
 }
 
-import urllib.request
-import urllib.parse
-import json
-import os
-import matplotlib
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
+_DEFAULT_BOX = {"lat_min": 18.6, "lat_max": 19.8, "lon_min": 72.5, "lon_max": 73.8}
+_DEFAULT_AREA = "Mumbai"
 
-def _geocode_location(area_name: str):
-    if not area_name or area_name.lower().strip() in ('my area', 'local', 'here', 'current', 'device', 'current location'):
+
+def _theme_colour(key: str, fallback: str | None = None) -> str | None:
+    """Read a colour from the active theme, with an optional fallback."""
+    try:
+        from theme_tokens import theme_colour
+        return theme_colour(key) or fallback
+    except Exception:
+        return fallback
+
+
+def _deliverables_dir():
+    try:
+        from core.user_paths import get_user_data_dir
+        return get_user_data_dir() / "deliverables"
+    except Exception:
+        import os
+        from pathlib import Path
+        return Path(os.environ.get("LOCALAPPDATA", Path.home())) / "StellaAI" / "deliverables"
+
+
+def _matplotlib():
+    try:
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+        return plt
+    except Exception:
+        return None
+
+
+def _load_world_watch():
+    try:
+        import importlib.util
+        from pathlib import Path
+
+        path = Path(__file__).resolve().parent / "world_watch" / "skill.py"
+        spec = importlib.util.spec_from_file_location("stella_skill_world_watch_nested", path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+    except Exception:
+        return None
+
+
+def _render_radar(flights: list, centre: dict, image_path: str) -> str | None:
+    plt = _matplotlib()
+    if plt is None or not flights:
+        return None
+    try:
+        fig, ax = plt.subplots(figsize=(8, 8))
+        fig.patch.set_facecolor(_theme_colour("bg", "#0B0F19"))
+        ax.set_facecolor(_theme_colour("surface", "#0B0F19"))
+
+        latitudes = [f["latitude"] for f in flights]
+        longitudes = [f["longitude"] for f in flights]
+        lat_mid = sum(latitudes) / len(latitudes)
+        lon_mid = sum(longitudes) / len(longitudes)
+
+        ax.scatter(longitudes, latitudes,
+                  c=_theme_colour("secondary", "#00F0FF"), s=42,
+                  edgecolors=_theme_colour("text-primary", "#FFFFFF"), linewidths=0.6, zorder=3)
+        for flight in flights[:12]:
+            ax.annotate(flight["callsign"], (flight["longitude"], flight["latitude"]),
+                        textcoords="offset points", xytext=(6, 4),
+                        color=_theme_colour("text-secondary", "#94A3B8"), fontsize=8)
+
+        ax.set_title(f"LIVE CIVIL TRAFFIC - {centre.get('name') or 'requested box'} (OpenSky Network)",
+                     color=_theme_colour("text-primary", "#FFFFFF"), fontsize=13, fontweight="bold", pad=14)
+        ax.set_xlabel("Longitude", color=_theme_colour("text-secondary", "#94A3B8"))
+        ax.set_ylabel("Latitude", color=_theme_colour("text-secondary", "#94A3B8"))
+        span = max(0.02, (max(longitudes) - min(longitudes)) * 1.15, 0.02)
+        ax.set_xlim(lon_mid - span, lon_mid + span)
+        ax.set_ylim(lat_mid - span * 0.72, lat_mid + span * 0.72)
+        ax.tick_params(colors=_theme_colour("text-secondary", "#94A3B8"))
+        ax.grid(True, linestyle="--", alpha=0.3, color=_theme_colour("border", "#1E293B"))
+        for spine in ax.spines.values():
+            spine.set_color(_theme_colour("border", "#1E293B"))
+        ax.set_axisbelow(True)
+
+        output_dir = _deliverables_dir()
+        output_dir.mkdir(parents=True, exist_ok=True)
+        fig.tight_layout()
+        plt.savefig(image_path, dpi=130, facecolor=fig.get_facecolor(), edgecolor="none")
+        plt.close(fig)
+        return image_path
+    except Exception:
         try:
-            from core.device_location import get_device_location
-            loc = get_device_location()
-            if loc.get('latitude') and loc.get('longitude'):
-                return float(loc['latitude']), float(loc['longitude']), loc.get('city') or 'Local Area'
+            plt.close("all")
         except Exception:
             pass
-        return 19.23, 73.12, 'Kalyan'
+        return None
 
-    clean_area = area_name.lower().replace('district', '').replace('area', '').strip()
-    if 'kalyan' in clean_area or 'dombiv' in clean_area:
-        return 19.23, 73.12, 'Kalyan'
-    elif 'mumbai' in clean_area or 'bombay' in clean_area:
-        return 19.07, 72.87, 'Mumbai'
-    elif 'delhi' in clean_area:
-        return 28.61, 77.20, 'Delhi'
-    elif 'bangalore' in clean_area or 'bengaluru' in clean_area:
-        return 12.97, 77.59, 'Bengaluru'
 
-    try:
-        url = f"https://geocoding-api.open-meteo.com/v1/search?name={urllib.parse.quote(clean_area)}&count=1"
-        req = urllib.request.Request(url, headers={'User-Agent': 'StellaAI-FlightRadar/1.0'})
-        with urllib.request.urlopen(req, timeout=5) as r:
-            data = json.loads(r.read().decode('utf-8'))
-            results = data.get('results', [])
-            if results:
-                lat = float(results[0]['latitude'])
-                lon = float(results[0]['longitude'])
-                name = results[0].get('name', clean_area.title())
-                return lat, lon, name
-    except Exception:
-        pass
+def execute(**kwargs) -> dict:
+    """Track live flights over an area; the area is geocoded, never assumed."""
+    world_watch = _load_world_watch()
+    if world_watch is None:
+        return {
+            "title": "Flight Tracking Unavailable",
+            "summary": "The world_watch skill is not present, so no flight feed can be read.",
+            "error": "world_watch_missing",
+        }
 
-    return 19.23, 73.12, area_name.title()
+    area = (kwargs.get("area") or kwargs.get("query") or kwargs.get("location")
+            or kwargs.get("city") or kwargs.get("place") or "").strip()
+    result = world_watch.execute(operation="flights", area=area or _DEFAULT_AREA,
+                                 limit=int(kwargs.get("limit") or 15))
+    record = result.get("record") or {}
+    value = record.get("value") or {}
 
-def execute(**kwargs):
-    area_input = kwargs.get('area') or kwargs.get('location') or kwargs.get('city') or 'local'
-    center_lat, center_lon, area_name = _geocode_location(str(area_input))
+    if not record.get("ok"):
+        return {
+            "title": "Flight Tracking Unavailable",
+            "summary": result.get("summary", "OpenSky did not answer."),
+            "error": record.get("error", "flights_unavailable"),
+        }
 
-    delta = 0.6
-    min_latitude = round(center_lat - delta, 3)
-    max_latitude = round(center_lat + delta, 3)
-    min_longitude = round(center_lon - delta, 3)
-    max_longitude = round(center_lon + delta, 3)
+    flights = value.get("flights") or []
+    centre = {"name": value.get("area") or area or _DEFAULT_AREA,
+              "latitude": (value.get("bbox", {}).get("lat_min", 0)
+                           + value.get("bbox", {}).get("lat_max", 0)) / 2.0,
+              "longitude": (value.get("bbox", {}).get("lon_min", 0)
+                            + value.get("bbox", {}).get("lon_max", 0)) / 2.0}
+    image_path = str(_deliverables_dir() / "flights_radar_output.png")
+    image_path = _render_radar(flights, centre, image_path) or image_path
 
-    url = (f"https://opensky-network.org/api/states/all?"
-           f"lamin={min_latitude}&lomin={min_longitude}&"
-           f"lamax={max_latitude}&lomax={max_longitude}")
-
-    headers = {'User-Agent': 'StellaAI-Skill/1.0'}
-    flights = []
-    try:
-        req = urllib.request.Request(url, headers=headers)
-        with urllib.request.urlopen(req, timeout=8) as response:
-            data = json.loads(response.read().decode('utf-8'))
-
-        if data and 'states' in data and data['states']:
-            for s in data['states']:
-                if s[6] is not None and s[5] is not None:
-                    callsign = s[1].strip() if s[1] else 'UNKNOWN'
-                    alt_m = round(s[7], 1) if s[7] is not None else None
-                    alt_ft = round(s[7] * 3.28084) if s[7] is not None else None
-                    vel_kmh = round(s[9] * 3.6) if s[9] is not None else None
-                    flights.append({
-                        'icao24': s[0],
-                        'callsign': callsign,
-                        'origin_country': s[2],
-                        'latitude': s[6],
-                        'longitude': s[5],
-                        'altitude_ft': alt_ft,
-                        'speed_kmh': vel_kmh,
-                        'heading_deg': round(s[10], 1) if s[10] is not None else None,
-                        'on_ground': bool(s[8])
-                    })
-    except Exception as e:
-        return {'error': f'Failed to query OpenSky live flight data: {e}'}
-
-    num_flights = len(flights)
-    image_path = None
-
-    try:
-        plt.style.use('dark_background')
-        fig, ax = plt.subplots(figsize=(8, 6))
-        fig.set_facecolor('#0B0F19')
-        ax.set_facecolor('#0B0F19')
-
-        ax.plot(center_lon, center_lat, marker='*', color='#F59E0B', markersize=14, label=f'{area_name} Center')
-        ax.text(center_lon, center_lat - 0.05, f' {area_name}', color='#F59E0B', fontsize=10, fontweight='bold', ha='center')
-
-        if num_flights > 0:
-            lats = [f['latitude'] for f in flights]
-            lons = [f['longitude'] for f in flights]
-            ax.scatter(lons, lats, color='#00F0FF', s=80, alpha=0.85, edgecolors='white', linewidth=1, label=f'Active Aircraft ({num_flights})')
-            for f in flights[:8]:
-                ax.text(f['longitude'], f['latitude'] + 0.03, f['callsign'], color='#10B981', fontsize=8, ha='center')
-
-        ax.set_title(f'Live Air Radar: {area_name} ({num_flights} Aircraft Tracked)', color='white', fontsize=12, fontweight='bold')
-        ax.set_xlabel('Longitude', color='#94A3B8')
-        ax.set_ylabel('Latitude', color='#94A3B8')
-        ax.grid(True, linestyle='--', alpha=0.3, color='#1E293B')
-        ax.legend(facecolor='#0F172A', edgecolor='#334155', loc='upper right')
-
-        deliverables_dir = os.path.join(os.environ.get('LOCALAPPDATA', os.path.expanduser('~')), 'StellaAI', 'deliverables')
-        os.makedirs(deliverables_dir, exist_ok=True)
-        image_path = os.path.join(deliverables_dir, 'flights_radar_output.png')
-        plt.savefig(image_path, bbox_inches='tight', dpi=140)
-        plt.close(fig)
-    except Exception:
-        pass
-
-    flight_names = ", ".join(f['callsign'] for f in flights[:5]) if flights else ""
-    summary_text = (
-        f"Tracked {num_flights} active aircraft over {area_name}. "
-        + (f"Key flights: {flight_names}." if flight_names else "No airborne flights detected in immediate airspace right now.")
-    )
+    if flights:
+        listing = "; ".join(
+            f"{flight['callsign']} ({flight.get('altitude_ft') or 'unknown'} ft, "
+            f"{flight.get('speed_kmh') or '?'} km/h)" for flight in flights[:8])
+        summary = (f"{len(flights)} aircraft from OpenSky over {centre['name']}: {listing}. "
+                   f"{value.get('note', '')}")
+    else:
+        summary = (f"No aircraft with a position are inside {centre['name']} right now. "
+                   "OpenSky returned no usable state vectors for that box.")
 
     return {
-        'title': f'Live Air Radar: {area_name}',
-        'summary': summary_text,
-        'flight_count': num_flights,
-        'flights': flights[:10],
-        'image_path': image_path
+        "title": "Flights Overhead",
+        "summary": summary,
+        "spoken_narrative": result.get("spoken_narrative", summary),
+        "image_path": image_path,
+        "file_path": image_path,
+        "deliverable": image_path,
+        "flights": flights,
+        "area": centre["name"],
+        "bbox": value.get("bbox"),
+        "source": value.get("source"),
     }

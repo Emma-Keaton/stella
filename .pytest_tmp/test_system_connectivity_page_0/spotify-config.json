@@ -1,0 +1,1 @@
+{"clientId": "test_id", "clientSecret": "test_sec", "redirectUri": "http://127.0.0.1:8888/callback", "refreshToken": "mock_refresh"}

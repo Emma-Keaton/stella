@@ -167,6 +167,51 @@ def feedback(row_index: int, success: bool) -> None:
         pass
 
 
+def version_history(goal: str) -> list[dict]:
+    """Return all stored versions of procedures matching a goal shape, newest first."""
+    try:
+        rows = _load()
+        goal_terms = _terms(goal)
+        goal_shape = _shape(goal)
+        matches = []
+        for row in rows:
+            if row.get("shape") == goal_shape or goal_terms & set(row.get("terms", [])):
+                matches.append(row)
+        matches.sort(key=lambda r: float(r.get("ts", 0.0)), reverse=True)
+        return matches
+    except Exception:
+        return []
+
+
+def revert(goal: str, version_index: int = 0) -> bool:
+    """Revert the most recent procedure matching a goal to an earlier state.
+
+    version_index=0 reverts to the newest stored version, 1 to the previous, etc.
+    Returns True if a revert happened, False otherwise.
+    """
+    try:
+        history = version_history(goal)
+        if not history or version_index >= len(history):
+            return False
+        target = history[version_index]
+        # Re-write the target row as the newest entry (a new version pointing
+        # back at the old state), preserving the revert in the audit trail.
+        rows = _load()
+        for row in rows:
+            if (
+                row.get("shape") == target.get("shape")
+                and row.get("tools") == target.get("tools")
+            ):
+                row["success"] = target.get("success", False)
+                row["notes"] = (row.get("notes", "") or "") + f" | reverted to ts={target.get('ts')}"
+                row["ts"] = time.time()
+                _rewrite(rows)
+                return True
+        return False
+    except Exception:
+        return False
+
+
 def _bump_uses(goal: str) -> None:
     """Mark matching procedures as used so frequently-helpful ones rank up."""
     try:

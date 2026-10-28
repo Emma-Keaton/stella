@@ -1,0 +1,73 @@
+{
+    "name": "skill_update",
+    "aliases": ["skill_update", "update skill", "skill update", "update a skill",
+                "adjust skill", "skill preference", "skill context", "fix skill",
+                "skill version", "rollback skill", "skill history", "tune skill"],
+    "description": "Context-aware skill updater. Tracks how the user interacts with each skill (what they asked, what the skill returned, whether it was correct), records preference signals (accept/reject/correct) plus free-form context, and applies those preferences to skill files. Safely edits manifest.json (description, triggers, aliases, version, category, surface, requires, parameters), bumps semantic versions, keeps a per-skill change history for rollback, and records interaction context so the agent can tune skills over time. Nothing is rewritten blindly: Python skill.py changes are flagged for manual review or done as safe targeted string replacements; every write is versioned and revertible. Writes to disk, so install/update needs authorized=true plus confirm=true plus a policy allow rule.",
+    "triggers": [
+        "update skill", "skill update", "adjust skill", "skill preference",
+        "skill context", "fix skill", "skill version", "rollback skill",
+        "skill history", "tune skill", "update a skill", "skill settings",
+        "change skill behavior", "make skill prefer", "skill no longer",
+        "this skill is wrong", "skill should do", "update skill manifest",
+        "bump skill version"
+    ],
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "operation": {
+                "type": "string",
+                "description": "One of: sources | list | inspect | record_pref | preferences | update_manifest | bump_version | apply_prefs | rollback | history. Defaults to sources."
+            },
+            "skill": {
+                "type": "string",
+                "description": "The skill name to update or inspect (e.g. anatomy, brainstorming). Required for most operations."
+            },
+            "context": {
+                "type": "string",
+                "description": "Interaction context: what the user asked, what the skill returned, and whether it was correct/acceptable (record_pref operation)."
+            },
+            "signal": {
+                "type": "string",
+                "description": "Preference signal: accept | reject | correct (record_pref operation)."
+            },
+            "field": {
+                "type": "string",
+                "description": "The manifest field to update (update_manifest operation): description | triggers | aliases | version | category | surface | requires | parameters."
+            },
+            "value": {
+                "type": "string",
+                "description": "The new value for the field (update_manifest operation). For triggers/aliases/parameters pass JSON."
+            },
+            "bump": {
+                "type": "string",
+                "description": "Semver bump level: patch | minor | major (bump_version operation). Defaults to patch."
+            },
+            "to_version": {
+                "type": "string",
+                "description": "Target version to roll back to (rollback operation)."
+            },
+            "authorized": {
+                "type": "boolean",
+                "description": "Must be true for any operation that writes skill files (update_manifest, bump_version, apply_prefs, rollback, record_pref)."
+            },
+            "confirm": {
+                "type": "boolean",
+                "description": "Must be true to actually write skill files."
+            },
+            "limit": {
+                "type": "integer",
+                "description": "Maximum items to return. Defaults to 20."
+            }
+        },
+        "required": []
+    },
+    "version": "1.0.0",
+    "active": true,
+    "author": "Stella",
+    "category": "system",
+    "surface": "both",
+    "requires": [],
+    "optional_dependencies": [],
+    "notes": "Writes into features/<skill>/ and features/skill_update/{history,preferences,context}/. Every write is versioned and revertible via rollback. Requires authorized=true + confirm=true + an allow rule."
+}

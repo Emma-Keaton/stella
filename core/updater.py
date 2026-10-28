@@ -1,4 +1,4 @@
-"""
+﻿"""
 core/updater.py — in-app self-update for a *frozen* Stella install.
 
 Why this replaced the old git-based updater
@@ -280,7 +280,7 @@ def _k2_needs_update(manifest: dict) -> bool:
     if not k2.get("k2_release"):
         return False
     try:
-        from core import k2_runtime as kr
+        from core import engine_runtime as kr
         cur_server = getattr(kr, "K2_SERVER_VERSION", "")
         cur_model = getattr(kr, "K2_MODEL_VERSION", "")
     except Exception:

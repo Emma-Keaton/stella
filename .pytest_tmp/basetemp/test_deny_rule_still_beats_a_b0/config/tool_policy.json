@@ -1,0 +1,1 @@
+{"version": 1, "rules": [{"name": "everything-active", "allow": ["*"], "activity": ["active"], "reason": "wide open"}, {"name": "never-this-host", "deny": ["*"], "activity": ["active"], "targets": ["prod.example.com"], "reason": "production is off limits"}]}

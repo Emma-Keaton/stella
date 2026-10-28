@@ -1,0 +1,48 @@
+{
+    "name": "doc_forensics",
+    "aliases": [
+        "doc_forensics", "document metadata", "pdf metadata", "docx metadata", "exif",
+        "file metadata", "who made this file", "metadata extraction", "secret scan",
+        "scan for secrets", "credential scan", "link extraction"
+    ],
+    "description": "Reads what a published file leaks about itself: PDF Info dictionaries, OOXML docProps, ZIP entry listings, and image EXIF (camera, software, GPS). Also scans text and code for credential-shaped strings and extracts URLs, and reports both in a form that distinguishes what the file says from what it proves. Everything is read from a local file; nothing is uploaded, and nothing outside the file is touched.",
+    "triggers": [
+        "document metadata", "pdf metadata", "who made this file", "file metadata",
+        "exif", "extract metadata", "hidden metadata", "secret scan", "scan for passwords",
+        "scan this repo for secrets", "credential scan", "extract links", "what urls are in this"
+    ],
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "operation": {
+                "type": "string",
+                "description": "One of: metadata | secrets_scan | links | compare | sources. Defaults to metadata."
+            },
+            "path": {
+                "type": "string",
+                "description": "Path to the file to inspect. Required by every operation."
+            },
+            "patterns": {
+                "type": "string",
+                "description": "Comma-separated extra secret patterns to scan for (name=regex pairs are not supported here; use a pattern name like 'slack', 'aws', 'jwt' or a raw regex)."
+            },
+            "max_matches": {
+                "type": "integer",
+                "description": "Maximum secret matches to report. Defaults to 20."
+            },
+            "limit": {
+                "type": "integer",
+                "description": "Maximum links to return. Defaults to 40."
+            }
+        },
+        "required": []
+    },
+    "version": "1.0.0",
+    "active": true,
+    "author": "Stella",
+    "category": "osint",
+    "surface": "both",
+    "requires": [],
+    "optional_dependencies": ["exifread", "pypdf", "python-docx", "openpyxl", "Pillow"],
+    "notes": "Readers are pure-Python (core/docs/metadata.py): PDF Info, OOXML docProps, ZIP entries, JPEG EXIF, PNG chunks. Matches are reported with their location, never the value in full."
+}

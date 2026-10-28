@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Cloud Providers (runtime array)",
+  "description": "Schema for the decrypted contents of config/cloud_providers.json. The file on disk is Fernet-encrypted; this describes the plaintext list. Written by core/cloud_config.save_provider(); read by core/providers/router.py.",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "provider"
+    ],
+    "properties": {
+      "provider": {
+        "type": "string",
+        "description": "Canonical provider id. Must be one of the ids in config/providers.json (groq, gemini, openai, anthropic, openrouter, ollama, lmstudio, custom). 'home_assistant' is NOT an AI provider and must not appear here.",
+        "enum": [
+          "groq",
+          "gemini",
+          "openai",
+          "anthropic",
+          "openrouter",
+          "ollama",
+          "lmstudio",
+          "custom"
+        ]
+      },
+      "api_key": {
+        "type": "string",
+        "description": "The secret. Encrypted at rest by core/cloud_config.py. Never logged, never returned to the UI in plaintext."
+      },
+      "base_url": {
+        "type": "string",
+        "description": "Overrides the registry base_url. Required for 'custom'."
+      },
+      "model": {
+        "type": "string",
+        "description": "Model identifier sent to the provider."
+      },
+      "headers": {
+        "type": "object",
+        "description": "Extra request headers, e.g. {\"Authorization\": \"Bearer ...\"}. Merged last, so they win over the derived auth header.",
+        "additionalProperties": {
+          "type": "string"
+        }
+      },
+      "params": {
+        "type": "object",
+        "description": "Extra JSON body parameters. Values keep their JSON types (numbers stay numbers, booleans stay booleans).",
+        "additionalProperties": true
+      },
+      "fallback": {
+        "type": "array",
+        "description": "Ordered provider ids to try if this provider fails.",
+        "items": {
+          "type": "string"
+        }
+      },
+      "enabled": {
+        "type": "boolean",
+        "description": "Whether this provider participates in routing. Default true.",
+        "default": true
+      },
+      "priority": {
+        "type": "integer",
+        "description": "Lower sorts first within the auto chain. Default 100.",
+        "default": 100
+      }
+    }
+  }
+}

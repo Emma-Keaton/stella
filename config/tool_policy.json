@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "rules": [
+    {
+      "name": "passive-observation-stays-open",
+      "allow": [
+        "*"
+      ],
+      "activity": [
+        "passive"
+      ],
+      "reason": "Passive queries against public datasets do not touch a target."
+    },
+    {
+      "name": "no-active-probing-by-default",
+      "deny": [
+        "*"
+      ],
+      "activity": [
+        "active",
+        "dns"
+      ],
+      "reason": "Direct contact with a target is off until an allow rule names the tool and target."
+    },
+    {
+      "name": "no-destructive-without-a-rule",
+      "deny": [
+        "*"
+      ],
+      "activity": [
+        "destructive"
+      ],
+      "reason": "Destructive work is off until an allow rule names the tool and target."
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "devices": {
+    "android_9f043a": {
+      "device_id": "android_9f043a",
+      "name": "Galaxy S24",
+      "platform": "android",
+      "os_version": "14",
+      "agent_version": "1.0.0",
+      "ip": "192.168.1.13",
+      "online": true,
+      "last_seen": "2026-10-24T22:34:33.719845+00:00",
+      "battery": null,
+      "capabilities": [
+        "camera",
+        "screen_capture"
+      ],
+      "permissions": [
+        "camera"
+      ],
+      "paired_at": "2026-10-24T22:34:33.701369+00:00",
+      "secret_hash": "052b6e5208e04180835219cb897ecf9aa2b4cd0da71ca031fd23c3cd40ce3e15",
+      "revoked": false,
+      "connection_id": "",
+      "identity_fingerprint": "3344348ee3b462fd",
+      "metadata": {}
+    }
+  }
+}

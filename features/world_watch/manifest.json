@@ -1,0 +1,86 @@
+{
+    "name": "world_watch",
+    "aliases": [
+        "world_watch", "flight tracker", "track flights", "flights over",
+        "vessel tracker", "ship tracking", "satellite tracker", "satellite passes",
+        "track satellites", "iss pass", "when does the iss pass", "earthquake",
+        "earthquakes", "wildfire", "fire tracking", "launch tracker", "space launches",
+        "rocket launch", "cyclone tracker", "hurricane tracker", "weather radar",
+        "air quality", "public cameras", "world radio", "internet radio", "transit",
+        "bikeshare", "alpr cameras", "street imagery", "infrastructure atlas",
+        "traffic flow", "military flights", "gnss interference", "submarine cables",
+        "datacenters"
+    ],
+    "description": "Watch the world through public feeds: live flights (civilian and military) over any area, vessel positions, satellite catalogues and ground-pass predictions, earthquakes, wildfires, rocket launches, cyclone tracks, forecast wind and rain radar, air quality, public cameras, internet radio stations, transit and bikeshare, ALPR camera locations, street-level imagery, submarine cables, datacenters and dams, and traffic flow. Keyless operations work without any API key; operations that need a key name the key and report unavailability instead of returning nothing. Reports when a feed is stale, rate-limited or on a fallback, and never fabricates a position.",
+    "triggers": [
+        "track flights", "flights over", "what planes are overhead", "flight radar",
+        "track ships", "vessels near", "ship tracking", "ais ships",
+        "satellite", "iss", "starlink", "when will the iss pass", "satellite pass",
+        "earthquake", "seismic", "quake near", "wildfire", "fire near", "active fires",
+        "rocket launch", "spacex launch", "upcoming launches", "launch schedule",
+        "hurricane", "cyclone", "typhoon", "weather radar", "rain radar",
+        "air quality", "aqi", "pollution near", "public camera", "traffic camera",
+        "radio station", "internet radio", "play radio", "bus locations",
+        "transit", "bikeshare", "bike stations", "license plate cameras",
+        "alpr", "street view", "mapillary", "submarine cable", "datacenter",
+        "dam", "military aircraft", "gnss jamming", "traffic jam"
+    ],
+    "parameters": {
+        "type": "OBJECT",
+        "properties": {
+            "operation": {
+                "type": "STRING",
+                "description": "One of: flights | military_flights | vessels | satellites | space_passes | earthquakes | fires | cyclones | launches | wind | radar | air_quality | cameras | radio | transit | bikeshare | alpr | street_level | infrastructure | traffic | gnss_integrity | sources. Defaults to flights."
+            },
+            "area": {
+                "type": "STRING",
+                "description": "Free-text place name (e.g. 'Mumbai', 'Bay Area', 'my area' or 'here' for the device location). Used to geocode and to build a bounding box."
+            },
+            "bbox": {
+                "type": "STRING",
+                "description": "Explicit bounding box as 'lat_min,lat_max,lon_min,lon_max' in decimal degrees. Overrides the area and is never inferred."
+            },
+            "lat": {
+                "type": "STRING",
+                "description": "Observer latitude in decimal degrees (used by space_passes and point-based operations)."
+            },
+            "lon": {
+                "type": "STRING",
+                "description": "Observer longitude in decimal degrees."
+            },
+            "radius_km": {
+                "type": "NUMBER",
+                "description": "Bounding-box radius in kilometres when no bbox is given. Defaults to 130 km, which is about 1.2 degrees."
+            },
+            "norad_id": {
+                "type": "INTEGER",
+                "description": "NORAD catalogue id for satellite operations. Defaults to 25544 (ISS)."
+            },
+            "hours": {
+                "type": "NUMBER",
+                "description": "Prediction horizon in hours for satellite passes. Defaults to 48."
+            },
+            "min_elevation": {
+                "type": "NUMBER",
+                "description": "Minimum elevation in degrees for a pass to count. Defaults to 10."
+            },
+            "category": {
+                "type": "STRING",
+                "description": "Category filter for catalogue operations, e.g. a launch provider, a transit operator, a channel country, or an infrastructure type (datacenter, dam, cable)."
+            },
+            "limit": {
+                "type": "INTEGER",
+                "description": "Maximum items to return. Defaults to 20."
+            }
+        },
+        "required": []
+    },
+    "version": "1.0.0",
+    "active": true,
+    "author": "Stella",
+    "category": "observability",
+    "surface": "both",
+    "requires": ["charts"],
+    "optional_dependencies": ["matplotlib"],
+    "notes": "Data sources: OpenSky Network, adsb.lol, AISStream, CelesTrak, USGS, NASA FIRMS, WFIGS/NIFC, NOAA NHC/CPHC, NOAA GFS/ECMWF, NOAA nowCOAST, ECCC GeoMet, CelesTrak launch library, GTFS-RT operators, GBFS, OSRM (FOSSGIS), Radio Browser, Mapillary, KartaView, Panoramax, OpenStreetMap. Each operation names its source and its auth tier in the result."
+}

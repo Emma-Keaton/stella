@@ -1,0 +1,25 @@
+{
+  "devices": {
+    "android_001": {
+      "device_id": "android_001",
+      "name": "Galaxy S24",
+      "platform": "android",
+      "os_version": "",
+      "agent_version": "",
+      "ip": "",
+      "online": false,
+      "last_seen": "",
+      "battery": null,
+      "capabilities": [
+        "camera"
+      ],
+      "permissions": [],
+      "paired_at": "",
+      "secret_hash": "",
+      "revoked": false,
+      "connection_id": "",
+      "identity_fingerprint": "",
+      "metadata": {}
+    }
+  }
+}

@@ -1,44 +1,88 @@
 """
 Feature: market_analysis
-Description: Analyzes the current Bitcoin price and displays a dark-mode graph card with recent price data. By default, it fetches BTCUSDT 1-hour klines for the last 24 hours.
+Description: Analyzes the current Bitcoin price and displays a graph card with recent price data. By default, it fetches BTCUSDT 1-hour klines for the last 24 hours.
+Uses theme tokens from themes.json (no hardcoded colours).
 """
 
 FEATURE_METADATA = {
     "name": "market_analysis",
-    "description": "Analyzes the current Bitcoin price and displays a dark-mode graph card with recent price data. By default, it fetches BTCUSDT 1-hour klines for the last 24 hours.",
-    "parameters": {"type": "OBJECT", "properties": {"symbol": {"type": "STRING", "description": "The trading pair symbol (e.g., 'BTCUSDT', 'ETHUSDT'). Defaults to 'BTCUSDT'."}, "interval": {"type": "STRING", "description": "The candlestick interval (e.g., '1m', '5m', '1h', '1d'). Defaults to '1h'."}, "limit": {"type": "INTEGER", "description": "The number of historical data points to fetch for the graph. Defaults to 24."}}, "required": []},
+    "description": "Analyzes the current Bitcoin price and displays a graph card with recent price data. By default, it fetches BTCUSDT 1-hour klines for the last 24 hours. Colours come from the active theme in themes.json.",
+    "parameters": {
+        "type": "OBJECT",
+        "properties": {
+            "symbol": {
+                "type": "STRING",
+                "description": "The trading pair symbol (e.g., 'BTCUSDT', 'ETHUSDT'). Defaults to 'BTCUSDT'.",
+            },
+            "interval": {
+                "type": "STRING",
+                "description": "The candlestick interval (e.g., '1m', '5m', '1h', '1d'). Defaults to '1h'.",
+            },
+            "limit": {
+                "type": "INTEGER",
+                "description": "The number of historical data points to fetch for the graph. Defaults to 24.",
+            },
+        },
+        "required": [],
+    },
     "version": "1.0.0",
-    "active": True
+    "active": True,
+    "optional_dependencies": ["matplotlib"],
 }
 
-import urllib.request
-import json
-import os
-import datetime
-import matplotlib
-matplotlib.use('Agg') # Use the 'Agg' backend for non-interactive plotting
-import matplotlib.pyplot as plt
+
+def _theme_colour(key: str, fallback: str | None = None) -> str | None:
+    """Read a colour from the active theme, with an optional fallback."""
+    try:
+        from theme_tokens import theme_colour
+        return theme_colour(key) or fallback
+    except Exception:
+        return fallback
+
+
+def _matplotlib():
+    try:
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+        return plt
+    except Exception:
+        return None
+
+
+def _deliverables_dir():
+    try:
+        from core.user_paths import get_user_data_dir
+        return get_user_data_dir() / "deliverables"
+    except Exception:
+        import os
+        from pathlib import Path
+        return Path(os.environ.get("LOCALAPPDATA", Path.home())) / "StellaAI" / "deliverables"
+
 
 def execute(**kwargs):
-    symbol = kwargs.get('symbol', 'BTCUSDT').upper()
-    interval = kwargs.get('interval', '1h')
-    limit = kwargs.get('limit', 24)
+    """Analyzes the current Bitcoin price and generates a price-trend graph."""
+    import urllib.request
+    import json
+    import datetime
 
-    # Ensure limit is an integer
+    symbol = kwargs.get("symbol", "BTCUSDT").upper()
+    interval = kwargs.get("interval", "1h")
+    limit = kwargs.get("limit", 24)
+
     try:
         limit = int(limit)
     except ValueError:
         return {"error": "Invalid 'limit' parameter. Must be an integer."}
 
-    # --- Fetch Live Price Data ---
     ticker_url = f"https://api.binance.com/api/v3/ticker/24hr?symbol={symbol}"
     current_price = "N/A"
     price_change_percent = "N/A"
     try:
         with urllib.request.urlopen(ticker_url, timeout=8) as response:
             ticker_data = json.loads(response.read().decode())
-            current_price = float(ticker_data.get('lastPrice', 0))
-            price_change_percent = float(ticker_data.get('priceChangePercent', 0))
+            current_price = float(ticker_data.get("lastPrice", 0))
+            price_change_percent = float(ticker_data.get("priceChangePercent", 0))
     except urllib.error.URLError as e:
         print(f"Error fetching live ticker data for {symbol}: {e}")
     except json.JSONDecodeError as e:
@@ -46,7 +90,6 @@ def execute(**kwargs):
     except Exception as e:
         print(f"An unexpected error occurred fetching live ticker data: {e}")
 
-    # --- Fetch Historical Klines Data for Graph ---
     klines_url = f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval={interval}&limit={limit}"
     times = []
     prices = []
@@ -54,8 +97,8 @@ def execute(**kwargs):
         with urllib.request.urlopen(klines_url, timeout=8) as response:
             klines_data = json.loads(response.read().decode())
             for kline in klines_data:
-                close_time_ms = kline[6]  # Close time in milliseconds
-                close_price = float(kline[4]) # Close price
+                close_time_ms = kline[6]
+                close_price = float(kline[4])
                 times.append(datetime.datetime.fromtimestamp(close_time_ms / 1000))
                 prices.append(close_price)
     except urllib.error.URLError as e:
@@ -68,54 +111,54 @@ def execute(**kwargs):
     if not times or not prices:
         return {"error": f"No historical data available for {symbol} with interval {interval} and limit {limit}."}
 
-    # --- Generate Dark-Mode Graph Card ---
-    plt.style.use('dark_background')
-    fig, ax = plt.subplots(figsize=(10, 6))
+    plt = _matplotlib()
+    image_path = None
+    if plt is not None:
+        try:
+            plt.style.use("dark_background")
+            fig, ax = plt.subplots(figsize=(10, 6))
+            fig.patch.set_facecolor(_theme_colour("bg", "#0B0F19"))
+            ax.set_facecolor(_theme_colour("surface", "#0B0F19"))
 
-    # Set dark HUD theme colors
-    fig.patch.set_facecolor('#0B0F19')
-    ax.set_facecolor('#0B0F19')
+            text_colour = _theme_colour("text-primary", "white")
+            muted_colour = _theme_colour("text-secondary", "white")
+            border_colour = _theme_colour("border", "#1E293B")
+            primary_colour = _theme_colour("primary", "#00F0FF")
 
-    # Plotting the data
-    ax.plot(times, prices, color='#00F0FF', marker='o', markersize=4, linestyle='-', linewidth=2)
+            ax.plot(
+                times, prices, color=primary_colour, marker="o", markersize=4,
+                linestyle="-", linewidth=2,
+            )
+            ax.set_title(f"{symbol} Price Trend ({interval} Interval)", color=text_colour, fontsize=16)
+            ax.set_xlabel("Time", color=text_colour, fontsize=12)
+            ax.set_ylabel("Price (USD)", color=text_colour, fontsize=12)
+            ax.grid(True, linestyle="--", alpha=0.6, color=border_colour)
+            ax.tick_params(axis="x", colors=text_colour, rotation=45)
+            ax.tick_params(axis="y", colors=text_colour)
+            for spine in ax.spines.values():
+                spine.set_edgecolor(border_colour)
 
-    # Title and labels
-    ax.set_title(f'{symbol} Price Trend ({interval} Interval)', color='white', fontsize=16)
-    ax.set_xlabel('Time', color='white', fontsize=12)
-    ax.set_ylabel('Price (USD)', color='white', fontsize=12)
+            fig.tight_layout()
 
-    # Grid
-    ax.grid(True, linestyle='--', alpha=0.6, color='#1E293B')
+            output_dir = _deliverables_dir()
+            output_dir.mkdir(parents=True, exist_ok=True)
+            image_path = str(output_dir / f"{symbol}_price_trend_{interval}.png")
+            plt.savefig(image_path)
+            plt.close(fig)
+        except Exception:
+            try:
+                plt.close("all")
+            except Exception:
+                pass
 
-    # Tick parameters
-    ax.tick_params(axis='x', colors='white', rotation=45)
-    ax.tick_params(axis='y', colors='white')
-
-    # Spines
-    for spine in ax.spines.values():
-        spine.set_edgecolor('#1E293B')
-
-    # Layout adjustment
-    fig.tight_layout()
-
-    # --- Save the plot to a file ---
-    # Create the deliverables directory if it doesn't exist
-    deliverables_dir = os.path.join(os.environ.get('LOCALAPPDATA', os.path.expanduser('~')), 'StellaAI', 'deliverables')
-    os.makedirs(deliverables_dir, exist_ok=True)
-
-    image_path = os.path.join(deliverables_dir, f'{symbol}_price_trend_{interval}.png')
-    plt.savefig(image_path)
-    plt.close(fig) # Close the figure to free up memory
-
-    # --- Prepare summary ---
     summary_text = f"Current {symbol} Price: ${current_price:,.2f}. "
-    if price_change_percent != 'N/A':
-        change_sign = '+' if price_change_percent >= 0 else ''
+    if price_change_percent != "N/A":
+        change_sign = "+" if price_change_percent >= 0 else ""
         summary_text += f"24hr Change: {change_sign}{price_change_percent:.2f}%. "
     summary_text += f"Displaying {len(prices)} {interval} data points."
 
     return {
         "image_path": image_path,
         "title": f"{symbol} Market Analysis",
-        "summary": summary_text
+        "summary": summary_text,
     }

@@ -196,5 +196,20 @@ class LocalBrain:
             return json.loads(resp.read().decode("utf-8"))
 
 
+def _extract_message_text(message: dict) -> str:
+    """Pull assistant text from a chat-completion message.
+
+    Reasoning models (K2-Horizon, etc.) write to ``reasoning_content`` while
+    classic models write to ``content``.  Return whichever is non-empty.
+    """
+    content = (message or {}).get("content") or ""
+    if content.strip():
+        return content.strip()
+    reasoning = (message or {}).get("reasoning_content") or ""
+    if reasoning.strip():
+        return reasoning.strip()
+    return ""
+
+
 # Global singleton instance
 local_brain = LocalBrain()

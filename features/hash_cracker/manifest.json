@@ -1,0 +1,73 @@
+{
+    "name": "hash_cracker",
+    "aliases": [
+        "hash_cracker", "crack hash", "password crack", "hashcat", "john the ripper",
+        "crack wifi password", "crack handshake", "wpa crack", "identify hash",
+        "convert capture", "hc22000", "hccapx", "rockyou"
+    ],
+    "description": "Crack a hash you are authorised to crack, offline, on this machine. Identifies a hash by shape, converts a capture file into hashcat's modern WPA mode 22000 (or the older hccapx), lists the wordlists this machine already has, and starts a hashcat or John session that reports back its real speed and progress. Every crack runs on a file that is already here: no hash is uploaded, no server is contacted, and a missing tool is named with the package that provides it.",
+    "triggers": [
+        "crack this hash", "identify this hash", "what hash is this", "crack the password",
+        "crack the handshake", "crack the wpa password", "wpa2 crack", "hashcat",
+        "john the ripper", "convert this capture", "hc22000", "hccapx",
+        "do I have rockyou", "what wordlists do I have", "cracking status"
+    ],
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "operation": {
+                "type": "string",
+                "description": "One of: tools | identify | convert | crack | john | status | wordlists | sources. Defaults to tools."
+            },
+            "hash": {
+                "type": "string",
+                "description": "The hash to identify, or its first characters."
+            },
+            "hash_file": {
+                "type": "string",
+                "description": "Path to a hash file (.hc22000, .hccapx, a raw hash per line) for cracking, converting or status."
+            },
+            "capture": {
+                "type": "string",
+                "description": "Path to an existing .cap/.pcap capture to convert into a crackable hash."
+            },
+            "sample": {
+                "type": "string",
+                "description": "Alias for hash, for identify."
+            },
+            "wordlist": {
+                "type": "string",
+                "description": "Wordlist path. When omitted, hashcat runs in increment mode and says so."
+            },
+            "mode": {
+                "type": "integer",
+                "description": "hashcat mode number, e.g. 22000 for WPA-PBKDF2-PMKID+EAPOL, 0 for MD5, 1000 for NTLM. Defaults to 22000."
+            },
+            "rules": {
+                "type": "string",
+                "description": "Optional hashcat rule file name, e.g. best64.rule."
+            },
+            "workload": {
+                "type": "string",
+                "description": "hashcat workload profile 1-4. Defaults to 2, which is honest about not locking up the desktop."
+            },
+            "confirm": {
+                "type": "boolean",
+                "description": "Must be true to start a cracking session. Defaults to false (nothing runs)."
+            },
+            "limit": {
+                "type": "integer",
+                "description": "Maximum entries to return. Defaults to 20."
+            }
+        },
+        "required": []
+    },
+    "version": "1.0.0",
+    "active": true,
+    "author": "Stella",
+    "category": "security",
+    "surface": "both",
+    "requires": [],
+    "optional_dependencies": [],
+    "notes": "External tools: hashcat (mode 22000), john, hcxpcapngtool, cap2hccapx, aircrack-ng. Probed per call. Cracking is offline-only and only ever targets a file that already exists on this machine."
+}

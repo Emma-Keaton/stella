@@ -19,6 +19,7 @@ class StellaGatewayDiscovery(private val context: Context) {
             }
 
             override fun onServiceResolved(serviceInfo: NsdServiceInfo) {
+                @Suppress("DEPRECATION")
                 val host = serviceInfo.host?.hostAddress.orEmpty()
                 val port = serviceInfo.port
                 if (host.isNotBlank() && port > 0) {
@@ -48,7 +49,7 @@ class StellaGatewayDiscovery(private val context: Context) {
             override fun onServiceFound(serviceInfo: NsdServiceInfo) {
                 val serviceType = serviceInfo.serviceType ?: return
                 if (!serviceType.contains("_STELLA._tcp", ignoreCase = true)) return
-                resolveListener?.let { nsdManager.resolveService(serviceInfo, it) }
+                resolveListener?.let { @Suppress("DEPRECATION") nsdManager.resolveService(serviceInfo, it) }
             }
 
             override fun onServiceLost(serviceInfo: NsdServiceInfo) = Unit

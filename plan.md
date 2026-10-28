@@ -29,8 +29,8 @@ executable/package. Personal use first, open-source friendly.
   user NOT typing. UI emits typing signals; gate pauses/resumes capture.
 - `core/feedback.py` — structured report builder + scrubber + channel senders
   (local file / email / GitHub issue / webhook / off).
-- `core/k2_server.py` — (exists) bundled llama.cpp server manager; reused as
-  the reference "local runtime" alongside Ollama/LM Studio.
+- `core/server.py` — (exists) the renamed local inference server manager;
+  kept side by side with Ollama/LM Studio as the reference "local runtime".
 - UI: provider dropdown + model combo + Remove/Replace buttons + voice picker
   + feedback dialog + setup wizard pages + disable toggles.
 - Packaging: PyInstaller (desktop), PWA wrapper (web), Termux/APK path

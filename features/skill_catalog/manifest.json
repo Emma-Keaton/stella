@@ -1,0 +1,67 @@
+{
+    "name": "skill_catalog",
+    "aliases": ["skill_catalog", "skill find", "find skill", "skill catalog",
+                "list skills", "install skill", "register skill", "run skill",
+                "skill manager", "discover skills", "hot-plug skill"],
+    "description": "Stella's skill catalog: the 'skill find' capability. Lists every skill available on this machine (features/ plus the user-data skills dir), finds skills by keyword, name, alias or trigger, installs a skill package from a local path or inline definition, registers a loaded skill into the dynamic registry, and runs a skill operation. Nothing is symlinked or referenced from outside this project - every installed skill is written into features/ or the user-data skills dir so Stella runs identically on any device. Installs and writes require authorized=true plus confirm=true plus a policy allow rule.",
+    "triggers": [
+        "skill find", "find skill", "skill catalog", "list skills",
+        "install skill", "register skill", "run skill", "skill manager",
+        "discover skills", "hot-plug skill", "what skills do I have",
+        "find a skill for", "install a skill"
+    ],
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "operation": {
+                "type": "string",
+                "description": "One of: list | find | install | register | run | sources. Defaults to sources."
+            },
+            "keyword": {
+                "type": "string",
+                "description": "Keyword to search skills by (find operation)."
+            },
+            "path": {
+                "type": "string",
+                "description": "Local path to a skill package directory or skill.py file to install (install operation)."
+            },
+            "name": {
+                "type": "string",
+                "description": "Skill name to register or run."
+            },
+            "skill": {
+                "type": "string",
+                "description": "Alias for name: the skill to run (run operation)."
+            },
+            "operation_target": {
+                "type": "string",
+                "description": "The skill operation to invoke (run operation), e.g. 'sources', 'count', 'list'."
+            },
+            "args": {
+                "type": "string",
+                "description": "JSON object of arguments to pass to the skill operation (run operation). Defaults to {}."
+            },
+            "authorized": {
+                "type": "boolean",
+                "description": "Must be true for install and any operation that writes to disk."
+            },
+            "confirm": {
+                "type": "boolean",
+                "description": "Must be true to actually install or register a skill."
+            },
+            "limit": {
+                "type": "integer",
+                "description": "Maximum items to return. Defaults to 50."
+            }
+        },
+        "required": []
+    },
+    "version": "1.0.0",
+    "active": true,
+    "author": "Stella",
+    "category": "system",
+    "surface": "both",
+    "requires": [],
+    "optional_dependencies": [],
+    "notes": "Writes skills only into features/ or the user-data skills dir - never symlinks or references a PC skill directory. Install/register are destructive (write to disk) and need authorized=true + confirm=true + an allow rule."
+}

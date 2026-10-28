@@ -1,0 +1,41 @@
+{
+    "name": "brainstorming",
+    "aliases": ["brainstorming", "brainstorm", "design", "explore idea", "refine idea",
+                "propose approaches", "design review", "creative work", "spec"],
+    "description": "Structured brainstorming and design exploration for Stella. Explores user intent, requirements and design before implementation. Asks clarifying questions one at a time, proposes 2-3 approaches with trade-offs, presents a design for approval, and produces a design-doc summary. Nothing is implemented until the user approves the design. Pure-Python, no external dependencies, runs on any surface.",
+    "triggers": [
+        "brainstorm", "brainstorming", "explore idea", "refine idea", "design",
+        "propose approaches", "design review", "creative work", "spec", "what should I build",
+        "how should I design", "clarify requirements"
+    ],
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "operation": {
+                "type": "string",
+                "description": "One of: explore | questions | approaches | design | checklist | sources. Defaults to sources."
+            },
+            "topic": {
+                "type": "string",
+                "description": "The idea, feature or topic to brainstorm about."
+            },
+            "context": {
+                "type": "string",
+                "description": "Additional project context or constraints."
+            },
+            "limit": {
+                "type": "integer",
+                "description": "Maximum items to return. Defaults to 10."
+            }
+        },
+        "required": []
+    },
+    "version": "1.0.0",
+    "active": true,
+    "author": "Stella",
+    "category": "development",
+    "surface": "both",
+    "requires": [],
+    "optional_dependencies": [],
+    "notes": "Pure-Python skill. No code is written or modified until the user approves a design. Follows the brainstorming hard-gate: explore -> clarify -> propose -> design -> approve."
+}

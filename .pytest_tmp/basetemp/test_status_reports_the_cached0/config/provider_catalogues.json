@@ -1,0 +1,13 @@
+{
+  "groq": {
+    "ok": true,
+    "models": [
+      "first",
+      "second"
+    ],
+    "fetched_at": 111.0,
+    "source": "test",
+    "provider": "groq",
+    "cached": false
+  }
+}

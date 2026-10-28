@@ -1,0 +1,1 @@
+{"version": 1, "rules": [{"name": "deny-wins", "deny": ["port_scan"], "activity": ["active"], "reason": "no"}, {"name": "allow-also", "allow": ["port_scan"], "activity": ["active"], "reason": "yes"}]}

@@ -27,6 +27,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from agent.llm import SYSTEM_PREAMBLE, Backend, LLMResponse
+from agent.frontier_router import FrontierRouter
 from agent.scratchpad import current_plan, progress_line, reset
 from agent.tools import Registry, ToolResult
 from agent.verify import verify
@@ -51,6 +52,8 @@ class RunResult:
     verification_notes: list[str] = field(default_factory=list)
     # Procedural memory: what a similar past task did.
     recalled: str = ""
+    # Frontier routing: which backend the Phase 5 router selected and why.
+    frontier_route: dict[str, Any] | None = None
 
     def summary(self) -> str:
         bits = [f"turns={self.turns}", f"tools={len(self.tool_calls)}"]
@@ -74,6 +77,7 @@ class Agent:
         max_tokens: int = 1024,
         temperature: float = 0.3,
         max_tools: int = 12,
+        tool_budget_tier: int = 1,  # 1 = cheap tools only, 2 = moderate, 3 = all
     ) -> None:
         self.backend = backend
         self.registry = registry
@@ -81,6 +85,7 @@ class Agent:
         self.max_tokens = max_tokens
         self.temperature = temperature
         self.max_tools = max_tools
+        self.tool_budget_tier = tool_budget_tier
 
     def run(self, goal: str, progress: Progress | None = None,
             history: list[dict] | None = None,
@@ -100,6 +105,30 @@ class Agent:
                 result.recalled = hint
         except Exception:
             hint = ""
+
+        # Phase 5 frontier routing: triage the goal to local vs frontier,
+        # honoring the local-by-default policy. Record the decision so the
+        # run record shows which backend class was chosen and why.
+        try:
+            from agent.frontier_router import FrontierRouter
+            _router = FrontierRouter()
+            route = _router.route(goal)
+            result.frontier_route = {
+                "backend": route.backend,
+                "reason": route.reason,
+                "confidence": route.confidence,
+                "forced_local": route.forced_local,
+                "opted_into_frontier": route.opted_into_frontier,
+            }
+        except Exception:
+            route = None
+            result.frontier_route = {
+                "backend": "local",
+                "reason": "router unavailable, defaulting to local",
+                "confidence": 0.0,
+                "forced_local": False,
+                "opted_into_frontier": False,
+            }
 
         schemas = self._select_tools(goal)
         messages: list[dict] = [{"role": "system", "content": SYSTEM_PREAMBLE}]
@@ -229,6 +258,11 @@ class Agent:
         HTTP 400. Beyond the hard limit, a small model is measurably worse at
         choosing correctly when it is shown 49 options at once.
 
+        Tool budget tier filters out expensive tools:
+        - tier 1: only cost_tier 1 (cheap/free) tools
+        - tier 2: cost_tier 1 and 2
+        - tier 3: all tools
+
         So we rank by lexical relevance to the goal, keep a floor of always-
         useful tools, and cap the total. Tools the registry permits are always
         a subset of what the caller allowed, so this narrows the menu without
@@ -245,6 +279,14 @@ class Agent:
                  if t not in stop and len(t) > 2}
 
         permitted = [t for t in self.registry if self.registry.permitted(t.name)]
+
+        # Apply tool budget tier filter
+        budget_tier = self.tool_budget_tier
+        permitted = [
+            t for t in permitted
+            if getattr(t, "cost_tier", 1) <= budget_tier
+        ]
+
         budget = max(4, min(self.max_tools, len(permitted)))
 
         if len(permitted) <= budget:
@@ -266,6 +308,8 @@ class Agent:
         for must in ("calculate", "current_time", "read_file", "todo"):
             tool = self.registry.get(must)
             if tool is None or not self.registry.permitted(must):
+                continue
+            if getattr(tool, "cost_tier", 1) > budget_tier:
                 continue
             if tool not in chosen and len(chosen) < budget + 3:
                 chosen.append(tool)
@@ -345,7 +389,8 @@ class Agent:
 def run_goal(goal: str, workspace: str | None = None,
              allowed_tools: list[str] | None = None,
              progress: Progress | None = None,
-             max_turns: int = 12) -> RunResult:
+             max_turns: int = 12,
+             tool_budget_tier: int = 1) -> RunResult:
     """Convenience entry point: build the default agent and run one goal."""
     from agent.llm import default_backend
     from agent.tools import build_default_registry
@@ -353,6 +398,7 @@ def run_goal(goal: str, workspace: str | None = None,
     registry = build_default_registry(workspace)
     if allowed_tools is not None:
         registry.allowed = set(allowed_tools)
-    return Agent(default_backend(), registry, max_turns=max_turns).run(
+    return Agent(default_backend(), registry, max_turns=max_turns,
+                 tool_budget_tier=tool_budget_tier).run(
         goal, progress=progress
     )

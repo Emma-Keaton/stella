@@ -13,6 +13,7 @@ import androidx.core.content.ContextCompat
 import com.stella.connect.core.StellaConnectCapabilities
 import com.stella.connect.core.CommandResult
 import com.stella.connect.device.AndroidDeviceInfoProvider
+import java.io.File
 
 class DeviceCommandHandler(private val context: Context) {
     private val infoProvider = AndroidDeviceInfoProvider(context)
@@ -32,6 +33,10 @@ class DeviceCommandHandler(private val context: Context) {
             "file_read" -> fileRead(parameters)
             "file_write" -> fileWrite(parameters)
             "file_delete" -> fileDelete(parameters)
+        "note_list" -> noteList(parameters)
+        "note_read" -> noteRead(parameters)
+        "note_create" -> noteCreate(parameters)
+        "note_delete" -> noteDelete(parameters)
             "ui_dump" -> uiDump()
             "ui_tap" -> uiTap(parameters)
             "ui_swipe" -> uiSwipe(parameters)
@@ -343,6 +348,200 @@ class DeviceCommandHandler(private val context: Context) {
         }
         val success = service.swipe(x1, y1, x2, y2, duration)
         return CommandResult(success, data = mapOf("action" to "swipe", "success" to success))
+    }
+
+    private fun noteFileName(path: String): String {
+        val base = path.substringAfterLast('/')
+        return if (base.endsWith(".md")) base else "$base.md"
+    }
+
+    /** App-scoped fallback store: private internal storage, never raw external root. */
+    private fun appNotesDir(): File {
+        val dir = File(context.filesDir, "notes")
+        if (!dir.exists()) dir.mkdirs()
+        return dir
+    }
+
+    /** The activated Memory Vault tree, or null when the vault is off. */
+    private fun vaultTree(): Uri? = com.stella.connect.core.MemoryVaultStore.activeTreeUri(context)
+
+    private fun treeChild(tree: Uri, name: String): androidx.documentfile.provider.DocumentFile? {
+        val doc = androidx.documentfile.provider.DocumentFile.fromTreeUri(context, tree) ?: return null
+        return try {
+            doc.listFiles().firstOrNull { it?.name == name }
+        } catch (_: Exception) { null }
+    }
+
+    private fun readUriText(uri: Uri): String? = try {
+        context.contentResolver.openInputStream(uri)?.use { it.bufferedReader(Charsets.UTF_8).readText() }
+    } catch (_: Exception) { null }
+
+    private fun writeUriText(uri: Uri, text: String): Boolean = try {
+        val os = context.contentResolver.openOutputStream(uri, "wt")
+        if (os == null) false else os.use { it.write(text.toByteArray(Charsets.UTF_8)); true }
+    } catch (_: Exception) { false }
+
+    private fun noteTitle(content: String): String {
+        val line = content.split("\n".toRegex()).firstOrNull { it.trim().startsWith("title:") } ?: return "Untitled"
+        return line.removePrefix("title:").trim()
+    }
+
+    private fun noteDate(content: String): String {
+        val line = content.split("\n".toRegex()).firstOrNull { it.trim().startsWith("date:") } ?: return ""
+        return line.removePrefix("date:").trim()
+    }
+
+    private fun listNotesDir(dir: File): List<Map<String, Any?>> {
+        return dir.listFiles()?.filter { it.isFile && it.name.endsWith(".md") }?.sortedWith(
+            compareByDescending<File> { it.lastModified() }
+        )?.map { file ->
+            val content = try { file.readText() } catch (_: Exception) { "" }
+            mapOf(
+                "name" to file.name,
+                "path" to file.absolutePath,
+                "size" to file.length(),
+                "title" to noteTitle(content),
+                "date" to noteDate(content),
+                "modified" to file.lastModified()
+            )
+        } ?: emptyList()
+    }
+
+    private fun listNotesTree(tree: Uri): List<Map<String, Any?>> {
+        val doc = androidx.documentfile.provider.DocumentFile.fromTreeUri(context, tree)
+            ?: return emptyList()
+        return try {
+            doc.listFiles()
+                .filter { it.isFile && (it.name ?: "").endsWith(".md") }
+                .sortedByDescending { it.lastModified() }
+                .map { f ->
+                    val content = readUriText(f.uri) ?: ""
+                    mapOf(
+                        "name" to f.name,
+                        "path" to f.name,
+                        "size" to f.length(),
+                        "title" to noteTitle(content),
+                        "date" to noteDate(content),
+                        "modified" to f.lastModified()
+                    )
+                }
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    private fun listNotes(): List<Map<String, Any?>> {
+        val tree = vaultTree()
+        return if (tree != null) listNotesTree(tree) else listNotesDir(appNotesDir())
+    }
+
+    private fun noteList(parameters: Map<String, Any?>): CommandResult {
+        val list = listNotes()
+        return CommandResult(true, data = mapOf("notes" to list, "count" to list.size))
+    }
+
+    private fun noteFrontMatter(body: String, path: String): String {
+        val firstLine = body.split("\n".toRegex()).firstOrNull { it.trim().isNotEmpty() }?.trim().orEmpty()
+        val title = if (body.isBlank()) path else firstLine
+        val date = java.text.SimpleDateFormat("yyyy-MM-dd HH:mm", java.util.Locale.US).format(java.util.Date())
+        val content = if (body.isBlank()) "" else "\n$body"
+        return "---\n" + "title: $title\n" + "date: $date\n" + "---\n" + content
+    }
+
+    private fun noteCreate(parameters: Map<String, Any?>): CommandResult {
+        val path = parameters["path"]?.toString()?.trim() ?: ""
+        if (path.isBlank()) {
+            return CommandResult(false, errorCode = "INVALID_ARGUMENT", error = "path (file name) is required.")
+        }
+        val name = noteFileName(path)
+        val body = parameters["content"]?.toString() ?: ""
+        val payload = noteFrontMatter(body, name)
+
+        val tree = vaultTree()
+        if (tree != null) {
+            return try {
+                val doc = androidx.documentfile.provider.DocumentFile.fromTreeUri(context, tree)
+                    ?: return CommandResult(false, errorCode = "VAULT_ERROR", error = "Memory Vault folder is unavailable.")
+                val target = treeChild(tree, name) ?: doc.createFile("text/markdown", name)
+                    ?: return CommandResult(false, errorCode = "VAULT_ERROR", error = "Could not create note in the Memory Vault.")
+                if (!writeUriText(target.uri, payload)) {
+                    return CommandResult(false, errorCode = "WRITE_ERROR", error = "Failed to write note to the Memory Vault.")
+                }
+                CommandResult(true, data = mapOf("message" to "Note created.", "path" to name, "name" to name))
+            } catch (e: Exception) {
+                CommandResult(false, errorCode = "WRITE_ERROR", error = e.message ?: "Failed to create note.")
+            }
+        }
+
+        val file = File(appNotesDir(), name)
+        return try {
+            file.parentFile?.mkdirs()
+            file.writeText(payload, Charsets.UTF_8)
+            CommandResult(true, data = mapOf("message" to "Note created.", "path" to file.absolutePath, "name" to file.name))
+        } catch (e: Exception) {
+            CommandResult(false, errorCode = "WRITE_ERROR", error = e.message ?: "Failed to create note.")
+        }
+    }
+
+    private fun noteRead(parameters: Map<String, Any?>): CommandResult {
+        val path = parameters["path"]?.toString()
+        if (path == null) {
+            return CommandResult(false, errorCode = "INVALID_ARGUMENT", error = "path is required.")
+        }
+        val name = noteFileName(path)
+
+        val tree = vaultTree()
+        if (tree != null) {
+            val child = treeChild(tree, name)
+                ?: return CommandResult(false, errorCode = "NOT_FOUND", error = "Note not found: $path")
+            val content = readUriText(child.uri)
+                ?: return CommandResult(false, errorCode = "READ_ERROR", error = "Failed to read note: $path")
+            return CommandResult(
+                true,
+                data = mapOf("content" to content, "path" to name, "title" to noteTitle(content), "date" to noteDate(content)),
+            )
+        }
+
+        val file = File(path).takeIf { it.isAbsolute && it.isFile } ?: File(appNotesDir(), name)
+        if (!file.exists() || !file.isFile) {
+            return CommandResult(false, errorCode = "NOT_FOUND", error = "Note not found: $path")
+        }
+        return try {
+            val content = file.readText()
+            CommandResult(true, data = mapOf("content" to content, "path" to file.absolutePath, "title" to noteTitle(content), "date" to noteDate(content)))
+        } catch (e: Exception) {
+            CommandResult(false, errorCode = "READ_ERROR", error = e.message ?: "Failed to read note.")
+        }
+    }
+
+    private fun noteDelete(parameters: Map<String, Any?>): CommandResult {
+        val path = parameters["path"]?.toString()
+        if (path == null) {
+            return CommandResult(false, errorCode = "INVALID_ARGUMENT", error = "path is required.")
+        }
+        val name = noteFileName(path)
+
+        val tree = vaultTree()
+        if (tree != null) {
+            val child = treeChild(tree, name)
+                ?: return CommandResult(false, errorCode = "NOT_FOUND", error = "Note not found: $path")
+            return if (child.delete()) {
+                CommandResult(true, data = mapOf("message" to "Deleted.", "path" to name))
+            } else {
+                CommandResult(false, errorCode = "DELETE_ERROR", error = "Failed to delete.")
+            }
+        }
+
+        val file = File(path).takeIf { it.isAbsolute && it.isFile } ?: File(appNotesDir(), name)
+        if (!file.exists()) {
+            return CommandResult(false, errorCode = "NOT_FOUND", error = "Note not found: $path")
+        }
+        return try {
+            file.delete()
+            CommandResult(true, data = mapOf("message" to "Deleted.", "path" to file.absolutePath))
+        } catch (e: Exception) {
+            CommandResult(false, errorCode = "DELETE_ERROR", error = e.message ?: "Failed to delete.")
+        }
     }
 
     private fun uiType(parameters: Map<String, Any?>): CommandResult {

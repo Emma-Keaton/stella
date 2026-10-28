@@ -138,6 +138,41 @@ Settings (`stream_replies`, `startup_greeting`).
 3. On the connect screen you can **Skip** linking to a PC for now and use
    Stella standalone - link later from Settings whenever you want.
 
+## 📦 Downloads & Releases
+
+| Platform | Latest Release | Archive |
+|----------|----------------|---------|
+| Windows 10/11 x64 | [Stella-Setup.exe](https://github.com/Emma-Keaton/stella/releases/latest) | [All Windows releases](https://github.com/Emma-Keaton/stella/releases) |
+| macOS Intel/Apple Silicon | [Stella-macOS.dmg](https://github.com/Emma-Keaton/stella/releases/latest) | [All macOS releases](https://github.com/Emma-Keaton/stella/releases) |
+| Linux x64 / ARM | [Stella-Linux.tar.gz](https://github.com/Emma-Keaton/stella/releases/latest) | [All Linux releases](https://github.com/Emma-Keaton/stella/releases) |
+| Android APK | [Stella-Connect.apk](https://github.com/Emma-Keaton/stella/releases/latest) | [All Android releases](https://github.com/Emma-Keaton/stella/releases) |
+| iOS TestFlight | [Join TestFlight](https://testflight.apple.com/join/) | - |
+
+### Full Setup Instructions
+
+**Windows**
+1. Download `Stella-Setup.exe` from Releases.
+2. Run installer, launch from Start Menu.
+3. Settings → Local Models → Download compatible model for your specs.
+4. Settings → AI & SPEED → add API keys for cloud providers.
+
+**macOS**
+1. Download `Stella-macOS.dmg` from Releases.
+2. Drag Stella to Applications, launch.
+3. Grant microphone/accessibility permissions when prompted.
+4. Settings → Local Models → Download model.
+
+**Linux**
+1. Download `Stella-Linux.tar.gz` from Releases.
+2. `tar -xzf Stella-Linux.tar.gz && ./Stella`
+3. Run `grant_permissions.sh` for microphone/audio loopback.
+
+**Android**
+See above Android steps. Optionally link to PC via Settings → CONNECTIONS → Link to computer.
+
+**iOS**
+Join TestFlight, install from App Store preview, enable permissions in Settings → Stella → Microphone, Notifications.
+
 ### Home page: prompt, navigate, speak
 
 The **Home** tab is the launch pad:

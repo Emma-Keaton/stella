@@ -48,11 +48,23 @@ class LLM:
     """Chat + tool-calling against an OpenAI-compatible endpoint."""
 
     def __init__(self, base_url: str, model: str = "k2", timeout: float = 300.0,
-                 name: str = "local") -> None:
+                 name: str = "local", api_key: str = "",
+                 auth_header: str = "Authorization",
+                 auth_prefix: str = "Bearer ") -> None:
         self.base_url = base_url.rstrip("/")
         self.model = model
         self.timeout = timeout
         self.name = name
+        self.api_key = api_key
+        self.auth_header = auth_header
+        self.auth_prefix = auth_prefix
+
+    def _headers(self) -> dict[str, str]:
+        """Request headers, including the provider auth header when there is a key."""
+        headers = {"Content-Type": "application/json"}
+        if self.api_key:
+            headers[self.auth_header] = f"{self.auth_prefix}{self.api_key}"
+        return headers
 
     def available(self) -> bool:
         try:
@@ -82,7 +94,7 @@ class LLM:
         req = urllib.request.Request(
             f"{self.base_url}/v1/chat/completions",
             data=json.dumps(payload).encode("utf-8"),
-            headers={"Content-Type": "application/json"},
+            headers=self._headers(),
         )
         try:
             with urllib.request.urlopen(req, timeout=self.timeout) as resp:
@@ -152,9 +164,54 @@ class Backend:
         return backend.chat(messages, tools, **kw)
 
 
+class CloudLLM:
+    """A cloud provider backend that resolves keys per-request via adapters.chat().
+
+    Unlike the raw `LLM` class, this:
+    * resolves the API key on every request (a UI save takes effect immediately),
+    * speaks the provider's native wire format (Anthropic / Gemini / OpenAI-compat),
+    * never snapshots the key at construction time.
+    """
+
+    def __init__(self, provider_id: str, entry: dict) -> None:
+        self.provider_id = provider_id
+        self.entry = entry
+        self.name = f"cloud-{provider_id}"
+        self.model = entry.get("model", "")
+
+    def available(self) -> bool:
+        """A cloud provider is available if it has a key configured."""
+        from core.providers.keys import resolve_key
+
+        return bool(resolve_key(self.provider_id))
+
+    def chat(
+        self,
+        messages: list[dict],
+        tools: list[dict] | None = None,
+        max_tokens: int = 1024,
+        temperature: float = 0.3,
+        **kw,
+    ) -> LLMResponse:
+        from core.providers.adapters import ProviderError, chat as adapter_chat
+
+        try:
+            text = adapter_chat(
+                self.provider_id,
+                messages,
+                max_tokens=max_tokens,
+                temperature=temperature,
+            )
+            return LLMResponse(text=text, finish_reason="stop")
+        except ProviderError as e:
+            return LLMResponse(error=f"[{self.provider_id}] {e}")
+        except Exception as e:
+            return LLMResponse(error=f"[{self.provider_id}] {e}")
+
+
 def default_backend() -> Backend:
     """Backend chain wired to Stella's existing runtime configuration."""
-    from core import k2_runtime
+    from core import engine_runtime
 
     backends: list[LLM] = []
 
@@ -177,25 +234,22 @@ def default_backend() -> Backend:
     #    public build, in which case this simply contributes nothing).
     try:
         backends.append(LLM(
-            f"http://127.0.0.1:{k2_runtime.K2_PORT}",
+            f"http://127.0.0.1:{engine_runtime.K2_PORT}",
             model="k2", name="k2-local", timeout=600.0,
         ))
     except Exception:
         pass
 
-    def _cloud(name: str, env: dict, url: str, model: str) -> LLM | None:
-        if not env.get("api_key"):
-            return None
-        # Generous timeouts for cloud APIs; local models set explicitly above.
-        return LLM(url, model=model, timeout=120.0, name=name)
-
+    # 3. Cloud providers, resolved from the shared provider configuration.
+    #    The chain comes from the registry + the saved provider store, so a key
+    #    saved in Settings > Cloud Providers is actually used here (T1.10).
+    #    Uses adapters.chat() so each provider speaks its native wire format
+    #    and keys are resolved per-request (no import-time snapshot).
     try:
-        import os
-        env = {k.lower(): v for k, v in os.environ.items()}
+        from core.providers.router import ProviderRouter
+        for entry in ProviderRouter().chain("agent"):
+            backends.append(CloudLLM(entry["provider"], entry))
     except Exception:
-        env = {}
+        pass
 
-    groq = _cloud("groq", env, "https://api.groq.com/openai/v1", "llama-3.3-70b-versatile")
-    if groq:
-        backends.append(groq)
     return Backend(backends)

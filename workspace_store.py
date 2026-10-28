@@ -102,7 +102,15 @@ class WorkspaceStore:
                     title TEXT NOT NULL,
                     created_at INTEGER NOT NULL,
                     updated_at INTEGER NOT NULL,
-                    pinned INTEGER NOT NULL DEFAULT 0
+                    pinned INTEGER NOT NULL DEFAULT 0,
+                    workspace_id TEXT NOT NULL DEFAULT 'personal'
+                );
+
+                CREATE TABLE IF NOT EXISTS workspaces (
+                    id TEXT PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    created_at INTEGER NOT NULL,
+                    sort_order INTEGER NOT NULL DEFAULT 0
                 );
 
                 CREATE TABLE IF NOT EXISTS messages (
@@ -128,6 +136,20 @@ class WorkspaceStore:
                 );
                 """
             )
+            # Migration: add workspace_id column to existing conversations tables
+            try:
+                conn.execute("ALTER TABLE conversations ADD COLUMN workspace_id TEXT NOT NULL DEFAULT 'personal'")
+            except sqlite3.OperationalError:
+                pass  # column already exists
+            # Seed default "Personal" workspace if none exists
+            row = conn.execute("SELECT COUNT(*) AS c FROM workspaces").fetchone()
+            if row["c"] == 0:
+                conn.execute(
+                    "INSERT INTO workspaces(id, name, created_at, sort_order) VALUES(?, ?, ?, ?)",
+                    ("personal", "Personal", _now_ms(), 0),
+                )
+            conn.commit()
+
 
     def _get_state(self, key: str) -> str | None:
         with self._lock, self._connect() as conn:
@@ -148,18 +170,19 @@ class WorkspaceStore:
         if conversation_id:
             self._set_state("active_conversation_id", conversation_id)
 
-    def create_conversation(self, title: str = "New Conversation") -> str:
+    def create_conversation(self, title: str = "New Conversation", workspace_id: str = "personal") -> str:
         conversation_id = str(uuid.uuid4())
         stamp = _now_ms()
         with self._lock, self._connect() as conn:
             conn.execute(
                 """
-                INSERT INTO conversations(id, title, created_at, updated_at, pinned)
-                VALUES(?, ?, ?, ?, 0)
+                INSERT INTO conversations(id, title, created_at, updated_at, pinned, workspace_id)
+                VALUES(?, ?, ?, ?, 0, ?)
                 """,
-                (conversation_id, title or "New Conversation", stamp, stamp),
+                (conversation_id, title or "New Conversation", stamp, stamp, workspace_id),
             )
         self.set_active_conversation_id(conversation_id)
+        self.set_active_workspace_id(workspace_id)
         return conversation_id
 
     def conversation_exists(self, conversation_id: str) -> bool:
@@ -542,6 +565,84 @@ class WorkspaceStore:
             }
             for row in rows
         ]
+
+    # ---- workspaces ---------------------------------------------------------
+
+    def list_workspaces(self) -> list[dict]:
+        with self._lock, self._connect() as conn:
+            rows = conn.execute(
+                "SELECT id, name, created_at, sort_order FROM workspaces ORDER BY sort_order ASC, created_at ASC"
+            ).fetchall()
+        return [
+            {"id": r["id"], "name": r["name"], "createdAt": int(r["created_at"]), "sortOrder": int(r["sort_order"])}
+            for r in rows
+        ]
+
+    def create_workspace(self, name: str) -> str:
+        ws_id = str(uuid.uuid4())
+        stamp = _now_ms()
+        with self._lock, self._connect() as conn:
+            max_order = conn.execute("SELECT COALESCE(MAX(sort_order), -1) AS m FROM workspaces").fetchone()["m"]
+            conn.execute(
+                "INSERT INTO workspaces(id, name, created_at, sort_order) VALUES(?, ?, ?, ?)",
+                (ws_id, name or "New Workspace", stamp, int(max_order) + 1),
+            )
+        return ws_id
+
+    def rename_workspace(self, workspace_id: str, name: str) -> None:
+        with self._lock, self._connect() as conn:
+            conn.execute("UPDATE workspaces SET name = ? WHERE id = ?", (name, workspace_id))
+
+    def reorder_workspace(self, workspace_id: str, sort_order: int) -> None:
+        with self._lock, self._connect() as conn:
+            conn.execute("UPDATE workspaces SET sort_order = ? WHERE id = ?", (sort_order, workspace_id))
+
+    def delete_workspace(self, workspace_id: str) -> None:
+        if workspace_id == "personal":
+            return  # cannot delete default workspace
+        with self._lock, self._connect() as conn:
+            # Move conversations to personal workspace
+            conn.execute("UPDATE conversations SET workspace_id = 'personal' WHERE workspace_id = ?", (workspace_id,))
+            conn.execute("DELETE FROM workspaces WHERE id = ?", (workspace_id,))
+
+    def list_threads(self, workspace_id: str, search: str = "") -> list[dict]:
+        with self._lock, self._connect() as conn:
+            if search:
+                rows = conn.execute(
+                    "SELECT id, title, created_at, updated_at, pinned FROM conversations WHERE workspace_id = ? AND title LIKE ? ORDER BY updated_at DESC",
+                    (workspace_id, f"%{search}%"),
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    "SELECT id, title, created_at, updated_at, pinned FROM conversations WHERE workspace_id = ? ORDER BY updated_at DESC",
+                    (workspace_id,),
+                ).fetchall()
+        return [
+            {"id": r["id"], "title": r["title"], "createdAt": int(r["created_at"]), "updatedAt": int(r["updated_at"]), "pinned": bool(r["pinned"])}
+            for r in rows
+        ]
+
+    def search_all(self, query: str) -> list[dict]:
+        with self._lock, self._connect() as conn:
+            rows = conn.execute(
+                "SELECT c.id, c.title, c.workspace_id, w.name AS workspace_name FROM conversations c LEFT JOIN workspaces w ON c.workspace_id = w.id WHERE c.title LIKE ? ORDER BY c.updated_at DESC",
+                (f"%{query}%",),
+            ).fetchall()
+        return [
+            {"id": r["id"], "title": r["title"], "workspaceId": r["workspace_id"], "workspaceName": r["workspace_name"]}
+            for r in rows
+        ]
+
+    def move_thread(self, conversation_id: str, workspace_id: str) -> None:
+        with self._lock, self._connect() as conn:
+            conn.execute("UPDATE conversations SET workspace_id = ? WHERE id = ?", (workspace_id, conversation_id))
+
+    def get_active_workspace_id(self) -> str | None:
+        return self._get_state("active_workspace_id")
+
+    def set_active_workspace_id(self, workspace_id: str | None) -> None:
+        if workspace_id:
+            self._set_state("active_workspace_id", workspace_id)
 
 
 _STORE = WorkspaceStore()

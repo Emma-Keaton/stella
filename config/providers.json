@@ -1,0 +1,114 @@
+{
+  "$comment": "Single source of truth for cloud provider capabilities. Consumed by Python (core/providers/registry.py) and Kotlin (core/ProviderRegistry.kt). Changing a provider here MUST change it on both sides - enforced by tests/test_provider_registry.py and ProviderRegistryTest.kt.",
+  "version": 1,
+  "providers": [
+    {
+      "id": "groq",
+      "label": "Groq",
+      "auth_style": "bearer",
+      "wire_format": "openai",
+      "base_url": "https://api.groq.com/openai/v1",
+      "requires_key": true,
+      "models_endpoint": "/models",
+      "chat_endpoint": "/chat/completions"
+    },
+    {
+      "id": "gemini",
+      "label": "Google Gemini",
+      "auth_style": "bearer",
+      "wire_format": "openai",
+      "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
+      "requires_key": true,
+      "models_endpoint": "/models",
+      "chat_endpoint": "/chat/completions",
+      "native_base_url": "https://generativelanguage.googleapis.com/v1beta"
+    },
+    {
+      "id": "openai",
+      "label": "OpenAI",
+      "auth_style": "bearer",
+      "wire_format": "openai",
+      "base_url": "https://api.openai.com/v1",
+      "requires_key": true,
+      "models_endpoint": "/models",
+      "chat_endpoint": "/chat/completions"
+    },
+    {
+      "id": "anthropic",
+      "label": "Anthropic",
+      "auth_style": "x-api-key",
+      "wire_format": "anthropic",
+      "base_url": "https://api.anthropic.com",
+      "requires_key": true,
+      "models_endpoint": null,
+      "chat_endpoint": "/v1/messages",
+      "anthropic_version": "2023-06-01",
+      "models": [
+        "claude-opus-4-1-20250805",
+        "claude-sonnet-4-5-20250929",
+        "claude-haiku-4-5-20251001",
+        "claude-3-7-sonnet-latest",
+        "claude-3-5-haiku-latest"
+      ]
+    },
+    {
+      "id": "openrouter",
+      "label": "OpenRouter",
+      "auth_style": "bearer",
+      "wire_format": "openai",
+      "base_url": "https://openrouter.ai/api/v1",
+      "requires_key": true,
+      "models_endpoint": "/models",
+      "chat_endpoint": "/chat/completions"
+    },
+    {
+      "id": "nvidia",
+      "label": "Nvidia NIM",
+      "auth_style": "bearer",
+      "wire_format": "openai",
+      "base_url": "https://integrate.api.nvidia.com/v1",
+      "requires_key": true,
+      "models_endpoint": "/models",
+      "chat_endpoint": "/chat/completions",
+      "docs_url": "https://docs.api.nvidia.com/nim/",
+      "models": [
+        "nvidia/llama-3.1-nemotron-70b-instruct",
+        "meta/llama-3.3-70b-instruct",
+        "meta/llama-3.1-70b-instruct",
+        "meta/llama-3.1-8b-instruct",
+        "qwen/qwen2.5-7b-instruct",
+        "google/gemma-2-9b-it"
+      ]
+    },
+    {
+      "id": "ollama",
+      "label": "Ollama",
+      "auth_style": "none",
+      "wire_format": "openai",
+      "base_url": "http://localhost:11434/v1",
+      "requires_key": false,
+      "models_endpoint": "/models",
+      "chat_endpoint": "/chat/completions"
+    },
+    {
+      "id": "lmstudio",
+      "label": "LM Studio",
+      "auth_style": "none",
+      "wire_format": "openai",
+      "base_url": "http://localhost:1234/v1",
+      "requires_key": false,
+      "models_endpoint": "/models",
+      "chat_endpoint": "/chat/completions"
+    },
+    {
+      "id": "custom",
+      "label": "Custom",
+      "auth_style": "custom",
+      "wire_format": "openai",
+      "base_url": "",
+      "requires_key": false,
+      "models_endpoint": "/models",
+      "chat_endpoint": "/chat/completions"
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+    "name": "document_ops",
+    "aliases": ["document_ops", "word document", "docx", "create document",
+                "write document", "read document", "edit document", "document manipulation",
+                "office document", "microsoft word"],
+    "description": "Document operations for Word (.docx) files: create, read, and edit documents. Uses python-docx. Read-only operations never modify files; write operations require authorized=true plus confirm=true plus a policy allow rule. All file paths are resolved against the workspace root - nothing is written outside it.",
+    "triggers": [
+        "word document", "docx", "create document", "write document",
+        "read document", "edit document", "document manipulation",
+        "office document", "microsoft word", "write a document",
+        "create a word file"
+    ],
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "operation": {
+                "type": "string",
+                "description": "One of: create | read | edit | sources. Defaults to sources."
+            },
+            "path": {
+                "type": "string",
+                "description": "Path to the .docx file."
+            },
+            "title": {
+                "type": "string",
+                "description": "Document title for create operation."
+            },
+            "content": {
+                "type": "string",
+                "description": "Document content/body text for create or edit."
+            },
+            "authorized": {
+                "type": "boolean",
+                "description": "Must be true for write operations (create, edit)."
+            },
+            "confirm": {
+                "type": "boolean",
+                "description": "Must be true to actually write a file."
+            }
+        },
+        "required": []
+    },
+    "version": "1.0.0",
+    "active": true,
+    "author": "Stella",
+    "category": "docs",
+    "surface": "desktop",
+    "requires": ["docx"],
+    "optional_dependencies": [],
+    "notes": "Uses python-docx. Write operations are destructive and need authorized=true + confirm=true + an allow rule. Paths are confined to the workspace root."
+}

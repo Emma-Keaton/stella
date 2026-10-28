@@ -16,11 +16,23 @@ Anything that writes to disk, shells out, or reaches the network is marked
 destructive and must be explicitly allowed by the caller. The agent cannot
 widen its own permissions - `Registry.allowed` is injected from the host and
 never derived from model output.
+
+Honesty
+-------
+Every tool result carries an honesty status:
+
+* ``done``     - the action completed and was verified (or is self-evident)
+* ``unverified`` - the action was attempted but could not be confirmed
+* ``failed``     - the action could not be performed
+
+This matches the principle from Stella's design: "It says what it checked,
+not what it assumed." Tools must never claim success they did not observe.
 """
 
 from __future__ import annotations
 
 import inspect
+import json
 import os
 import shlex
 import subprocess
@@ -29,19 +41,102 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable, Iterable
 
+from core.tool_policy import PolicyDecision
+from core.tool_policy import evaluate as evaluate_tool_policy
+
+
+def _audit_tool_call(
+    tool_name: str,
+    target: str,
+    activity: str,
+    rule: str,
+    ok: bool,
+    reason: str = "",
+    tool: "Tool | None" = None,
+) -> None:
+    """Best-effort audit row: a failure to log never fails the call itself."""
+    try:
+        from core import audit
+
+        audit.record(
+            "agent",
+            tool_name,
+            target or "-",
+            "permitted" if ok else "refused",
+            activity=activity,
+            rule=rule,
+            extra={
+                "reason": reason,
+                "destructive": bool(tool.destructive) if tool else False,
+                "requires": list(tool.requires) if tool else [],
+            },
+        )
+    except Exception:
+        pass
+
+
+# ---------------------------------------------------------------------------
+# Honesty levels for tool results
+# ---------------------------------------------------------------------------
+
+class Honesty(str):
+    """How much trust a tool result deserves.
+
+    ``done``      - the action completed and was observed to succeed
+    ``unverified``- the action was attempted but the result could not be
+                    confirmed (e.g., a file write that returned success but
+                    the file wasn't re-read to confirm)
+    ``failed``    - the action could not be performed at all
+    ``ask``       - nothing was done, because doing it would have been a guess
+    ``started``   - the action is under way; the outcome follows separately
+
+    See `agent/outcome.py` for what each word may be spoken as.
+    """
+    DONE = "done"
+    UNVERIFIED = "unverified"
+    FAILED = "failed"
+    ASK = "ask"
+    STARTED = "started"
+
+    @classmethod
+    def from_bool(cls, ok: bool) -> "Honesty":
+        return cls.DONE if ok else cls.FAILED
+
+
+# ---------------------------------------------------------------------------
+# Tool result
+# ---------------------------------------------------------------------------
 
 @dataclass
 class ToolResult:
-    """Uniform tool outcome. `ok` false means the loop should reconsider."""
+    """Uniform tool outcome.
+
+    ``ok`` false means the loop should reconsider. ``honesty`` tells the
+    model how much to trust the outcome: ``done`` means the action was
+    confirmed, ``unverified`` means it was attempted but not confirmed,
+    ``failed`` means it did not happen.
+    """
 
     ok: bool
     output: str = ""
     data: Any = None
     error: str = ""
+    honesty: Honesty = Honesty.DONE
 
     def as_message(self) -> str:
-        return self.output if self.ok else f"ERROR: {self.error or 'tool failed'}"
+        if self.ok:
+            return self.output
+        return f"ERROR: {self.error or 'tool failed'}"
 
+    @property
+    def is_confirmed(self) -> bool:
+        """True only if the outcome was confirmed (honesty == done)."""
+        return self.ok and self.honesty == Honesty.DONE
+
+
+# ---------------------------------------------------------------------------
+# Tool declaration
+# ---------------------------------------------------------------------------
 
 @dataclass
 class Tool:
@@ -51,6 +146,18 @@ class Tool:
     handler: Callable[..., ToolResult]
     requires: tuple[str, ...] = ()
     destructive: bool = False
+    # Self-describing metadata (mark-LVI pattern): every skill declares its
+    # own TOOL dict. These fields let the model understand *why* a tool
+    # exists and what it costs, not just what it does.
+    category: str = "general"
+    cost_tier: int = 1          # 1 = cheap/free, 2 = moderate, 3 = expensive
+    requires_confirmation: bool = False
+    read_only: bool = True
+    # Activity class gating by core/tool_policy.py: passive | dns | active |
+    # destructive. Passive work never opens a connection to a target.
+    activity: str = "passive"
+    # Short description for models on a tight tool budget (agent/tool_budget).
+    brief: str = ""
 
     def schema(self) -> dict:
         return {
@@ -62,6 +169,24 @@ class Tool:
             },
         }
 
+    def to_tool_dict(self) -> dict:
+        """Self-describing tool dict (mark-LVI pattern).
+
+        Returns a complete description that can be shown to the model or
+        stored in a skill manifest, including honesty metadata hints.
+        """
+        return {
+            "name": self.name,
+            "description": self.description,
+            "parameters": self.parameters,
+            "category": self.category,
+            "cost_tier": self.cost_tier,
+            "requires_confirmation": self.requires_confirmation,
+            "read_only": self.read_only,
+            "requires": list(self.requires),
+            "destructive": self.destructive,
+            "activity": self.activity,
+        }
 
 class Registry:
     """Holds tools and decides what a given caller may run."""
@@ -70,6 +195,7 @@ class Registry:
         self._tools: dict[str, Tool] = {}
         # None means "no gating" (used by tests and by trusted local callers).
         self.allowed: set[str] | None = None if allowed is None else set(allowed)
+        self.actor = "agent"
 
     # -- registration -------------------------------------------------------
 
@@ -80,9 +206,16 @@ class Registry:
         parameters: dict,
         requires: tuple[str, ...] = (),
         destructive: bool = False,
+        activity: str = "passive",
+        brief: str = "",
     ):
         def wrap(fn: Callable[..., ToolResult]) -> Callable[..., ToolResult]:
-            self.register(Tool(name, description, parameters, fn, requires, destructive))
+            self.register(
+                Tool(
+                    name, description, parameters, fn, requires, destructive,
+                    activity=activity, brief=brief,
+                )
+            )
             return fn
 
         return wrap
@@ -120,18 +253,75 @@ class Registry:
         """OpenAI-style tool schemas for the tools this caller may use."""
         return [t.schema() for t in self._tools.values() if self.permitted(t.name)]
 
+    # -- policy gate --------------------------------------------------------
+
+    _audit = staticmethod(_audit_tool_call)
+
+    @staticmethod
+    def _target_of(tool: Tool, kwargs: dict) -> str:
+        for key in ("target", "scope", "host", "domain", "ip", "url", "path", "command"):
+            value = kwargs.get(key)
+            if value:
+                return str(value)[:200]
+        return ""
+
+    def policy_check(self, name: str, args: dict | None = None) -> PolicyDecision:
+        """The policy verdict for a call, without running it."""
+        tool = self._tools.get(name)
+        if tool is None:
+            return PolicyDecision(
+                allowed=False, rule="unknown-tool", reason=f"unknown tool '{name}'")
+        kwargs = dict(args or {})
+        return evaluate_tool_policy(
+            name, tool.activity, self._target_of(tool, kwargs), actor=self.actor)
+
     # -- execution ----------------------------------------------------------
 
     def run(self, name: str, args: dict | None = None) -> ToolResult:
-        """Execute a tool with permission + isolation guarantees."""
+        """Execute a tool with permission, policy and audit guarantees."""
         tool = self._tools.get(name)
         if tool is None:
+            self._audit(name, args or "", "", "unknown-tool", ok=False, tool=tool)
             return ToolResult(ok=False, error=f"unknown tool '{name}'")
         if not self.permitted(name):
+            self._audit(name, args or "", "", "not-enabled", ok=False, tool=tool)
             return ToolResult(
                 ok=False,
                 error=f"tool '{name}' is not enabled for this session",
             )
+
+        kwargs = dict(args or {})
+        target = self._target_of(tool, kwargs)
+
+        decision = evaluate_tool_policy(
+            name, tool.activity, target, actor=self.actor)
+        if not decision.allowed:
+            approved = False
+            try:
+                from core.approvals import is_approved
+
+                approved = is_approved(
+                    self.actor, name, tool.activity, target)
+            except Exception:
+                approved = False
+            if not approved:
+                self._audit(
+                    name, target, decision.activity, decision.rule, ok=False,
+                    reason=decision.reason, tool=tool)
+                return ToolResult(
+                    ok=False,
+                    error=(
+                        f"Refused by tool policy '{decision.rule}': {decision.reason} "
+                        "Add an allow rule in config/tool_policy.json naming this tool "
+                        "and target, or grant a standing approval from Settings."
+                    ),
+                    honesty=Honesty.ASK,
+                )
+
+        self._audit(
+            name, target, decision.activity, decision.rule, ok=True,
+            reason="permitted; running", tool=tool)
+
         try:
             kwargs = dict(args or {})
             sig = inspect.signature(tool.handler)
@@ -145,11 +335,24 @@ class Registry:
             result.output = (result.output or "")[:8000]
             result.data = {"elapsed": round(time.time() - started, 3), **(
                 result.data if isinstance(result.data, dict) else {})}
+
+            # Honesty inference: if the tool handler didn't set honesty,
+            # infer it from the tool's properties and outcome.
+            if result.honesty == Honesty.DONE and not result.ok:
+                result.honesty = Honesty.FAILED
+            elif result.ok and result.honesty == Honesty.DONE:
+                # Destructive or network actions are "unverified" unless the
+                # handler explicitly confirmed them.
+                if tool.destructive or not tool.read_only:
+                    result.honesty = Honesty.UNVERIFIED
+
             return result
         except TypeError as exc:
-            return ToolResult(ok=False, error=f"bad arguments for '{name}': {exc}")
+            return ToolResult(ok=False, error=f"bad arguments for '{name}': {exc}",
+                              honesty=Honesty.FAILED)
         except Exception as exc:  # noqa: BLE001 - surfaced back to the model
-            return ToolResult(ok=False, error=f"{type(exc).__name__}: {exc}")
+            return ToolResult(ok=False, error=f"{type(exc).__name__}: {exc}",
+                              honesty=Honesty.FAILED)
 
 
 # ---------------------------------------------------------------------------
@@ -256,6 +459,8 @@ def build_default_registry(workspace: str | Path | None = None,
         },
         requires=("files",),
         destructive=True,
+        activity="destructive",
+        brief="Write or append a text file in the workspace.",
     )
     def write_file(path: str, content: str, append: bool = False) -> ToolResult:
         p = _resolve_in_workspace(path)
@@ -345,6 +550,8 @@ def build_default_registry(workspace: str | Path | None = None,
         },
         requires=("shell",),
         destructive=True,
+        activity="active",
+        brief="Run one shell command in the workspace and return its output.",
     )
     def run_command(command: str, timeout_s: int = 60) -> ToolResult:
         cwd = str(_SAFE_ROOT or Path.cwd())
@@ -397,6 +604,55 @@ def build_default_registry(workspace: str | Path | None = None,
     def recall(query: str, limit: int = 8) -> ToolResult:
         from agent.memory import recall as _recall
         return _recall(query, limit)
+
+    @reg.tool(
+        "write_note",
+        "Write a markdown note to the Memory Vault folder. Returns the file path.",
+        {
+            "type": "object",
+            "properties": {
+                "title": {"type": "string", "description": "Note title (used as filename)."},
+                "content": {"type": "string", "description": "Note body in markdown."},
+                "folder": {"type": "string", "description": "Optional subfolder within the vault."},
+            },
+            "required": ["title", "content"],
+        },
+        requires=("memory",),
+        destructive=True,
+        activity="destructive",
+        brief="Write a markdown note into the Memory Vault.",
+    )
+    def write_note(title: str, content: str, folder: str = "") -> ToolResult:
+        import re as _re
+        from pathlib import Path as _Path
+        # Determine vault root from settings or default to ~/Stella/notes
+        vault_root = _Path.home() / "Stella" / "notes"
+        try:
+            import json as _json
+            from core.user_paths import get_user_data_dir
+            settings_path = _Path(get_user_data_dir()) / "config" / "app_settings.json"
+            if settings_path.exists():
+                s = _json.loads(settings_path.read_text(encoding="utf-8-sig"))
+                if not isinstance(s, dict):
+                    s = {}
+                configured = s.get("vault_path") or s.get("memory_vault_folder")
+                if configured and s.get("vault_enabled", True):
+                    vault_root = _Path(configured)
+        except Exception:
+            pass
+        if folder:
+            vault_root = vault_root / folder
+        vault_root.mkdir(parents=True, exist_ok=True)
+        # Sanitize title for filename
+        safe = _re.sub(r'[<>:"/\\|?*]', "_", title).strip() or "untitled"
+        path = vault_root / f"{safe}.md"
+        # Avoid overwriting — append counter
+        counter = 1
+        while path.exists():
+            path = vault_root / f"{safe}_{counter}.md"
+            counter += 1
+        path.write_text(f"# {title}\n\n{content}\n", encoding="utf-8")
+        return ToolResult(ok=True, output=f"Note written: {path}", data={"path": str(path)})
 
     # ---- time / environment ------------------------------------------------
 
@@ -525,6 +781,8 @@ def build_default_registry(workspace: str | Path | None = None,
             "required": ["device"],
         },
         destructive=True,
+        activity="destructive",
+        brief="Reverse every change a device automation session made.",
     )
     def device_revert(device: str, goal: str = "") -> ToolResult:
         from agent import device_automation as da
@@ -544,5 +802,88 @@ def build_default_registry(workspace: str | Path | None = None,
         if summary.get("failed"):
             return ToolResult(ok=False, error=line, data=summary)
         return ToolResult(ok=True, output=line, data=summary)
+
+    # ---- image generation (pocketstrike pattern) ------------------------
+    # Image generation via local model (llama.cpp/Ollama with vision) or
+    # external image generation API. Honest about what it can produce.
+    @reg.tool(
+        "generate_image",
+        "Generate an image from a text prompt. Uses a local image model if "
+        "available (Ollama/LM Studio with vision), otherwise reports that "
+        "image generation is not available on this device. The returned "
+        "image path can be used in subsequent messages.",
+        {
+            "type": "object",
+            "properties": {
+                "prompt": {"type": "string",
+                           "description": "Description of the image to generate."},
+                "width": {"type": "integer",
+                          "description": "Image width in pixels (default 512)."},
+                "height": {"type": "integer",
+                           "description": "Image height in pixels (default 512)."},
+            },
+            "required": ["prompt"],
+        },
+        requires=("files",),
+        destructive=False,
+    )
+    def generate_image(prompt: str, width: int = 512, height: int = 512) -> ToolResult:
+        """Generate an image from a text prompt.
+
+        Tries a local image model first (Ollama/LM Studio with vision
+        capability), then falls back to reporting unavailability. Never
+        fabricates an image that wasn't actually generated.
+        """
+        import json
+        import urllib.request
+
+        # Try local image model first (Ollama/LM Studio with vision support)
+        try:
+            from core.providers import registry
+
+            endpoint = registry.image_generation_endpoint()
+            base_url = endpoint["base_url"]
+            api_key = endpoint["api_key"]
+        except Exception:
+            base_url = ""
+            api_key = ""
+
+        if base_url:
+            try:
+                payload = {
+                    "prompt": prompt,
+                    "width": width,
+                    "height": height,
+                }
+                headers = {"Content-Type": "application/json"}
+                if api_key:
+                    headers["Authorization"] = f"Bearer {api_key}"
+
+                req = urllib.request.Request(
+                    base_url.rstrip("/") + "/generate",
+                    data=json.dumps(payload).encode("utf-8"),
+                    headers=headers,
+                )
+                with urllib.request.urlopen(req, timeout=60) as resp:
+                    if resp.status == 200:
+                        data = json.loads(resp.read().decode())
+                        image_path = data.get("image_path", "")
+                        if image_path and Path(image_path).exists():
+                            return ToolResult(
+                                ok=True,
+                                output=f"Image generated: {image_path}",
+                                data={"path": image_path, "prompt": prompt},
+                                honesty=Honesty.DONE,
+                            )
+            except Exception:
+                pass  # Fall through to "not available"
+
+        return ToolResult(
+            ok=False,
+            error="Image generation not available on this device. "
+                  "Configure an image generation endpoint in Settings, "
+                  "or use a local model with vision capabilities.",
+            honesty=Honesty.FAILED,
+        )
 
     return reg

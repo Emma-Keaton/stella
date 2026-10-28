@@ -44,7 +44,7 @@ def _run_skill_forge(
     from core.dynamic_registry import DynamicToolRegistry
 
     if player and hasattr(player, "write_log"):
-        player.write_log(f"ðŸ§¬ [Evolution] Synthesizing capability for: '{goal}'")
+        player.write_log(f"🧬 [Evolution] Synthesizing capability for: '{goal}'")
     if speak:
         speak("Synthesizing a new capability for this task, sir.")
 
@@ -60,7 +60,7 @@ def _run_skill_forge(
 
     name = str(result.get("name") or skill_name or "new_feature")
     description = str(result.get("description") or "")
-    announcement = f"âš¡ [Stella] Synthesized and activated feature '{name}'. {description}".strip()
+    announcement = f"⚡ [Stella] Synthesized and activated feature '{name}'. {description}".strip()
 
     if player and hasattr(player, "write_log"):
         player.write_log(f"Stella: {announcement}")
@@ -74,7 +74,7 @@ def _run_skill_forge(
                 exec_args["query"] = goal
                 exec_args["goal"] = goal
             if player and hasattr(player, "write_log"):
-                player.write_log(f"â–¶ï¸ [Evolution] Running newly registered skill '{name}'...")
+                player.write_log(f"▶️ [Evolution] Running newly registered skill '{name}'...")
             run_result = DynamicToolRegistry.execute_sync(name, exec_args)
             if run_result:
                 if isinstance(run_result, dict):
@@ -113,7 +113,7 @@ def _inject_context(params: dict, tool: str, step_results: dict, goal: str = "")
             combined = "\n\n---\n\n".join(all_results)
             translated = _translate_to_goal_language(combined, goal)
             params["content"] = translated
-            print(f"[Executor] ðŸ’‰ Injected research results into {tool}")
+            print(f"[Executor] 💉 Injected research results into {tool}")
 
     elif tool == "file_controller" and params.get("action") in ("write", "create_file"):
         content = params.get("content", "")
@@ -126,7 +126,7 @@ def _inject_context(params: dict, tool: str, step_results: dict, goal: str = "")
                 combined = "\n\n---\n\n".join(all_results)
                 translated = _translate_to_goal_language(combined, goal)
                 params["content"] = translated
-                print(f"[Executor] ðŸ’‰ Injected + translated content into {tool}")
+                print(f"[Executor] 💉 Injected + translated content into {tool}")
 
     return params
 
@@ -157,7 +157,7 @@ def _translate_to_goal_language(content: str, goal: str) -> str:
             return content  # offline: leave the content as authored
 
         target_lang = _detect_language(goal)
-        print(f"[Executor] ðŸŒ Translating to: {target_lang}")
+        print(f"[Executor] 🌐 Translating to: {target_lang}")
 
         prompt = (
             f"You are a professional translator. "
@@ -171,10 +171,10 @@ def _translate_to_goal_language(content: str, goal: str) -> str:
         )
         response = model.generate_content(prompt)
         translated = response.text.strip()
-        print(f"[Executor] âœ… Translation done ({target_lang})")
+        print(f"[Executor] ✅ Translation done ({target_lang})")
         return translated
     except Exception as e:
-        print(f"[Executor] âš ï¸ Translation failed: {e}")
+        print(f"[Executor] ⚠️ Translation failed: {e}")
         return content
 
 def _call_tool(tool: str, parameters: dict, speak: Callable | None, player: Any = None) -> str:
@@ -470,7 +470,7 @@ def _call_tool(tool: str, parameters: dict, speak: Callable | None, player: Any 
                 return out_str
         except Exception as exc:
             return f"Feature '{tool}' failed: {exc}"
-        print(f"[Executor] âš ï¸ Unknown tool '{tool}' â€” no developer fallback is configured")
+        print(f"[Executor] ⚠️ Unknown tool '{tool}' — no developer fallback is configured")
         return f"Unknown action: {tool}"
 
 class AgentExecutor:
@@ -484,7 +484,7 @@ class AgentExecutor:
         cancel_flag: threading.Event | None = None,
         player:      Any                    = None,
     ) -> str:
-        print(f"\n[Executor] ðŸŽ¯ Goal: {goal}")
+        print(f"\n[Executor] 🎯 Goal: {goal}")
 
         replan_attempts = 0
         completed_steps = []
@@ -515,7 +515,7 @@ class AgentExecutor:
 
                 params = _inject_context(params, tool, step_results, goal=goal)
 
-                print(f"\n[Executor] â–¶ï¸ Step {step_num}: [{tool}] {desc}")
+                print(f"\n[Executor] ▶️ Step {step_num}: [{tool}] {desc}")
 
                 # Update HUD right telemetry wing with live step operation
                 if player and hasattr(player, "show_hud_operation"):
@@ -543,7 +543,7 @@ class AgentExecutor:
                         result = _call_tool(tool, params, speak, player=player)
                         step_results[step_num] = result 
                         completed_steps.append(step)
-                        print(f"[Executor] âœ… Step {step_num} done: {str(result)[:100]}")
+                        print(f"[Executor] ✅ Step {step_num} done: {str(result)[:100]}")
                         step_ok = True
 
                         # Check if this step produced a deliverable file
@@ -575,7 +575,7 @@ class AgentExecutor:
                             AutoHealEngine.record_last_error(traceback.format_exc())
                         except Exception:
                             pass
-                        print(f"[Executor] âŒ Step {step_num} attempt {attempt} failed: {error_msg}")
+                        print(f"[Executor] ❌ Step {step_num} attempt {attempt} failed: {error_msg}")
 
                         recovery = analyze_error(step, error_msg, attempt=attempt)
                         decision = recovery["decision"]
@@ -590,7 +590,7 @@ class AgentExecutor:
                             continue
 
                         elif decision == ErrorDecision.SKIP:
-                            print(f"[Executor] â­ï¸ Skipping step {step_num}")
+                            print(f"[Executor] ⏭️ Skipping step {step_num}")
                             completed_steps.append(step)
                             step_ok = True
                             break
@@ -617,7 +617,7 @@ class AgentExecutor:
                                     step_ok = True
                                     break
                                 except Exception as fix_err:
-                                    print(f"[Executor] âš ï¸ Fix failed: {fix_err}")
+                                    print(f"[Executor] ⚠️ Fix failed: {fix_err}")
 
                             failed_step  = step
                             failed_error = error_msg

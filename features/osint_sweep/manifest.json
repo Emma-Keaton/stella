@@ -1,0 +1,65 @@
+{
+    "name": "osint_sweep",
+    "aliases": [
+        "osint_sweep", "osint", "username search", "find accounts", "social media search",
+        "email reputation", "phone lookup", "person search", "breach check",
+        "have i been pwned", "account footprint", "reputation check"
+    ],
+    "description": "Open-source intelligence sweeps across identity vectors: username enumeration across a site list, e-mail reputation and breach history, phone-number line-type and carrier, and person-name co-occurrence. Every source is classified passive (P0), DNS-based (P1) or direct-contact (P2) before it runs, and only P0 runs by default - P1 and P2 need an explicit activity class plus a policy allow rule. Each result carries a per-source outcome with its stop reason, and an empty source is reported as empty rather than as a failure.",
+    "triggers": [
+        "osint", "username search", "find this username", "social media accounts",
+        "email reputation", "check this email", "phone lookup", "who owns this number",
+        "person search", "breach check", "have i been pwned", "account footprint",
+        "is this email in a breach", "check a domain for leaks"
+    ],
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "operation": {
+                "type": "string",
+                "description": "One of: tools | username | email | phone | person | reputation | breach_check | sweep | sources. Defaults to tools."
+            },
+            "username": {
+                "type": "string",
+                "description": "Username or handle to look for across the site list."
+            },
+            "email": {
+                "type": "string",
+                "description": "Email address for reputation or breach checks."
+            },
+            "phone": {
+                "type": "string",
+                "description": "Phone number in E.164 or national format."
+            },
+            "person": {
+                "type": "string",
+                "description": "Person name to search for co-occurring accounts."
+            },
+            "activity": {
+                "type": "string",
+                "description": "Activity class to permit: p0 (passive, default) | p1 (DNS) | p2 (direct contact). Only p0 runs without an explicit request and a policy rule."
+            },
+            "authorized": {
+                "type": "boolean",
+                "description": "Must be true for p1 or p2 activity."
+            },
+            "confirm": {
+                "type": "boolean",
+                "description": "Must be true for p1 or p2 activity."
+            },
+            "limit": {
+                "type": "integer",
+                "description": "Maximum items to return. Defaults to 40."
+            }
+        },
+        "required": []
+    },
+    "version": "1.0.0",
+    "active": true,
+    "author": "Stella",
+    "category": "osint",
+    "surface": "both",
+    "requires": [],
+    "optional_dependencies": ["requests"],
+    "notes": "Sherlock-style username enumeration, SpiderFoot-style source taxonomy, theHarvester-style per-source outcome reporting. P0 passive only by default."
+}

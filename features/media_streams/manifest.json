@@ -1,0 +1,93 @@
+{
+    "name": "media_streams",
+    "aliases": [
+        "media_streams", "tv channels", "iptv", "television", "watch channel",
+        "play tv", "internet radio", "play radio", "radio station", "play music",
+        "record stream", "jellyfin", "icecast", "libretime", "broadcast",
+        "playlist", "m3u", "station manager", "now playing"
+    ],
+    "description": "Stream and manage open-source television, radio and self-hosted media. Search the IPTV-org channel catalogue and the Radio-Browser station directory by country, language, category or codec; play a stream in Stella's own media surface or hand it to an external player when the codec is missing; record a stream to disk with a bounded duration; import, dedupe and export the user's own M3U playlists and personal station list; and connect to the user's own Jellyfin, Icecast or LibreTime servers over loopback. States honestly that a source is a community list whose legality varies by country, and never bundles content or circumvents DRM.",
+    "triggers": [
+        "tv channel", "iptv", "television", "watch tv", "play channel", "channel guide",
+        "radio station", "internet radio", "play radio", "world radio", "listen to",
+        "record stream", "save stream", "record radio", "jellyfin", "icecast",
+        "libretime", "my media server", "broadcast", "rtmp", "push stream",
+        "import playlist", "m3u playlist", "playlist", "my stations", "station list",
+        "what is playing", "now playing", "stop playback", "pause playback",
+        "volume up", "change volume", "mute"
+    ],
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "operation": {
+                "type": "string",
+                "description": "One of: tv_search | tv_channels | radio_search | tv_play | radio_play | stop | pause | volume | record | library | servers | now_playing | sources. Defaults to tv_search."
+            },
+            "query": {
+                "type": "string",
+                "description": "Free-text search: a channel or station name, a country, a language, or a tag (e.g. 'news', 'jazz', 'sports')."
+            },
+            "country": {
+                "type": "string",
+                "description": "Two-letter ISO country code filter (e.g. 'IN', 'GB', 'US')."
+            },
+            "language": {
+                "type": "string",
+                "description": "Language filter for channels or stations (e.g. 'english', 'hindi', 'malayalam')."
+            },
+            "category": {
+                "type": "string",
+                "description": "Content category filter (e.g. 'news', 'sports', 'music', 'movies', 'kids', 'general')."
+            },
+            "limit": {
+                "type": "integer",
+                "description": "Maximum entries to return. Defaults to 20."
+            },
+            "channel": {
+                "type": "string",
+                "description": "Channel id, name, or the stream URL itself for playback."
+            },
+            "station": {
+                "type": "string",
+                "description": "Station name or URL for playback."
+            },
+            "url": {
+                "type": "string",
+                "description": "Explicit stream URL. Always used verbatim - never resolved or guessed."
+            },
+            "duration_seconds": {
+                "type": "integer",
+                "description": "Recording length in seconds. Defaults to 300, capped at 3600."
+            },
+            "confirm": {
+                "type": "boolean",
+                "description": "Must be true to write a recording to disk. Defaults to false (dry run)."
+            },
+            "action": {
+                "type": "string",
+                "description": "For library and servers operations: import | export | list | add | remove | refresh (library); list | status | play | connect (servers)."
+            },
+            "path": {
+                "type": "string",
+                "description": "Path to an M3U playlist file for the library import action."
+            },
+            "volume": {
+                "type": "integer",
+                "description": "Output volume percentage (0-100) for the volume operation."
+            },
+            "target": {
+                "type": "string",
+                "description": "Output device name for the volume operation. Defaults to the selected audio output."
+            }
+        },
+        "required": []
+    },
+    "version": "1.0.0",
+    "active": true,
+    "author": "Stella",
+    "category": "media",
+    "surface": "both",
+    "requires": [],
+    "optional_dependencies": [],
+    "notes": "Sources: IPTV-org public channel database (index.m3u + channels.json), Radio Browser community database, Jellyfin/Icecast/LibreTime user-configured servers, VLC/ffmpeg optional for capture. No content is bundled; no DRM is circumvented."
+}

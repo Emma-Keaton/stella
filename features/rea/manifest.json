@@ -1,0 +1,63 @@
+{
+    "name": "reverse_engineer_anything",
+    "aliases": ["rea", "reverse engineer", "reverse-engineer-anything", "extract features", "rebuild app"],
+    "description": "Reverse engineer shipped software (APK, native binary, Electron app, managed assembly, firmware, website, sqlite, pcap) using only tools already on this machine. Explains features, compares versions, or rebuilds extracted features into a destination project you specify. Reports what can and cannot work so you can plan workarounds.",
+    "triggers": [
+        "reverse engineer", "reverse-engineer", "extract features", "rebuild app",
+        "decompile apk", "inspect binary", "rea ", "reverse engineer anything",
+        "explain how this feature works", "compare builds"
+    ],
+    "parameters": {
+        "type": "OBJECT",
+        "properties": {
+            "operation": {
+                "type": "STRING",
+                "description": "One of: analyze | extract | apply | graph | backends | static_scan. Defaults to analyze."
+            },
+            "target": {
+                "type": "STRING",
+                "description": "Path to the artefact to reverse engineer (APK, EXE, ELF, Mach-O, ASAR, zip, sqlite, pcap, etc.)."
+            },
+            "destination": {
+                "type": "STRING",
+                "description": "Explicit destination project directory for apply operations. Never inferred."
+            },
+            "kind": {
+                "type": "STRING",
+                "description": "Extraction kind: android | native | dynamic | auto. Defaults to auto."
+            },
+            "files": {
+                "type": "STRING",
+                "description": "JSON object mapping destination-relative paths to file contents (apply operation)."
+            },
+            "confirm": {
+                "type": "BOOLEAN",
+                "description": "Must be true to actually write files to a destination. Defaults to false (preview only)."
+            },
+            "script": {
+                "type": "STRING",
+                "description": "JavaScript snippet for dynamic (Frida) extraction."
+            },
+            "device": {
+                "type": "STRING",
+                "description": "Remote Frida device id for dynamic extraction."
+            },
+            "workdir": {
+                "type": "STRING",
+                "description": "Directory for intermediate extraction output."
+            },
+            "patterns": {
+                "type": "STRING",
+                "description": "Comma-separated patterns for static_scan (default scans for common REA-relevant tokens)."
+            }
+        },
+        "required": []
+    },
+    "version": "1.0.0",
+    "active": true,
+    "author": "Stella",
+    "category": "development",
+    "surface": "desktop",
+    "requires": [],
+    "notes": "Documentation (SKILL.md + references/) lives in features/rea/docs/. This skill wraps the bundled stella-rea package and system tools only; it never reaches outside this project for functionality."
+}

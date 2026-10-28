@@ -2,11 +2,10 @@
 Feature: Holographic Hardware Assembler & Interactive Circuit HUD
 Description: Analyzes electronic components on screen or from voice, resolves pin-to-pin wiring,
 and launches the interactive Holographic Circuit HUD display.
-Triggers: see the arduino parts on my screen, how to assemble these parts, how to connect arduino, circuit diagram, wire arduino, circuit schematic
+Uses theme tokens from themes.json (no hardcoded colours). Gracefully degrades when the circuit assembler is unavailable.
 """
 
 from typing import Any, Dict
-from actions.circuit_assembler import circuit_assembler
 
 FEATURE_METADATA = {
     "name": "circuit_schematic",
@@ -14,7 +13,8 @@ FEATURE_METADATA = {
     "description": (
         "Analyzes electronic components (Arduino, ESP32, sensors, actuators, resistors) on screen or from voice, "
         "calculates pin-to-pin wiring diagrams, safety warnings, and step-by-step assembly guides, "
-        "and displays the interactive Holographic Circuit HUD."
+        "and displays the interactive Holographic Circuit HUD. Reports unavailability when the circuit assembler "
+        "backend cannot be loaded."
     ),
     "triggers": [
         "see the arduino parts on my screen",
@@ -54,12 +54,51 @@ FEATURE_METADATA = {
 }
 
 
+def _theme_colour(key: str, fallback: str | None = None) -> str | None:
+    """Read a colour from the active theme, with an optional fallback."""
+    try:
+        from theme_tokens import theme_colour
+        return theme_colour(key) or fallback
+    except Exception:
+        return fallback
+
+
+def _load_circuit_assembler():
+    """Load the circuit assembler defensively."""
+    try:
+        from actions.circuit_assembler import circuit_assembler
+        return circuit_assembler, None
+    except Exception as exc:
+        return None, exc
+
+
 def execute(**kwargs) -> Dict[str, Any]:
     """Executes Circuit Assembler action and returns the formatted result."""
+    circuit_assembler, load_error = _load_circuit_assembler()
+
+    if circuit_assembler is None:
+        return {
+            "title": "Circuit Assembler Unavailable",
+            "summary": (
+                "The circuit assembler backend could not be loaded on this machine. "
+                "Install/configure the circuit assembler integration to enable hardware wiring analysis."
+            ),
+            "spoken_narrative": "Circuit assembler is not available on this machine.",
+            "error": str(load_error) if load_error else "backend not available",
+        }
+
     action = kwargs.get("action", "assemble_components")
     components = kwargs.get("components", "")
     query = kwargs.get("query", "")
-    
+
     player = kwargs.get("player")
     speak = kwargs.get("speak")
-    return circuit_assembler(action=action, components=components, query=query, player=player, speak=speak)
+    try:
+        return circuit_assembler(action=action, components=components, query=query, player=player, speak=speak)
+    except Exception as exc:
+        return {
+            "title": "Circuit Assembler Error",
+            "summary": f"Circuit assembler action '{action}' failed: {exc}",
+            "spoken_narrative": f"Circuit assembler action {action} failed.",
+            "error": str(exc),
+        }

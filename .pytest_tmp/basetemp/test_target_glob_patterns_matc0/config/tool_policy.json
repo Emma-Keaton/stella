@@ -1,0 +1,1 @@
+{"version": 1, "rules": [{"name": "lab-only", "allow": ["port_scan"], "activity": ["active"], "reason": "lab traffic only", "targets": ["*.lab.internal"]}]}

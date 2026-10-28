@@ -1,0 +1,39 @@
+{
+    "name": "memory_inspector",
+    "aliases": ["memory_inspector", "inspect memory", "what stella remembers", "memory inspector", "show memories", "stored facts", "recall all", "memory audit"],
+    "description": "Inspects Stella's durable memory store: lists every remembered fact with its tags and timestamp, searches by keyword, reports the count, and (with confirm=true) can clear the store. Never invents memories - reports exactly what is on disk, or that nothing is stored.",
+    "triggers": [
+        "inspect memory", "what stella remembers", "memory inspector", "show memories",
+        "stored facts", "recall all", "memory audit", "what do I remember", "list memories"
+    ],
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "operation": {
+                "type": "string",
+                "description": "One of: list | search | count | clear. Defaults to list."
+            },
+            "query": {
+                "type": "string",
+                "description": "Keyword to search memories by (for the search operation)."
+            },
+            "limit": {
+                "type": "integer",
+                "description": "Maximum facts to return. Defaults to 100."
+            },
+            "confirm": {
+                "type": "boolean",
+                "description": "Must be true to actually clear the store. Defaults to false."
+            }
+        },
+        "required": []
+    },
+    "version": "1.0.0",
+    "active": true,
+    "author": "Stella",
+    "category": "memory",
+    "surface": "both",
+    "requires": [],
+    "optional_dependencies": [],
+    "notes": "Reads agent/memory.py's memories.jsonl under the user data dir. Clearing is destructive: needs confirm=true and reports the count removed."
+}

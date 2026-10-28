@@ -1,0 +1,50 @@
+{
+    "name": "presentation_ops",
+    "aliases": ["presentation_ops", "powerpoint", "pptx", "create presentation",
+                "write presentation", "read presentation", "edit presentation",
+                "slide deck", "presentation manipulation", "microsoft powerpoint"],
+    "description": "Presentation operations for PowerPoint (.pptx) files: create, read, and edit decks. Uses python-pptx. Read-only operations never modify files; write operations require authorized=true plus confirm=true plus a policy allow rule. All file paths are resolved against the workspace root - nothing is written outside it.",
+    "triggers": [
+        "powerpoint", "pptx", "create presentation", "write presentation",
+        "read presentation", "edit presentation", "slide deck",
+        "presentation manipulation", "microsoft powerpoint", "create a slide deck"
+    ],
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "operation": {
+                "type": "string",
+                "description": "One of: create | read | edit | sources. Defaults to sources."
+            },
+            "path": {
+                "type": "string",
+                "description": "Path to the .pptx file."
+            },
+            "title": {
+                "type": "string",
+                "description": "Presentation title for create operation."
+            },
+            "content": {
+                "type": "string",
+                "description": "Slide content for create or edit (one slide per blank line)."
+            },
+            "authorized": {
+                "type": "boolean",
+                "description": "Must be true for write operations (create, edit)."
+            },
+            "confirm": {
+                "type": "boolean",
+                "description": "Must be true to actually write a file."
+            }
+        },
+        "required": []
+    },
+    "version": "1.0.0",
+    "active": true,
+    "author": "Stella",
+    "category": "docs",
+    "surface": "desktop",
+    "requires": ["pptx"],
+    "optional_dependencies": [],
+    "notes": "Uses python-pptx. Write operations are destructive and need authorized=true + confirm=true + an allow rule. Paths are confined to the workspace root."
+}

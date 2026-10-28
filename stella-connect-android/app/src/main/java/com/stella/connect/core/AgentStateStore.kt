@@ -1,4 +1,4 @@
-package com.stella.connect.core
+﻿package com.stella.connect.core
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,6 +28,22 @@ object AgentStateStore {
 
     private val _chatHistory = MutableStateFlow<List<ChatMessage>>(emptyList())
     val chatHistory: StateFlow<List<ChatMessage>> = _chatHistory.asStateFlow()
+
+    /** Active workspace id. When null, defaults to "personal". */
+    private val _activeWorkspaceId = MutableStateFlow<String?>(null)
+    val activeWorkspaceId: StateFlow<String?> = _activeWorkspaceId.asStateFlow()
+
+    /** Active thread id within the active workspace. */
+    private val _activeThreadId = MutableStateFlow<String?>(null)
+    val activeThreadId: StateFlow<String?> = _activeThreadId.asStateFlow()
+
+    fun setActiveWorkspace(workspaceId: String?) {
+        _activeWorkspaceId.value = workspaceId
+    }
+
+    fun setActiveThread(threadId: String?) {
+        _activeThreadId.value = threadId
+    }
 
     /**
      * Ids of the capabilities the user has actually granted, refreshed from
@@ -77,6 +93,65 @@ object AgentStateStore {
 
     fun setGrantedPermissions(ids: Set<String>) {
         _grantedPermissions.value = ids
+    }
+
+    /**
+     * Live-voice pause flag. True when the user tapped the VoiceOrb to pause
+     * inference + speech (orb shows "Paused — tap to resume"). The foreground
+     * service reads this to gate TTS dispatch.
+     */
+    private val _voicePaused = MutableStateFlow(false)
+    val voicePaused: StateFlow<Boolean> = _voicePaused.asStateFlow()
+
+    fun setVoicePaused(paused: Boolean) {
+        _voicePaused.value = paused
+    }
+}
+
+/**
+ * The guided "grant everything" walk.
+ *
+ * [queue] is the ordered list of capability ids still to hand
+ * to the user, [index] is the current step, and [adbHint] is
+ * the ADB one-liner for the step that just failed to flip in
+ * Settings - shown instead of looping back to the dead page.
+ */
+data class PermissionWalkState(
+    val queue: List<String> = emptyList(),
+    val index: Int = 0,
+    val adbHint: String? = null,
+    val finished: Boolean = false,
+)
+
+object PermissionWalkStore {
+    private val _walk = MutableStateFlow(PermissionWalkState())
+    val walk: StateFlow<PermissionWalkState> = _walk.asStateFlow()
+
+    fun start(queue: List<String>) {
+        _walk.value = PermissionWalkState(queue = queue, index = 0)
+    }
+
+    fun advance() {
+        val cur = _walk.value
+        val next = cur.index + 1
+        _walk.value = if (next >= cur.queue.size) {
+            cur.copy(finished = true, adbHint = null)
+        } else {
+            cur.copy(index = next, adbHint = null)
+        }
+    }
+
+    /** Keep the current step but surface the ADB fallback. */
+    fun stuck(adbLine: String?) {
+        _walk.value = _walk.value.copy(adbHint = adbLine)
+    }
+
+    fun skip() {
+        advance()
+    }
+
+    fun clear() {
+        _walk.value = PermissionWalkState()
     }
 }
 

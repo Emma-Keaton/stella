@@ -12,6 +12,19 @@ enum class ConnectionState {
     RECONNECTING,
 }
 
+enum class OrbState {
+    IDLE,
+    LISTENING,
+    SPEAKING,
+    THINKING,
+}
+
+enum class AgentHeadState {
+    IDLE,
+    LISTENING,
+    SPEAKING,
+}
+
 data class GatewayEndpoint(
     val name: String,
     val host: String,

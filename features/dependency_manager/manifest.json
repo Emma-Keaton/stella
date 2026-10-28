@@ -1,0 +1,49 @@
+{
+    "name": "dependency_manager",
+    "aliases": [
+        "dependency_manager", "install dependencies", "install tool", "install package",
+        "what am I missing", "what do I need", "setup tools", "provision machine",
+        "install aircrack", "install hashcat", "install ffmpeg"
+    ],
+    "description": "Provisions this machine with the tools Stella's capabilities need. Reports what is present and what is missing per platform, with the exact install command for each, and - only with an explicit confirmation and a policy rule that allows it - runs the install and reads back whether the tool actually became available. Never invents a package mapping: a name it has no command for is reported as such.",
+    "triggers": [
+        "install", "install tool", "install package", "install dependencies",
+        "what do I need", "what am I missing", "setup", "provision",
+        "install aircrack", "install hashcat", "install ffmpeg", "install wireshark",
+        "install vlc", "install python package", "pip install"
+    ],
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "operation": {
+                "type": "string",
+                "description": "One of: status | audit | install | install_bundle | platform | bundles. Defaults to status."
+            },
+            "name": {
+                "type": "string",
+                "description": "Requirement to install, e.g. hashcat, ffmpeg, matplotlib, or a bundle name such as wireless-full."
+            },
+            "skill": {
+                "type": "string",
+                "description": "Skill to audit, e.g. world_watch or wireless_audit. Its manifest's requires and optional_dependencies are expanded."
+            },
+            "confirm": {
+                "type": "boolean",
+                "description": "Must be true to actually install. Defaults to false, which only reports what would run."
+            },
+            "limit": {
+                "type": "integer",
+                "description": "Maximum items to list. Defaults to 40."
+            }
+        },
+        "required": []
+    },
+    "version": "1.0.0",
+    "active": true,
+    "author": "Stella",
+    "category": "system",
+    "surface": "both",
+    "requires": [],
+    "optional_dependencies": [],
+    "notes": "Installing is destructive class in core/tool_policy.py: it needs a policy allow rule and confirm=true. PACKAGE_MAP in core/dependencies.py is the only source of install commands."
+}

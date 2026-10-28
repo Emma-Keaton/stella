@@ -15,11 +15,11 @@ $WorkingDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 Set-Location -Path $WorkingDir
 
 Write-Host "==========================================================================" -ForegroundColor Yellow
-Write-Host "  ____  ____      _    _   _ __  __    _      _    ___ " -ForegroundColor Yellow
-Write-Host " | __ )|  _ \    / \  | | | |  \/  |  / \    / \  |_ _|" -ForegroundColor Yellow
-Write-Host " |  _ \| |_) |  / _ \ | |_| | |\/| | / _ \  / _ \  | | " -ForegroundColor Yellow
-Write-Host " | |_) |  _ <  / ___ \|  _  | |  | |/ ___ \/ ___ \ | | " -ForegroundColor Yellow
-Write-Host " |____/|_| \_\/_/   \_\_| |_|_|  |_/_/   \_\_/   \_\___|" -ForegroundColor Yellow
+Write-Host "  ____ _____ _____ _     _        _      _______     _____  " -ForegroundColor Yellow
+Write-Host " / ___|_   _| ____| |   | |      / \    | ____\ \   / / _ \ " -ForegroundColor Yellow
+Write-Host "\___ \ | | |  _| | |   | |     / _ \   |  _|  \ \ / / | | |" -ForegroundColor Yellow
+Write-Host "  ___) || | | |___| |___| |___ / ___ \  | |___  \ V /| |_| |" -ForegroundColor Yellow
+Write-Host "|____/ |_| |_____|_____|_____/_/   \_\ |_____|  \_/  \___/" -ForegroundColor Yellow
 Write-Host "                      STELLA EVO" -ForegroundColor Cyan
 Write-Host "         AUTONOMOUS SELF-EVOLUTION COGNITIVE ENGINE" -ForegroundColor Green
 Write-Host "   [Skill Forge // Crucible Sandbox // 180 FPS HoloCore]" -ForegroundColor Cyan

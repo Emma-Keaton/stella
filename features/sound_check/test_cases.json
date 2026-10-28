@@ -1,0 +1,30 @@
+[
+    {
+        "name": "devices are listed read-only",
+        "query": "list my audio devices",
+        "operation": "devices",
+        "expect": "ok_or_reason",
+        "note": "Reads what the OS reports as usable; no authorisation needed."
+    },
+    {
+        "name": "volume without a level is refused",
+        "query": "set the volume",
+        "operation": "volume",
+        "expect": "refused",
+        "note": "A level is required, and the result is read back."
+    },
+    {
+        "name": "diagnosis reports blockers",
+        "query": "why can't you hear me",
+        "operation": "diagnosis",
+        "expect": "ok",
+        "note": "Names what is open before suggesting a meter test."
+    },
+    {
+        "name": "unknown operation is refused",
+        "query": "echo cancel please",
+        "operation": "echo_cancel",
+        "expect": "refused",
+        "note": "Only devices, tone, meter, volume and diagnosis exist."
+    }
+]

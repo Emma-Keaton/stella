@@ -124,5 +124,15 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/stella_accessibility_service" />
         </service>
+
+        <!-- Triggered by adb broadcast CHAT_PROMPT with prompt extra.
+             Starts the local engine and replies to the prompt. -->
+        <receiver
+            android:name=".core.ChatPromptReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.stella.connect.CHAT_PROMPT" />
+            </intent-filter>
+        </receiver>
     </application>
 </manifest>

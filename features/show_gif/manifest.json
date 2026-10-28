@@ -29,6 +29,9 @@
     },
     "created_at": 1790693040.010282,
     "version": "1.0.0",
-    "author": "Project Ultron Autonomous Self-Evolution Engine",
+    "author": "Project Stella",
+    "category": "media",
+    "surface": "desktop",
+    "requires": [],
     "active": true
 }

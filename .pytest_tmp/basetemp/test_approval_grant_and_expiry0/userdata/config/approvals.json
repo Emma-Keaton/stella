@@ -1,0 +1,32 @@
+{
+  "pulse": [
+    {
+      "tools": [
+        "port_scan"
+      ],
+      "activity": [
+        "active"
+      ],
+      "targets": [
+        "10.0.0.1"
+      ],
+      "expires_at": 1793081300.695,
+      "reason": "Granted by the user."
+    }
+  ],
+  "gone": [
+    {
+      "tools": [
+        "port_scan"
+      ],
+      "activity": [
+        "active"
+      ],
+      "targets": [
+        "10.0.0.1"
+      ],
+      "expires_at": 1793081239.707,
+      "reason": "Granted by the user."
+    }
+  ]
+}

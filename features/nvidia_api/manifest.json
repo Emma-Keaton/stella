@@ -1,0 +1,31 @@
+{
+    "name": "nvidia_api",
+    "aliases": ["nvidia_nim", "nvidia_api_test", "test_nvidia_key", "ping_nvidia", "nvidia_models"],
+    "description": "Test an Nvidia NIM API key: measure latency and uptime (ping), list the models the key can currently see, and run one short chat completion as a smoke test. Reports the exact failure class (no key / auth / quota / network) instead of guessing, and never fabricates a latency or a model list.",
+    "triggers": [
+        "ping nvidia", "test nvidia api key", "check nvidia key", "nvidia api key compatibility",
+        "is my nvidia key working", "nvidia uptime", "nvidia response time", "list nvidia models",
+        "available nvidia models", "nvidia nim models", "smoke test nvidia"
+    ],
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "operation": {
+                "type": "string",
+                "description": "One of: ping | models | chat | check. ping measures latency/uptime; models lists the live catalogue; chat runs one tiny completion; check verifies the key without listing models. Defaults to ping."
+            },
+            "model": {
+                "type": "string",
+                "description": "Optional model id for the chat operation. Defaults to the first model the key can see."
+            }
+        },
+        "required": []
+    },
+    "version": "1.0.0",
+    "active": true,
+    "author": "Stella",
+    "category": "providers",
+    "surface": "both",
+    "requires": [],
+    "optional_dependencies": []
+}

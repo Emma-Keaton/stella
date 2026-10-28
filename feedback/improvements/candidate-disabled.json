@@ -574,5 +574,923 @@
     "context": "ctx",
     "why": "",
     "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-14T11:42:43.316505+00:00",
+    "outcome": "disabled",
+    "error_type": "ValueError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-14T11:42:43.366127+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-14T11:42:53.155895+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-14T12:27:16.198247+00:00",
+    "outcome": "disabled",
+    "error_type": "ValueError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-14T12:27:16.237096+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-14T12:27:24.393548+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-14T12:31:05.223381+00:00",
+    "outcome": "disabled",
+    "error_type": "ValueError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-14T12:31:05.287781+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-14T12:31:35.025318+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-14T17:59:57.406391+00:00",
+    "outcome": "disabled",
+    "error_type": "ValueError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-14T17:59:57.435651+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-14T18:00:06.983591+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-21T03:40:42.535999+00:00",
+    "outcome": "disabled",
+    "error_type": "ValueError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-21T03:40:42.571551+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-21T03:40:50.707567+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-21T06:50:03.643417+00:00",
+    "outcome": "disabled",
+    "error_type": "ValueError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-21T06:50:03.682976+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-21T06:50:14.638390+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-21T06:53:49.045097+00:00",
+    "outcome": "disabled",
+    "error_type": "ValueError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-21T06:53:49.088630+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-21T06:53:57.729183+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-21T07:19:34.313963+00:00",
+    "outcome": "disabled",
+    "error_type": "ValueError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-21T07:19:34.359236+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-21T07:19:44.232850+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-21T07:40:50.397499+00:00",
+    "outcome": "disabled",
+    "error_type": "ValueError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-21T07:40:50.449337+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-21T07:41:01.563211+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-21T19:37:56.343071+00:00",
+    "outcome": "disabled",
+    "error_type": "ValueError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-21T19:37:56.381553+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-21T19:38:07.079356+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-22T06:24:20.097791+00:00",
+    "outcome": "disabled",
+    "error_type": "ValueError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-22T06:24:20.140815+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-22T06:24:33.356351+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-23T08:31:02.697019+00:00",
+    "outcome": "disabled",
+    "error_type": "ValueError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-23T08:31:02.713122+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-23T08:31:12.613617+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-23T13:08:33.980917+00:00",
+    "outcome": "disabled",
+    "error_type": "ValueError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-23T13:08:34.028555+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-23T13:08:52.221778+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-23T14:56:45.494080+00:00",
+    "outcome": "disabled",
+    "error_type": "ValueError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-23T14:56:45.553791+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-23T14:57:05.510090+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-23T15:24:14.922866+00:00",
+    "outcome": "disabled",
+    "error_type": "ValueError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-23T15:24:14.962839+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-23T15:24:24.912929+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T21:59:02.880591+00:00",
+    "outcome": "disabled",
+    "error_type": "ValueError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T21:59:02.982098+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T21:59:14.864067+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T22:02:41.653983+00:00",
+    "outcome": "disabled",
+    "error_type": "ValueError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T22:02:41.701794+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T22:02:50.638604+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T22:04:28.804818+00:00",
+    "outcome": "disabled",
+    "error_type": "ValueError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T22:04:28.872768+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T22:04:38.024215+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T22:05:36.461594+00:00",
+    "outcome": "disabled",
+    "error_type": "ValueError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T22:05:36.507724+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T22:05:46.027477+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T22:26:07.714144+00:00",
+    "outcome": "disabled",
+    "error_type": "ValueError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T22:26:07.747894+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T22:26:23.526645+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T22:27:55.728875+00:00",
+    "outcome": "disabled",
+    "error_type": "ValueError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T22:27:55.761280+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T22:28:13.190304+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T22:31:10.422919+00:00",
+    "outcome": "disabled",
+    "error_type": "ValueError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T22:31:10.491439+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T22:31:19.417868+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T22:58:25.712979+00:00",
+    "outcome": "disabled",
+    "error_type": "ValueError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T22:58:25.752557+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T22:58:33.624845+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T23:19:40.810129+00:00",
+    "outcome": "disabled",
+    "error_type": "ValueError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T23:19:40.848998+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T23:19:48.093389+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T23:22:10.211461+00:00",
+    "outcome": "disabled",
+    "error_type": "ValueError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T23:22:10.245044+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T23:22:17.476412+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T23:23:21.910136+00:00",
+    "outcome": "disabled",
+    "error_type": "ValueError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T23:23:21.938988+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T23:23:29.189372+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T23:24:58.027167+00:00",
+    "outcome": "disabled",
+    "error_type": "ValueError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T23:24:58.055479+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T23:25:05.416408+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T23:26:32.921013+00:00",
+    "outcome": "disabled",
+    "error_type": "ValueError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T23:26:32.949904+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T23:26:40.081804+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T23:29:48.057263+00:00",
+    "outcome": "disabled",
+    "error_type": "ValueError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T23:29:48.088171+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T23:29:55.415554+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-27T01:55:18.398743+00:00",
+    "outcome": "disabled",
+    "error_type": "ValueError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-27T01:55:18.424923+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-27T01:55:26.195373+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-27T05:40:00.039921+00:00",
+    "outcome": "disabled",
+    "error_type": "ValueError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-27T05:40:00.053303+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-27T05:40:08.996301+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-27T05:56:33.601566+00:00",
+    "outcome": "disabled",
+    "error_type": "ValueError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-27T05:56:33.626555+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-27T05:56:40.909538+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-27T06:06:58.204211+00:00",
+    "outcome": "disabled",
+    "error_type": "ValueError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-27T06:06:58.232627+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-27T06:07:05.764781+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-27T08:02:59.422209+00:00",
+    "outcome": "disabled",
+    "error_type": "ValueError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-27T08:02:59.453805+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-27T08:03:08.215535+00:00",
+    "outcome": "disabled",
+    "error_type": "RuntimeError",
+    "error_message": "boom",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
   }
 ]

@@ -1,0 +1,78 @@
+{
+    "name": "domain_intel",
+    "aliases": [
+        "domain_intel", "whois lookup", "who owns this domain", "dns lookup", "dns records",
+        "subdomain enumeration", "subdomains", "reverse dns", "ip geolocation",
+        "asn lookup", "spf dkim dmarc", "email security", "subdomain takeover",
+        "tech fingerprint", "what is this site running", "ct logs", "certificate transparency",
+        "passive dns", "wayback machine", "jwt decode", "identify hash", "analyze pcap"
+    ],
+    "description": "Passive and active domain intelligence: DNS records, WHOIS/RDAP registration, reverse DNS, IP geolocation and ASN ownership, subdomain enumeration through certificate-transparency logs, subdomain-takeover checks, technology fingerprinting from HTTP responses, SPF/DKIM/DMARC/CAA email-security records, passive-DNS and Wayback history, public bucket probing, and offline decoding of hashes, JWTs and packet captures. P0 passive is the default; anything that queries the target's DNS or contacts it is gated by core/tool_policy.py and names its target. Every result names its source, its key status, and its activity class.",
+    "triggers": [
+        "whois", "who owns this domain", "dns records", "dns lookup", "mx records",
+        "txt records", "subdomains", "enumerate subdomains", "certificate transparency",
+        "crt.sh", "subdomain takeover", "reverse dns", "ptr record", "ip geolocation",
+        "where is this ip", "asn", "who owns this ip", "spf", "dkim", "dmarc",
+        "email security", "fingerprint this site", "what is this site running",
+        "wayback", "passive dns", "decode jwt", "identify this hash", "analyze pcap",
+        "analyze apk", "decode this token"
+    ],
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "operation": {
+                "type": "string",
+                "description": "One of: dns | whois | reverse_dns | ip_geo | asn | subdomains | takeover_check | tech_fingerprint | passive_dns | wayback | bucket_probe | email_security | hash_identify | jwt_audit | pcap_analyze | apk_manifest | sources. Defaults to dns."
+            },
+            "domain": {
+                "type": "string",
+                "description": "Domain to inspect, e.g. example.com."
+            },
+            "target": {
+                "type": "string",
+                "description": "Alias for domain: a domain, IP, or URL depending on the operation."
+            },
+            "ip": {
+                "type": "string",
+                "description": "IP address for reverse_dns, ip_geo or asn."
+            },
+            "record": {
+                "type": "string",
+                "description": "DNS record type for the dns operation: A | AAAA | MX | TXT | NS | SOA | CAA | all. Defaults to all."
+            },
+            "hash": {
+                "type": "string",
+                "description": "Hash to identify (hash_identify operation)."
+            },
+            "token": {
+                "type": "string",
+                "description": "JWT to decode and audit (jwt_audit operation)."
+            },
+            "path": {
+                "type": "string",
+                "description": "Path to a .pcap/.cap file for pcap_analyze, or an .apk for apk_manifest."
+            },
+            "authorized": {
+                "type": "boolean",
+                "description": "Must be true for operations that contact the target (tech_fingerprint, bucket_probe, email_security). Passive operations never need it."
+            },
+            "confirm": {
+                "type": "boolean",
+                "description": "Must be true to start an operation that contacts the target."
+            },
+            "limit": {
+                "type": "integer",
+                "description": "Maximum items to return. Defaults to 20."
+            }
+        },
+        "required": []
+    },
+    "version": "1.0.0",
+    "active": true,
+    "author": "Stella",
+    "category": "osint",
+    "surface": "both",
+    "requires": [],
+    "optional_dependencies": ["dnspython", "whois", "requests"],
+    "notes": "Passive sources: crt.sh, CertSpotter, RDAP, RIPE/BGPView, ipapi, Wayback, Common Crawl, passive DNS. Active operations (fingerprint, bucket probe, DNS against the target) are gated and name their target."
+}

@@ -50,7 +50,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -63,12 +63,13 @@ import com.stella.connect.core.ChatMessage
 import com.stella.connect.core.ConnectionState
 import com.stella.connect.core.DeviceCredential
 import com.stella.connect.core.GatewayEndpoint
-import com.stella.connect.core.K2Manager
+import com.stella.connect.core.LocalEngineManager
 import com.stella.connect.core.PairingOffer
 import com.stella.connect.core.PermissionManager
 import com.stella.connect.network.StellaGatewayDiscovery
 import com.stella.connect.pairing.PairingPayloadParser
 import com.stella.connect.pairing.PairingStorage
+import com.stella.connect.ui.SettingsScreen
 import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import com.google.mlkit.vision.barcode.BarcodeScanning
 import com.google.mlkit.vision.barcode.common.Barcode
@@ -161,13 +162,6 @@ fun StellaConnectApp(
     }
 
     val navController = rememberNavController()
-    // Track the current destination so the bottom nav knows what to highlight
-    // and only shows on the main (root) screens.
-    val currentBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = currentBackStackEntry?.destination?.route
-    val navBarHeight = 64.dp
-    val mainRoutes = setOf("chat", "local_models")
-    val showBottomNav = currentRoute in mainRoutes
 
     // The PC bridge is a setting, not a build flag: available in both
     // variants, on by default only for the personal K2 build.
@@ -177,10 +171,12 @@ fun StellaConnectApp(
 
     // Determine start destination. With the bridge on and nothing paired yet,
     // the user most likely wants to reach their PC, so offer that first.
+    val onboardingDone = rememberSaveable { mutableStateOf(false) }
     val startDest = when {
         setupMissing.isNotEmpty() -> "permissions"
         credential != null -> "home"
         bridgeOn -> "connect"
+        onboardingDone.value -> "home"
         else -> "welcome"
     }
 
@@ -217,8 +213,11 @@ fun StellaConnectApp(
                 )
             }
             composable("welcome") {
-                WelcomeScreen(
-                    onNext = { navController.navigate("about") }
+                OnboardingScreen(
+                    onContinue = {
+                        onboardingDone.value = true
+                        navController.navigate("home") { popUpTo("welcome") { inclusive = true } }
+                    }
                 )
             }
             composable("about") {
@@ -356,13 +355,7 @@ fun StellaConnectApp(
                         status = status,
                         onOpenChat = { navController.navigate("chat") },
                         onOpenLocalModels = { navController.navigate("local_models") },
-                        onOpenSettings = {
-                            val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                                data = Uri.fromParts("package", context.packageName, null)
-                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                            }
-                            context.startActivity(intent)
-                        },
+                        onOpenSettings = { navController.navigate("settings") },
                         onPairPc = { navController.navigate("connect") }
                     )
                 }
@@ -376,49 +369,14 @@ fun StellaConnectApp(
                         }
                         context.startService(intent)
                     },
-                    bottomInset = if (showBottomNav) navBarHeight else 0.dp
+                    onOpenSettings = { navController.navigate("settings") }
                 )
             composable("local_models") {
                 LocalModelsScreen(onBack = { navController.popBackStack() })
             }
+            composable("settings") {
+                SettingsScreen()
             }
-        }
-
-        // Bottom nav — the single way to move between the main screens. The
-        // prompt box in Chat/Models lifts itself above this bar via bottomInset.
-        if (showBottomNav) {
-            NavigationBar(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .height(navBarHeight),
-                containerColor = androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.92f),
-                tonalElevation = 0.dp
-            ) {
-                NavigationBarItem(
-                    selected = currentRoute == "chat" || currentRoute == "home",
-                    onClick = { navController.navigate("chat") { popUpTo(0) { saveState = true }; launchSingleTop = true; restoreState = true } },
-                    icon = { Icon(Icons.Default.Send, contentDescription = "Chat") },
-                    label = { Text("Chat") }
-                )
-                NavigationBarItem(
-                    selected = currentRoute == "local_models",
-                    onClick = { navController.navigate("local_models") { popUpTo(0) { saveState = true }; launchSingleTop = true; restoreState = true } },
-                    icon = { Icon(Icons.Default.List, contentDescription = "Models") },
-                    label = { Text("Models") }
-                )
-                NavigationBarItem(
-                    selected = false,
-                    onClick = {
-                        val intent = Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                            data = Uri.fromParts("package", context.packageName, null)
-                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        }
-                        context.startActivity(intent)
-                    },
-                    icon = { Icon(Icons.Default.Settings, contentDescription = "Settings") },
-                    label = { Text("Settings") }
-                )
             }
         }
     }
@@ -810,7 +768,7 @@ private fun ConnectedScreen(
                     Text("Synchronized with your PC", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary.copy(alpha = 0.8f))
                 }
                 Icon(
-                    imageVector = androidx.compose.material.icons.Icons.Default.Send,
+                    imageVector = androidx.compose.material.icons.Icons.Filled.Send,
                     contentDescription = "Open Chat",
                     tint = MaterialTheme.colorScheme.primary
                 )
@@ -854,19 +812,19 @@ private fun ConnectedScreen(
  *   2. Download K2 Horizon  -> the one-tap pull (public, non-bundled build).
  *   3. Remove               -> free the space back.
  *
- * Everything routes through K2Manager so llama-server picks the file up the
+ * Everything routes through LocalEngineManager so llama-server picks the file up the
  * same way however it arrived.
  */
 @Composable
 private fun LocalModelsScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val k2Status by K2Manager.statusLine.collectAsState()
-    val progress by K2Manager.downloadProgress.collectAsState()
-    val present = remember { mutableStateOf(K2Manager.modelPresent(context)) }
+    val k2Status by LocalEngineManager.statusLine.collectAsState()
+    val progress by LocalEngineManager.downloadProgress.collectAsState()
+    val present = remember { mutableStateOf(LocalEngineManager.modelPresent(context)) }
 
     LaunchedEffect(k2Status, progress) {
-        if (progress !in 0f..0.999f) present.value = K2Manager.modelPresent(context)
+        if (progress !in 0f..0.999f) present.value = LocalEngineManager.modelPresent(context)
     }
 
     val picker = rememberLauncherForActivityResult(
@@ -879,9 +837,9 @@ private fun LocalModelsScreen(onBack: () -> Unit) {
                 )
             } catch (_: Exception) {}
             scope.launch {
-                val ok = K2Manager.importLocalModel(context, uri)
-                present.value = K2Manager.modelPresent(context)
-                if (ok) K2Manager.start(context)
+                val ok = LocalEngineManager.importLocalModel(context, uri)
+                present.value = LocalEngineManager.modelPresent(context)
+                if (ok) LocalEngineManager.start(context)
             }
         }
     }
@@ -922,14 +880,14 @@ private fun LocalModelsScreen(onBack: () -> Unit) {
                     when {
                         progress in 0f..0.999f -> "Loading ${(progress * 100).toInt()}%"
                         present.value -> "Model ready - on-device"
-                        K2Manager.bundled -> k2Status
+                        LocalEngineManager.bundled -> k2Status
                         else -> "No model installed yet"
                     },
                     color = if (present.value) MaterialTheme.colorScheme.primary
                     else androidx.compose.ui.graphics.Color.White.copy(alpha = 0.7f),
                 )
                 Text(
-                    if (K2Manager.bundled) "Build: on-device runtime bundled"
+                    if (LocalEngineManager.bundled) "Build: on-device runtime bundled"
                     else "Build: download runtime",
                     style = MaterialTheme.typography.labelSmall,
                     color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.45f),
@@ -950,12 +908,12 @@ private fun LocalModelsScreen(onBack: () -> Unit) {
             onPick = { picker.launch(arrayOf("*/*")) },
             onDownload = {
                 scope.launch {
-                    if (K2Manager.prepare(context)) K2Manager.start(context)
-                    present.value = K2Manager.modelPresent(context)
+                    if (LocalEngineManager.prepare(context)) LocalEngineManager.start(context)
+                    present.value = LocalEngineManager.modelPresent(context)
                 }
             },
             onRemove = {
-                K2Manager.deleteLocalModel(context)
+                LocalEngineManager.deleteLocalModel(context)
                 present.value = false
             },
         )
@@ -987,7 +945,7 @@ private fun LocalModelsActions(
         color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.5f),
     )
     Spacer(Modifier.height(20.dp))
-    if (!K2Manager.bundled) {
+    if (!LocalEngineManager.bundled) {
         FilledTonalButton(
             onClick = onDownload,
             modifier = Modifier.fillMaxWidth(),
@@ -1025,20 +983,20 @@ private fun StandaloneHomeScreen(
     onPairPc: () -> Unit,
 ) {
     val context = LocalContext.current
-    val k2Mode by K2Manager.mode.collectAsState()
-    val k2Status by K2Manager.statusLine.collectAsState()
-    val k2Progress by K2Manager.downloadProgress.collectAsState()
+    val k2Mode by LocalEngineManager.mode.collectAsState()
+    val k2Status by LocalEngineManager.statusLine.collectAsState()
+    val k2Progress by LocalEngineManager.downloadProgress.collectAsState()
     var greeted by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         if (greeted) return@LaunchedEffect
         greeted = true
-        if (K2Manager.bundled) {
-            if (K2Manager.modelPresent(context)) {
-                K2Manager.start(context)
+        if (LocalEngineManager.bundled) {
+            if (LocalEngineManager.modelPresent(context)) {
+                LocalEngineManager.start(context)
             } else {
                 kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
-                    if (K2Manager.prepare(context)) K2Manager.start(context)
+                    if (LocalEngineManager.prepare(context)) LocalEngineManager.start(context)
                 }
             }
         }
@@ -1061,8 +1019,8 @@ private fun StandaloneHomeScreen(
 
     val k2Line = when {
         k2Progress in 0f..0.999f -> "K2 model downloading ${(k2Progress * 100).toInt()}%"
-        K2Manager.bundled && (k2Mode == "LOCAL") -> "K2 on-device ready"
-        K2Manager.bundled -> k2Status
+        LocalEngineManager.bundled && (k2Mode == "LOCAL") -> "K2 on-device ready"
+        LocalEngineManager.bundled -> k2Status
         else -> "On-device. No PC linked."
     }
 
@@ -1119,7 +1077,7 @@ private fun StandaloneHomeScreen(
                     )
                 }
                 Icon(
-                    imageVector = androidx.compose.material.icons.Icons.Default.Send,
+                    imageVector = androidx.compose.material.icons.Icons.Filled.Send,
                     contentDescription = "Open Chat",
                     tint = MaterialTheme.colorScheme.primary
                 )

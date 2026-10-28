@@ -1,0 +1,1 @@
+{"version": 1, "rules": [{"name": "allow-passive", "allow": ["*"], "activity": ["passive"], "reason": "ok"}, {"name": "deny-active", "deny": ["*"], "activity": ["active", "dns"], "reason": "no"}]}

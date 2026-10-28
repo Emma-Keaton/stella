@@ -27,7 +27,7 @@ from memory.memory_manager import search_memory
 import core.boot_sentry
 from core.sensorium import sensorium
 from core.protocols import protocols
-from core.local_brain import local_brain
+from core.local_brain import local_brain, _extract_message_text
 import asyncio
 import threading
 import json
@@ -133,8 +133,17 @@ LIVE_CONNECT_TIMEOUT = 12
 
 
 def _get_api_key() -> str:
-    with open(API_CONFIG_PATH, "r", encoding="utf-8") as f:
-        return json.load(f)["gemini_api_key"]
+    """Resolve the Gemini API key.
+
+    Delegates to the single resolution path in core.providers.keys, which
+    prefers the encrypted Cloud Providers store and falls back to the legacy
+    plaintext api_keys.json and the environment (T1.1/T1.2).
+    """
+    try:
+        from core.providers.keys import resolve_key
+        return resolve_key("gemini")
+    except Exception:
+        return ""
 
 
 def _is_port_in_use(port: int, host: str = "127.0.0.1") -> bool:
@@ -229,7 +238,7 @@ def _load_system_prompt() -> str:
         base_prompt = (
             "You are Stella, a calm, direct, and professional AI assistant. "
             "Be concise, direct, and always use the provided tools to complete tasks. "
-            "Never simulate or guess results â€” always call the appropriate tool. "
+            "Never simulate or guess results — always call the appropriate tool. "
             "If the user asks to create, build, launch, or open a website, always use the selected workspace folder."
         )
         
@@ -633,9 +642,9 @@ def _update_memory_async(user_text: str, stella_text: str) -> None:
     try:
         learned = auto_learn_interaction(user_text, stella_text)
         if learned:
-            print(f"[Memory] ðŸ§  Auto-learned: {list(learned.keys())}")
+            print(f"[Memory] 🧠 Auto-learned: {list(learned.keys())}")
     except Exception as exc:
-        print(f"[Memory] âš ï¸ Auto-learn error: {exc}")
+        print(f"[Memory] ⚠️ Auto-learn error: {exc}")
 
     try:
         api_key = _get_api_key()
@@ -644,10 +653,10 @@ def _update_memory_async(user_text: str, stella_text: str) -> None:
         data = extract_memory(user_text, stella_text, api_key)
         if data:
             update_memory(data)
-            print(f"[Memory] âœ… {list(data.keys())}")
+            print(f"[Memory] ✅ {list(data.keys())}")
     except Exception as e:
         if "429" not in str(e):
-            print(f"[Memory] âš ï¸ {e}")
+            print(f"[Memory] ⚠️ {e}")
 
 def _memory_context_for_request(text: str) -> str:
     try:
@@ -660,7 +669,7 @@ TOOL_DECLARATIONS = [
     {
         "name": "undo",
         "description": (
-            "Roll back the last change made to the computer â€” reversing a file move, "
+            "Roll back the last change made to the computer — reversing a file move, "
             "copy, create, or edit, a desktop organization, a volume or brightness change, "
             "or a Wi-Fi toggle. Call this whenever the user says undo, revert, take it back, "
             "put it back, restore, or says they made a mistake. "
@@ -671,7 +680,7 @@ TOOL_DECLARATIONS = [
             "properties": {
                 "action": {
                     "type": "STRING",
-                    "description": "undo (default) â€” reverse the last change | list â€” show what can be undone",
+                    "description": "undo (default) — reverse the last change | list — show what can be undone",
                 },
             },
         },
@@ -966,7 +975,7 @@ TOOL_DECLARATIONS = [
         "description": (
             "Opens any application on the Windows computer. "
             "Use this whenever the user asks to open, launch, or start any app, "
-            "website, or program. Always call this tool â€” never just say you opened it."
+            "website, or program. Always call this tool — never just say you opened it."
         ),
         "parameters": {
             "type": "OBJECT",
@@ -1060,7 +1069,7 @@ TOOL_DECLARATIONS = [
             "MUST be called when user asks what is on screen, what you see, "
             "analyze my screen, look at camera, etc. "
             "You have NO visual ability without this tool. "
-            "After calling this tool, stay SILENT â€” the vision module speaks directly."
+            "After calling this tool, stay SILENT — the vision module speaks directly."
         ),
         "parameters": {
             "type": "OBJECT",
@@ -1309,7 +1318,7 @@ TOOL_DECLARATIONS = [
         "description": (
             "Executes complex multi-step tasks requiring multiple different tools. "
             "Examples: 'research X and save to file', 'find and organize files'. "
-            "DO NOT use for single commands. NEVER use for Steam/Epic â€” use game_updater."
+            "DO NOT use for single commands. NEVER use for Steam/Epic — use game_updater."
         ),
         "parameters": {
             "type": "OBJECT",
@@ -1641,7 +1650,7 @@ TOOL_DECLARATIONS = [
             "Call this silently whenever the user reveals something worth remembering: "
             "name, age, city, job, preferences, hobbies, relationships, projects, or future plans. "
             "Do NOT call for: weather, reminders, searches, or one-time commands. "
-            "Do NOT announce that you are saving â€” just call it silently. "
+            "Do NOT announce that you are saving — just call it silently. "
             "Values must be in English regardless of the conversation language."
         ),
         "parameters": {
@@ -1650,12 +1659,12 @@ TOOL_DECLARATIONS = [
                 "category": {
                     "type": "STRING",
                     "description": (
-                        "identity â€” name, age, birthday, city, job, language, nationality | "
-                        "preferences â€” favorite food/color/music/film/game/sport, hobbies | "
-                        "projects â€” active projects, goals, things being built | "
-                        "relationships â€” friends, family, partner, colleagues | "
-                        "wishes â€” future plans, things to buy, travel dreams | "
-                        "notes â€” habits, schedule, anything else worth remembering"
+                        "identity — name, age, birthday, city, job, language, nationality | "
+                        "preferences — favorite food/color/music/film/game/sport, hobbies | "
+                        "projects — active projects, goals, things being built | "
+                        "relationships — friends, family, partner, colleagues | "
+                        "wishes — future plans, things to buy, travel dreams | "
+                        "notes — habits, schedule, anything else worth remembering"
                     )
                 },
                 "key":   {"type": "STRING", "description": "Short snake_case key (e.g. name, favorite_food, sister_name)"},
@@ -2120,7 +2129,7 @@ class StellaLive:
         scope = self._ptt.start()
         try:
             self.ui.write_log(
-                f"SYS: Push-to-talk on â€” hold {self._ptt.label}"
+                f"SYS: Push-to-talk on — hold {self._ptt.label}"
                 + ("." if scope == "global" else " (works while window focused).")
             )
         except Exception:
@@ -2239,14 +2248,14 @@ class StellaLive:
         if any(p in lower for p in ("switch to offline mode", "go offline", "turn on offline mode", "enable offline mode", "air gap mode")):
             config_manager.set_setting("offline_mode_enabled", True)
             config_manager.set_setting("default_ai_provider", "Local")
-            self.ui.write_log("ðŸ”’ SYSTEM: Air-Gapped Offline Mode ENGAGED. All operations running 100% locally.")
+            self.ui.write_log("🔒 SYSTEM: Air-Gapped Offline Mode ENGAGED. All operations running 100% locally.")
             self.speak("Offline mode engaged, sir. Running 100 percent locally on your machine.", proactive=True)
             return
 
         if any(p in lower for p in ("switch to online mode", "go online", "turn off offline mode", "disable offline mode")):
             config_manager.set_setting("offline_mode_enabled", False)
             config_manager.set_setting("default_ai_provider", "Google Gemini")
-            self.ui.write_log("ðŸŒ SYSTEM: Offline Mode DISENGAGED. Cloud connectivity restored.")
+            self.ui.write_log("🌐 SYSTEM: Offline Mode DISENGAGED. Cloud connectivity restored.")
             self.speak("Online mode restored, sir. Cloud connectivity is active.", proactive=True)
             return
 
@@ -2833,11 +2842,15 @@ class StellaLive:
             return
         # Route directly to Local Brain if preferred by user in settings or in air-gapped offline mode
         app_settings = config_manager.load_settings()
-        configured_provider = app_settings.get("default_ai_provider", "Gemini")
         is_offline_mode = bool(app_settings.get("offline_mode_enabled", False))
 
-        # If offline mode or Local provider selected, route directly to Local Brain
-        if is_offline_mode or configured_provider == "Local":
+        # If offline mode or no cloud providers configured (Local selected), route directly to Local Brain
+        try:
+            from core.providers.router import ProviderRouter
+            cloud_chain = ProviderRouter().chain("chat")
+        except Exception:
+            cloud_chain = []
+        if is_offline_mode or not cloud_chain:
             is_local_preferred = True
         else:
             is_local_preferred = False
@@ -3764,7 +3777,6 @@ class StellaLive:
             except Exception:
                 pass
             reply = ""
-            gemini_first = not self._use_openrouter_first
             request_text = f"{memory_ctx}\n\nCurrent User Request:\n{text}" if memory_ctx else text
 
             app_settings = config_manager.load_settings()
@@ -3772,45 +3784,45 @@ class StellaLive:
             local_model_target = app_settings.get("local_ai_model", "qwen2.5:3b")
             is_offline_mode = app_settings.get("offline_mode_enabled", False)
 
-            is_cloud_gemini = configured_provider in ("Gemini", "Google Gemini")
-            is_cloud_openrouter = configured_provider == "OpenRouter"
-
-            # 1. If user explicitly selected Google Gemini, run Gemini FIRST
-            if is_cloud_gemini and not is_offline_mode:
+            # Route cloud providers through the shared router (Stage 3 / T2.3).
+            # Each provider speaks its native wire format via adapters.chat()
+            # and keys are resolved per-request (a UI save takes effect immediately).
+            if not is_offline_mode:
                 try:
-                    self.ui.update_task_workspace(
-                        status="Thinking (Gemini)",
-                        output="Processing on Google Gemini...",
-                        percent=50,
-                    )
-                    reply = _gemini_text_reply(request_text)
-                    print("[STELLA] ðŸŒ Google Gemini answered successfully!")
-                except Exception as e_gem:
-                    print(f"[STELLA] âš ï¸ Gemini failed: {e_gem}")
-                    if _is_gemini_limit_error(e_gem):
-                        self._use_openrouter_first = True
+                    from core.providers.router import ProviderRouter
+                    from core.providers.adapters import ProviderError, chat as adapter_chat
 
-            # 2. If user explicitly selected OpenRouter, run OpenRouter FIRST
-            elif is_cloud_openrouter and not is_offline_mode:
-                try:
-                    self.ui.update_task_workspace(
-                        status="Thinking (OpenRouter)",
-                        output="Processing on OpenRouter...",
-                        percent=50,
+                    system_prompt = (
+                        "You are Stella, a concise, helpful desktop assistant. "
+                        "Reply naturally and briefly. Do not mention internal implementation details."
                     )
-                    reply = openrouter_client.chat(
-                        request_text,
-                        system=(
-                            "You are Stella, a concise, helpful desktop assistant. "
-                            "Reply naturally and briefly. Do not mention internal implementation details."
-                        ),
-                    )
-                    print("[STELLA] ðŸŒ OpenRouter answered successfully!")
-                except Exception as e_or:
-                    print(f"[STELLA] âš ï¸ OpenRouter failed: {e_or}")
+                    for entry in ProviderRouter().chain("chat"):
+                        provider_id = entry["provider"]
+                        try:
+                            self.ui.update_task_workspace(
+                                status=f"Thinking ({provider_id})",
+                                output=f"Processing on {provider_id}...",
+                                percent=50,
+                            )
+                            messages = [
+                                {"role": "system", "content": system_prompt},
+                                {"role": "user", "content": request_text},
+                            ]
+                            reply = adapter_chat(provider_id, messages)
+                            if reply:
+                                print(f"[STELLA] 🌐 {provider_id} answered successfully!")
+                                break
+                        except ProviderError as e:
+                            print(f"[STELLA] ⚠️ {provider_id} failed: {e}")
+                            continue
+                        except Exception as e:
+                            print(f"[STELLA] ⚠️ {provider_id} failed: {e}")
+                            continue
+                except Exception as e:
+                    print(f"[STELLA] ⚠️ Cloud router failed: {e}")
 
-            # 3. If user explicitly configured Local AI, is in Offline Mode, or cloud provider failed: run Local Brain
-            if not reply and (configured_provider == "Local" or is_offline_mode or not (is_cloud_gemini or is_cloud_openrouter)) and local_brain.is_available():
+            # 3. If cloud providers didn't answer (or Local/offline selected): run Local Brain
+            if not reply and local_brain.is_available():
                 try:
                     self.ui.update_task_workspace(
                         status="Thinking (Local AI)",
@@ -3862,7 +3874,7 @@ class StellaLive:
                             else:
                                 fn_args = fn_args_raw or {}
 
-                            print(f"[STELLA] ðŸ”’ Local Brain executing tool: {fn_name}({fn_args})")
+                            print(f"[STELLA] 🔒 Local Brain executing tool: {fn_name}({fn_args})")
                             self.ui.update_task_workspace(
                                 status=f"Executing {fn_name}",
                                 output=f"Running action: {fn_name} on local machine...",
@@ -3887,26 +3899,13 @@ class StellaLive:
                                 if followup_reply:
                                     reply = followup_reply
                             except Exception as e_fu:
-                                print(f"[STELLA] âš ï¸ Local Brain follow-up failed: {e_fu}")
+                                print(f"[STELLA] ⚠️ Local Brain follow-up failed: {e_fu}")
                                 reply = str(tool_result) if tool_result else f"{fn_name.replace('_', ' ').capitalize()} completed."
                     else:
-                        reply = msg.get("content", "").strip()
-                    print(f"[STELLA] ðŸ”’ Local Brain ({local_model_target}) answered successfully!")
+                        reply = _extract_message_text(msg)
+                    print(f"[STELLA] 🔒 Local Brain ({local_model_target}) answered successfully!")
                 except Exception as e_loc:
-                    print(f"[STELLA] âš ï¸ Local Brain failed: {e_loc}")
-
-            # 4. Fallback cascading: if primary cloud choice failed, try secondary cloud choice
-            if not reply and not is_offline_mode:
-                if is_cloud_gemini and self._use_openrouter_first:
-                    try:
-                        reply = openrouter_client.chat(request_text)
-                    except Exception:
-                        pass
-                elif is_cloud_openrouter:
-                    try:
-                        reply = _gemini_text_reply(request_text)
-                    except Exception:
-                        pass
+                    print(f"[STELLA] ⚠️ Local Brain failed: {e_loc}")
 
             # 4. Ultimate offline safety net: Local Brain fallback
             if not reply and local_brain.is_available():
@@ -3930,13 +3929,13 @@ class StellaLive:
                             fn_args = fn_args_raw or {}
                         reply = self._execute_tool_sync(fn_name, fn_args, call_id)
                     else:
-                        reply = msg_net.get("content", "").strip()
-                    print(f"[STELLA] ðŸ”’ Local Brain offline safety net answered ({local_model_target})!")
+                        reply = _extract_message_text(msg_net)
+                    print(f"[STELLA] 🔒 Local Brain offline safety net answered ({local_model_target})!")
                 except Exception as e_net:
-                    print(f"[STELLA] âš ï¸ Offline Local Brain fallback failed: {e_net}")
+                    print(f"[STELLA] ⚠️ Offline Local Brain fallback failed: {e_net}")
             reply = (reply or "").strip()
             if not reply:
-                reply = "Iâ€™m ready, sir."
+                reply = "I’m ready, sir."
             self.ui.write_log(f"Stella: {reply}")
             if not getattr(self.ui, "muted", False):
                 self.speak(reply, proactive=True)
@@ -3948,7 +3947,7 @@ class StellaLive:
                 self.ui.set_state("LISTENING")
         except Exception as e:
             msg = f"Fallback reply failed: {e}"
-            print(f"[STELLA] âš ï¸ {msg}")
+            print(f"[STELLA] ⚠️ {msg}")
             self.ui.write_log(f"ERR: {msg}")
             try:
                 self.ui.finish_task_workspace(msg, "Reply failed.", 100)
@@ -4037,7 +4036,7 @@ class StellaLive:
 
     def speak_error(self, tool_name: str, error: str):
         short = str(error)[:120]
-        self.ui.write_log(f"ERR: {tool_name} â€” {short}")
+        self.ui.write_log(f"ERR: {tool_name} — {short}")
         self.speak(f"Sir, {tool_name} encountered an error. {short}")
 
     def _forge_skill(self, goal: str, skill_name: str | None = None) -> str:
@@ -4114,7 +4113,7 @@ class StellaLive:
         sys_prompt = _load_system_prompt()
 
         now      = datetime.now()
-        time_str = now.strftime("%A, %B %d, %Y â€” %I:%M %p")
+        time_str = now.strftime("%A, %B %d, %Y — %I:%M %p")
         time_ctx = (
             f"[CURRENT DATE & TIME]\n"
             f"Right now it is: {time_str}\n"
@@ -4179,7 +4178,7 @@ class StellaLive:
         name = fc.name
         args = dict(fc.args or {})
 
-        print(f"[STELLA] ðŸ”§ {name}  {args}")
+        print(f"[STELLA] 🔧 {name}  {args}")
         self.speak(f"Working on {name.replace('_', ' ')}...")
         self.ui.set_state("THINKING")
 
@@ -4228,7 +4227,7 @@ class StellaLive:
             if action == "list":
                 items = undo_stack.history()
                 result = ("Things I can undo, most recent first:\n" +
-                          "\n".join(f"  â€¢ {item}" for item in items)
+                          "\n".join(f"  • {item}" for item in items)
                          ) if items else "I have not changed anything I can undo yet."
             else:
                 loop = asyncio.get_event_loop()
@@ -4295,7 +4294,7 @@ class StellaLive:
             value    = args.get("value", "")
             if key and value:
                 update_memory({category: {key: {"value": value}}})
-                print(f"[Memory] ðŸ’¾ save_memory: {category}/{key} = {value}")
+                print(f"[Memory] 💾 save_memory: {category}/{key} = {value}")
                 try:
                     self.ui.finish_task_workspace("Memory saved.", "Memory updated.", 100)
                 except Exception:
@@ -4558,7 +4557,7 @@ class StellaLive:
                     },
                     daemon=True,
                 ).start()
-                result = "Vision module activated. Stay completely silent â€” vision module will speak directly."
+                result = "Vision module activated. Stay completely silent — vision module will speak directly."
 
             elif name == "computer_settings":
                 r = await loop.run_in_executor(None, lambda: computer_settings(parameters=args, response=None, player=self.ui))
@@ -4852,8 +4851,8 @@ class StellaLive:
             bullets = []
             for l in res_str.splitlines():
                 cl = l.strip()
-                if (cl.startswith(("-", "*", "â€¢", ">")) or cl.startswith(tuple("123456789."))) and len(cl) > 3:
-                    bullets.append(cl.lstrip("-*â€¢>0123456789. ").strip())
+                if (cl.startswith(("-", "*", "•", ">")) or cl.startswith(tuple("123456789."))) and len(cl) > 3:
+                    bullets.append(cl.lstrip("-*•>0123456789. ").strip())
                 elif len(cl) > 15 and not cl.startswith("#") and len(bullets) < 4:
                     bullets.append(cl)
 
@@ -4881,7 +4880,7 @@ class StellaLive:
         if not self.ui.muted:
             self.ui.set_state("LISTENING")
 
-        print(f"[STELLA] ðŸ“¤ {name} â†’ {str(result)[:80]}")
+        print(f"[STELLA] 📤 {name} → {str(result)[:80]}")
 
         return types.FunctionResponse(
             id=fc.id, name=name,
@@ -4932,7 +4931,7 @@ class StellaLive:
             await self.session.send_realtime_input(media=msg)
 
     async def _listen_audio(self):
-        print("[STELLA] ðŸŽ¤ Mic started")
+        print("[STELLA] 🎤 Mic started")
         loop = asyncio.get_event_loop()
         import numpy as np
 
@@ -5057,15 +5056,15 @@ class StellaLive:
                 device=_mic_dev,
                 callback=callback,
             ):
-                print(f"[STELLA] ðŸŽ¤ Mic stream open ({_mic_name or 'Default'})")
+                print(f"[STELLA] 🎤 Mic stream open ({_mic_name or 'Default'})")
                 while True:
                     await asyncio.sleep(0.1)
         except Exception as e:
-            print(f"[STELLA] âŒ Mic: {e}")
+            print(f"[STELLA] ❌ Mic: {e}")
             raise
 
     async def _receive_audio(self):
-        print("[STELLA] ðŸ‘‚ Recv started")
+        print("[STELLA] 👂 Recv started")
         out_buf, in_buf = [], []
 
         try:
@@ -5140,7 +5139,7 @@ class StellaLive:
                         self.ui.set_state("EXECUTING")
                         fn_responses = []
                         for fc in response.tool_call.function_calls:
-                            print(f"[STELLA] ðŸ“ž {fc.name}")
+                            print(f"[STELLA] 📞 {fc.name}")
                             fr = await self._execute_tool(fc)
                             fn_responses.append(fr)
                         self.ui.set_state("THINKING")
@@ -5149,12 +5148,12 @@ class StellaLive:
                         )
 
         except Exception as e:
-            print(f"[STELLA] âŒ Recv: {e}")
+            print(f"[STELLA] ❌ Recv: {e}")
             traceback.print_exc()
             raise
 
     async def _play_audio(self):
-        print("[STELLA] ðŸ”Š Play started")
+        print("[STELLA] 🔊 Play started")
         loop = asyncio.get_event_loop()
         import numpy as np
 
@@ -5181,7 +5180,7 @@ class StellaLive:
                     pass
                 await asyncio.to_thread(stream.write, chunk)
         except Exception as e:
-            print(f"[STELLA] âŒ Play: {e}")
+            print(f"[STELLA] ❌ Play: {e}")
             raise
         finally:
             self.set_speaking(False)
@@ -5230,7 +5229,7 @@ class StellaLive:
 
         while True:
             try:
-                print("[STELLA] ðŸ”Œ Connecting...")
+                print("[STELLA] 🔌 Connecting...")
                 self.ui.set_state("THINKING")
                 config = self._build_config()
 
@@ -5243,7 +5242,7 @@ class StellaLive:
                         self.audio_in_queue = asyncio.Queue()
                         self.out_queue      = asyncio.Queue()  # Fix: removed maxsize=10 to prevent dropping packets
                         
-                        print("[STELLA] âœ… Connected.")
+                        print("[STELLA] ✅ Connected.")
                         try:
                             self.ui.boot_set_step_status("Connect AI backend", "done")
                             self.ui.boot_set_progress(75, "AI backend connected")
@@ -5283,7 +5282,7 @@ class StellaLive:
                         pass
                     
             except Exception as e:
-                print(f"[STELLA] âš ï¸ {e}")
+                print(f"[STELLA] ⚠️ {e}")
                 traceback.print_exc()
                 if _is_gemini_limit_error(e):
                     self._use_openrouter_first = True
@@ -5291,7 +5290,7 @@ class StellaLive:
                 self._loop = None
             self.set_speaking(False)
             self.ui.set_state("LISTENING")
-            print("[STELLA] ðŸ”„ Reconnecting in 5s...")
+            print("[STELLA] 🔄 Reconnecting in 5s...")
             await asyncio.sleep(5)
 
 def main():
@@ -5328,6 +5327,13 @@ def main():
     _step("Building interface...")
     ui = StellaUI(str(BASE_DIR / "assets" / "stella_logo.png"), show_immediately=True)
     _step("Starting services...")
+    try:
+        from core.background_services import start_background_services
+
+        _services = start_background_services()
+        _startup_log(f"background services: {_services}")
+    except Exception as exc:
+        _startup_log(f"background services unavailable: {exc}")
     dashboard = None
     dashboard_enabled = DashboardServer is not None and not _is_port_in_use(8000)
     if DashboardServer is not None and not dashboard_enabled:
@@ -5405,7 +5411,7 @@ def main():
         def _on_sensorium_alert(alert_type: str, meta: dict):
             msg = meta.get("message", "System state change detected.")
             try:
-                ui.write_log(f"ðŸ§  SENSORIUM: {msg}")
+                ui.write_log(f"🧠 SENSORIUM: {msg}")
             except Exception:
                 pass
         sensorium.register_interjection_handler(_on_sensorium_alert)
@@ -5434,14 +5440,14 @@ def main():
 
     def runner():
         _startup_log("runner waiting api key")
-        # Start the bundled K2 Horizon local inference server alongside the app.
+        # Start the bundled local inference server alongside the app.
         try:
-            from core import k2_server
-            if k2_server.autostart_enabled():
-                _startup_log("k2 server autostart")
-                k2_server.start_background()
+            from core import server
+            if server.autostart_enabled():
+                _startup_log("server autostart")
+                server.start_background()
         except Exception as exc:
-            _startup_log(f"k2 server autostart notice: {exc}")
+            _startup_log(f"server autostart notice: {exc}")
         ui.wait_for_api_key()
         _startup_log("runner api key ready")
         stella_evo = StellaLive(
@@ -5494,7 +5500,7 @@ def main():
                     clean_text = (text or "").strip()
                     snippet = f": '{clean_text[:75]}...'" if len(clean_text) > 75 else (f": '{clean_text}'" if clean_text else "")
                     msg = f"You received a new Instagram message from {username}{snippet}. What should I reply, or should I take over the chat?"
-                    ui.write_log(f"ðŸ“± Insta (@{username}): {clean_text or '[Media/Attachment]'}")
+                    ui.write_log(f"📱 Insta (@{username}): {clean_text or '[Media/Attachment]'}")
                     ui.write_log(f"Stella: {msg}")
                     stella_evo.speak(msg)
                     return None
@@ -5515,7 +5521,7 @@ def main():
                     clean_subj = (subject or "No Subject").strip()
                     subj_preview = f"'{clean_subj[:70]}...'" if len(clean_subj) > 70 else f"'{clean_subj}'"
                     msg = f"You received a new email from {sender} with subject: {subj_preview}."
-                    ui.write_log(f"ðŸ“§ Email ({sender}): {clean_subj}")
+                    ui.write_log(f"📧 Email ({sender}): {clean_subj}")
                     ui.write_log(f"Stella: {msg}")
                     stella_evo.speak(msg)
 
@@ -5552,7 +5558,7 @@ def main():
         try:
             asyncio.run(stella_evo.run())
         except KeyboardInterrupt:
-            print("\nðŸ”´ Shutting down...")
+            print("\n🔴 Shutting down...")
 
     def start_runner():
         threading.Thread(target=runner, daemon=True).start()

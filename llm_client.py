@@ -19,27 +19,31 @@ def _strip_k2_think(text: str) -> str:
     return clean.strip()
 
 def _k2_chat_completion(messages: list[dict], temperature: float = 0.7, max_tokens: int = 1024) -> Optional[str]:
+    return _server_chat_completion(messages, temperature, max_tokens)
+
+
+def _server_chat_completion(messages: list[dict], temperature: float = 0.7, max_tokens: int = 1024) -> Optional[str]:
     try:
-        from core import k2_server
+        from core import server
     except Exception as e:
-        raise RuntimeError(f"K2 server manager unavailable: {e}")
-    if not k2_server.ensure_running():
-        raise RuntimeError("K2 local server failed to start. Check models/K2-Horizon-0.9B-Q4_K_M.gguf exists.")
+        raise RuntimeError(f"Local server manager unavailable: {e}")
+    if not server.ensure_running():
+        raise RuntimeError("Local server failed to start. Check that a GGUF model exists (models/K2-Horizon-0.9B-Q4_K_M.gguf by default).")
     payload = {"model": "k2-horizon-0.9b", "messages": messages, "temperature": temperature, "max_tokens": max_tokens}
     deadline = time.time() + 180
     while True:
         try:
-            resp = requests.post(f"{k2_server.base_url()}/v1/chat/completions", headers={"Content-Type": "application/json"}, json=payload, timeout=600)
+            resp = requests.post(f"{server.base_url()}/v1/chat/completions", headers={"Content-Type": "application/json"}, json=payload, timeout=600)
             if resp.status_code == 200:
                 content = resp.json().get("choices", [{}])[0].get("message", {}).get("content", "")
                 return _strip_k2_think(content) or None
             if resp.status_code == 503 and time.time() < deadline:
                 time.sleep(3)
                 continue
-            logger.error(f"[LLM Client] K2 Error {resp.status_code}: {resp.text[:200]}")
+            logger.error(f"[LLM Client] Server Error {resp.status_code}: {resp.text[:200]}")
             return None
         except Exception as e:
-            logger.error(f"[LLM Client] K2 Request Failed: {e}")
+            logger.error(f"[LLM Client] Server Request Failed: {e}")
             return None
 
 logger = logging.getLogger("llm_client")
@@ -118,7 +122,7 @@ class UnifiedAIClient:
             if history:
                 messages.extend(history)
             messages.append({"role": "user", "content": prompt})
-            result = _k2_chat_completion(messages, temperature, max_tokens)
+            result = _server_chat_completion(messages, temperature, max_tokens)
             if result:
                 return result
             raise RuntimeError("K2 local inference failed. Is the model file present in models/?")
@@ -155,7 +159,7 @@ class UnifiedAIClient:
                 {"role": "system", "content": system + K2_NO_THINK_SUFFIX + " Output valid JSON only, without any markdown formatting."},
                 {"role": "user", "content": prompt}
             ]
-            raw = _k2_chat_completion(messages, temperature=0.2, max_tokens=max_tokens)
+            raw = _server_chat_completion(messages, temperature=0.2, max_tokens=max_tokens)
             if not raw:
                 raise RuntimeError("K2 local inference failed.")
             clean = raw.strip()
@@ -219,7 +223,7 @@ class UnifiedAIClient:
         elif self._provider == "Groq":
             return groq_client.multi_turn(messages, self._groq_model, max_tokens, temperature)
         elif self._provider == "K2":
-            result = _k2_chat_completion(messages, temperature, max_tokens)
+            result = _server_chat_completion(messages, temperature, max_tokens)
             if result:
                 return result
             raise RuntimeError("K2 local inference failed.")

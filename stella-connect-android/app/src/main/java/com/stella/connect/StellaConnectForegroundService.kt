@@ -9,15 +9,20 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
+import android.os.PowerManager
 import androidx.core.app.NotificationCompat
 import com.stella.connect.commands.DeviceCommandHandler
 import com.stella.connect.core.AgentStateStore
 import com.stella.connect.core.ConnectionState
+import com.stella.connect.core.HudOverlay
+import com.stella.connect.core.LocalEngineManager
+import com.stella.connect.core.WakeWordManager
 import com.stella.connect.network.StellaWebSocketClient
 import com.stella.connect.pairing.PairingStorage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.collect
 
@@ -26,12 +31,34 @@ class StellaConnectForegroundService : Service() {
     private lateinit var storage: PairingStorage
     private lateinit var client: StellaWebSocketClient
     private var started = false
+    private var wakeLock: PowerManager.WakeLock? = null
+    private var keepAliveJob: Job? = null
+
+    /** Crash-loop guard for engine restarts (bad model must not spin forever). */
+    private var engineFailStreak = 0
 
     override fun onCreate() {
         super.onCreate()
         storage = PairingStorage(this)
         client = StellaWebSocketClient(this, storage, DeviceCommandHandler(this))
         createNotificationChannel()
+        acquireWakeLock()
+        // Wire wake word → HUD → chat: when the wake word fires, show the HUD
+        // bubble and post a nudge so the user knows Stella is listening.
+        WakeWordManager.init(this) {
+            scope.launch {
+                HudOverlay.init(this@StellaConnectForegroundService).show()
+                AgentStateStore.addChatMessage(
+                    com.stella.connect.core.ChatMessage(
+                        id = java.util.UUID.randomUUID().toString(),
+                        role = "user",
+                        text = "(wake word)",
+                        timestamp = System.currentTimeMillis(),
+                        status = "Received",
+                    )
+                )
+            }
+        }
         try {
             val notification = buildNotification("Stella", "Starting connection")
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -49,6 +76,57 @@ class StellaConnectForegroundService : Service() {
         scope.launch {
             AgentStateStore.connectionState.collect {
                 updateNotification()
+            }
+        }
+        startKeepAlive()
+    }
+
+    /** Keep the CPU awake while the service (and engine) should be alive. */
+    private fun acquireWakeLock() {
+        try {
+            val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+            wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "stella:engine").apply {
+                setReferenceCounted(false)
+                acquire()
+            }
+        } catch (_: Exception) {}
+    }
+
+    /**
+     * Watchdog loop: the local engine must survive backgrounding and silent
+     * crashes. If a model is present but llama-server is not running, restart
+     * it (with a crash-loop backoff so a bad model cannot spin forever).
+     * Also keeps the notification truthful (never "Disconnected" on-device).
+     */
+    private fun startKeepAlive() {
+        keepAliveJob?.cancel()
+        keepAliveJob = scope.launch {
+            while (true) {
+                delay(15_000)
+                try {
+                    val ctx = applicationContext
+                    if (LocalEngineManager.modelPresent(ctx) && !LocalEngineManager.isRunning()) {
+                        if (engineFailStreak >= 3) {
+                            AgentStateStore.setStatus("Engine restart paused - will retry in 5 min")
+                            delay(300_000)
+                            engineFailStreak = 0
+                        }
+                        AgentStateStore.addLog("Keep-alive: engine not running - restarting")
+                        val ok = LocalEngineManager.prepare(ctx) && LocalEngineManager.start(ctx)
+                        if (ok) {
+                            engineFailStreak = 0
+                            AgentStateStore.addLog("Keep-alive: engine restarted")
+                        } else {
+                            engineFailStreak += 1
+                        }
+                    } else if (LocalEngineManager.isRunning()) {
+                        engineFailStreak = 0
+                    }
+                    // Refresh notification wording (on-device vs paired states).
+                    updateNotification()
+                } catch (e: Exception) {
+                    AgentStateStore.addLog("Keep-alive error: ${e.message ?: "unknown"}")
+                }
             }
         }
     }
@@ -94,7 +172,15 @@ class StellaConnectForegroundService : Service() {
             client.sendChatMessage(text)
             return
         }
-        AgentStateStore.setStatus("Thinking on-device...")
+        AgentStateStore.setStatus(
+            when {
+                com.stella.connect.core.LocalEngineManager.modelPresent(applicationContext) ->
+                    "Thinking on-device..."
+                com.stella.connect.core.LocalEngineManager.cloudAvailable(applicationContext) ->
+                    "Relaying to cloud..."
+                else -> "Thinking..."
+            },
+        )
         scope.launch {
             val reply = answerLocally(text)
             AgentStateStore.addChatMessage(
@@ -106,7 +192,12 @@ class StellaConnectForegroundService : Service() {
                     status = "Sent",
                 )
             )
-            AgentStateStore.setStatus("Running on-device - connect to your PC any time")
+            AgentStateStore.setStatus(
+                if (com.stella.connect.core.LocalEngineManager.mode.value == "CLOUD")
+                    "Answered via cloud - link your PC any time"
+                else
+                    "Running on-device - connect to your PC any time",
+            )
         }
     }
 
@@ -133,8 +224,15 @@ class StellaConnectForegroundService : Service() {
                     "Answer briefly. If you cannot answer on-device, say what is possible here."))
                 .put(org.json.JSONObject().put("role", "user").put("content", text))
                 .toString()
-            val out = com.stella.connect.core.K2Manager.chat(messages, 256)?.trim()
-            if (out.isNullOrBlank()) k2StateLine() else out
+            val started = com.stella.connect.core.LocalEngineManager.start(applicationContext)
+            if (started) {
+                val out = com.stella.connect.core.LocalEngineManager.chat(messages, 256)?.trim()
+                if (!out.isNullOrBlank()) return out
+            }
+            // LOCAL rung unavailable -> CLOUD rung (Phase 1.6 chain).
+            val cloud = com.stella.connect.core.LocalEngineManager
+                .cloudChat(applicationContext, messages, 256)?.trim()
+            if (!cloud.isNullOrBlank()) cloud else k2StateLine()
         } catch (_: Exception) {
             k2StateLine()
         }
@@ -143,13 +241,10 @@ class StellaConnectForegroundService : Service() {
     private fun k2StateLine(): String {
         val ctx = applicationContext
         return when {
-            com.stella.connect.core.K2Manager.isRunning() ->
-                "K2 is running on this phone. Ask me anything."
-            com.stella.connect.core.K2Manager.modelPresent(ctx) ->
+            com.stella.connect.core.LocalEngineManager.isRunning() ->
+                "Stella is running on this phone. Ask me anything."
+            com.stella.connect.core.LocalEngineManager.modelPresent(ctx) ->
                 "The on-device model is ready - I'm starting the local engine now. Ask again in a moment."
-            com.stella.connect.core.K2Manager.bundled ->
-                "I'm installing the bundled on-device model on first launch. Open the home screen " +
-                "and I'll finish setup there - no PC needed."
             else ->
                 "No model downloaded yet and no PC linked. I can still help with device " +
                 "info and pairing - say \"pair\" and I'll walk you through linking, or download " +
@@ -170,11 +265,16 @@ class StellaConnectForegroundService : Service() {
 
     private fun updateNotification() {
         val state = AgentStateStore.connectionState.value
-        val text = when (state) {
-            ConnectionState.CONNECTED -> "Connected to Stella"
-            ConnectionState.CONNECTING -> "Connecting to Stella"
-            ConnectionState.RECONNECTING -> "Reconnecting"
-            ConnectionState.DISCONNECTED -> "Disconnected"
+        val gateway = AgentStateStore.gateway.value
+        val text = when {
+            state == ConnectionState.CONNECTED -> "Connected to Stella"
+            state == ConnectionState.CONNECTING -> "Connecting to Stella"
+            state == ConnectionState.RECONNECTING -> "Reconnecting"
+            // On-device mode: there is nothing to be "disconnected" from.
+            gateway == null ->
+                if (LocalEngineManager.isRunning()) "On-device - local engine running"
+                else "On-device - local only"
+            else -> "Disconnected - retrying"
         }
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         manager.notify(NOTIFICATION_ID, buildNotification("Stella", text))
@@ -200,7 +300,12 @@ class StellaConnectForegroundService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onDestroy() {
+        keepAliveJob?.cancel()
+        try { wakeLock?.release() } catch (_: Exception) {}
+        wakeLock = null
         client.disconnect()
+        WakeWordManager.shutdown()
+        HudOverlay.shutdown()
         super.onDestroy()
     }
 

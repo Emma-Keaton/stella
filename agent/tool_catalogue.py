@@ -44,6 +44,12 @@ CAPABILITY = {
     "dev": "dev",
     "self": "internal",
     "phone": "device",
+    # Phase K: capabilities added by the external-repo pull-in.
+    "security": "security",
+    "osint": "security",
+    "recon": "security",
+    "observability": "network",
+    "providers": "network",
 }
 
 

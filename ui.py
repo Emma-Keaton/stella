@@ -1,4 +1,4 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 from core.user_paths import get_user_data_dir
 
 import asyncio
@@ -205,25 +205,6 @@ try:
             C.load_theme(_global_settings.get("app_theme", "#ffffff"))
 except Exception:
     pass
-
-# Patch setStyleSheet to dynamically replace hardcoded gold colors with active white and ice theme
-_old_setStyleSheet = QWidget.setStyleSheet
-def _new_setStyleSheet(self, style):
-    if style:
-        style = style.replace("#7C6EE6", getattr(C, "ACC", "#7C6EE6"))
-        style = style.replace("#7C6EE6", getattr(C, "ACC", "#7C6EE6"))
-        style = style.replace("#7C6EE6", getattr(C, "ACC", "#7C6EE6"))
-        style = style.replace("#ffd700", getattr(C, "ACC", "#7C6EE6"))
-        style = style.replace("#d4af37", getattr(C, "ACC", "#7C6EE6"))
-        style = style.replace("#a89df0", getattr(C, "ACC2", "#a89df0"))
-        style = style.replace("#00b4d8", getattr(C, "ACC", "#7C6EE6"))
-        style = style.replace("255, 179, 0", "124, 110, 230")
-        style = style.replace("255,179,0", "0,229,255")
-        style = style.replace("255, 190, 26", "124, 110, 230")
-        style = style.replace("244, 180, 0", "124, 110, 230")
-    _old_setStyleSheet(self, style)
-QWidget.setStyleSheet = _new_setStyleSheet
-
 
 class BackgroundWidget(QWidget):
     _state_sig = pyqtSignal(str)
@@ -3715,8 +3696,9 @@ class WorkspaceSidebar(QWidget):
         self._input = QLineEdit()
         self._input.setPlaceholderText("Message Stella...")
         self._input.setFont(QFont("Exo 2", 10))
+        self._input.setFixedHeight(36)
         self._input.setStyleSheet(
-            f"QLineEdit {{ background: transparent; color: {C.WHITE}; border: none; padding: 2px 4px; selection-background-color: rgba(124, 110, 230, 0.25); }}"
+            f"QLineEdit {{ background: transparent; color: {C.WHITE}; border: none; padding: 4px 8px; selection-background-color: rgba(124, 110, 230, 0.25); }}"
         )
         self._input.returnPressed.connect(self._send)
         self._input.textChanged.connect(lambda t: voice_gate.set_typing(bool((t or "").strip())))
@@ -4302,8 +4284,9 @@ class InlineChatWorkspace(QFrame):
         self._input = QLineEdit()
         self._input.setPlaceholderText("Message Stella...")
         self._input.setFont(QFont("Exo 2", 10))
+        self._input.setFixedHeight(34)
         self._input.setStyleSheet(
-            f"QLineEdit {{ background: transparent; color: {C.WHITE}; border: none; padding: 0 4px; selection-background-color: rgba(124, 110, 230, 0.25); }}"
+            f"QLineEdit {{ background: transparent; color: {C.WHITE}; border: none; padding: 3px 8px; selection-background-color: rgba(124, 110, 230, 0.25); }}"
         )
         self._input.returnPressed.connect(self._send)
         self._input.textChanged.connect(lambda t: voice_gate.set_typing(bool((t or "").strip())))
@@ -8819,7 +8802,7 @@ class MainWindow(QMainWindow):
         self._clock_tmr.start(1000)
         self._tick_clock()
 
-        # Metrik gÃƒÂ¼ncelleme timer'Ã„Â±
+        # Metrik güncelleme timer'ı
         self._metric_tmr = QTimer(self)
         self._metric_tmr.timeout.connect(self._update_metrics)
         self._metric_tmr.start(2000)
@@ -10527,13 +10510,13 @@ class MainWindow(QMainWindow):
         self._input = QLineEdit()
         self._input.setPlaceholderText("Ask Stella anything...")
         self._input.setFont(QFont("Exo 2", 10))
-        self._input.setFixedHeight(50)
+        self._input.setFixedHeight(52)
         self._input.setStyleSheet(f"""
             QLineEdit {{
                 background: transparent;
                 color: {C.WHITE};
                 border: none;
-                padding: 0 14px;
+                padding: 2px 14px;
                 selection-background-color: rgba(124, 110, 230, 0.25);
             }}
         """)
@@ -11934,6 +11917,31 @@ class SystemConnectivityPage(QWidget):
         mem_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         mem_btn.clicked.connect(self._open_memory_inspector)
         tools_row.addWidget(mem_btn)
+
+        # Memory Vault Settings
+        vault_card = self._card("Memory Vault", "Choose where Stella stores notes and long-term memories.")
+        vault_lay = vault_card.layout()
+        
+        self._vault_enabled_btn = self._mk_toggle(
+            "Enable Memory Vault",
+            bool(self._load_app_settings().get("memory_vault_enabled", True)),
+            self._on_vault_enabled_toggled
+        )
+        vault_lay.addWidget(self._vault_enabled_btn)
+        
+        vault_folder_row = QHBoxLayout()
+        vault_folder_row.addWidget(QLabel("Vault Folder"))
+        self._vault_folder_input = QLineEdit(self._load_app_settings().get("memory_vault_folder", ""))
+        self._vault_folder_input.setPlaceholderText("Select folder for notes (empty = default ~/Stella/notes)")
+        self._vault_folder_input.setReadOnly(True)
+        vault_folder_row.addWidget(self._vault_folder_input, 1)
+        self._vault_folder_btn = QPushButton("Browse...")
+        self._vault_folder_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._vault_folder_btn.clicked.connect(self._pick_vault_folder)
+        vault_folder_row.addWidget(self._vault_folder_btn)
+        vault_lay.addLayout(vault_folder_row)
+        
+        lay.addWidget(vault_card)
 
         # Return the column. Without this the method fell off the end
         # returning None, so __init__ added nothing here and the whole left
@@ -13904,6 +13912,25 @@ class SystemConnectivityPage(QWidget):
                 return False, "Windows restricts programmatic taskbar pinning. Please right-click the 'Stella - Premium.lnk' shortcut on your Desktop and select 'Pin to taskbar', or drag it directly onto your taskbar."
         except Exception as e:
             return False, f"Error pinning to taskbar: {e}"
+
+    def _on_vault_enabled_toggled(self, enabled: bool):
+        settings = self._load_app_settings()
+        settings["memory_vault_enabled"] = bool(enabled)
+        self._save_app_settings(settings)
+        if hasattr(self, "_vault_folder_input"):
+            self._vault_folder_input.setEnabled(enabled)
+        if hasattr(self, "_vault_folder_btn"):
+            self._vault_folder_btn.setEnabled(enabled)
+
+    def _pick_vault_folder(self):
+        from PyQt6.QtWidgets import QFileDialog
+        from pathlib import Path
+        folder = QFileDialog.getExistingDirectory(self, "Select Memory Vault Folder", self._vault_folder_input.text() or str(Path.home()))
+        if folder:
+            self._vault_folder_input.setText(folder)
+            settings = self._load_app_settings()
+            settings["memory_vault_folder"] = folder
+            self._save_app_settings(settings)
 
 class SmartDevicesSection(QFrame):
     def __init__(self, controller=None, parent=None):

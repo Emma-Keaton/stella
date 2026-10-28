@@ -17,7 +17,6 @@ import okhttp3.Request
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import okio.ByteString
-import org.json.JSONArray
 import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 import kotlin.math.min
@@ -77,7 +76,9 @@ class StellaWebSocketClient(
         val endpoint = currentEndpoint ?: return
         reconnectAttempt += 1
         AgentStateStore.setConnectionState(ConnectionState.RECONNECTING)
-        val delayMs = min(30_000L, 1_000L * (1 shl min(reconnectAttempt, 5)))
+        // Snappy backoff: 1s doubling up to 15s, retries forever - the PC may
+        // just be asleep, and the user must never see a dead "Disconnected".
+        val delayMs = min(15_000L, 1_000L * (1 shl min(reconnectAttempt, 4)))
         AgentStateStore.setStatus("Reconnecting in ${delayMs / 1000}s")
         Thread {
             try {
@@ -253,16 +254,18 @@ class StellaWebSocketClient(
         override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
             socket = null
             AgentStateStore.addLog("Socket closed: $code $reason")
-            AgentStateStore.setConnectionState(ConnectionState.DISCONNECTED)
-            AgentStateStore.setStatus("Disconnected")
+            // Go straight to RECONNECTING - never surface a dead "Disconnected"
+            // for a drop that is about to be retried.
+            AgentStateStore.setConnectionState(ConnectionState.RECONNECTING)
+            AgentStateStore.setStatus("Connection lost - retrying")
             reconnectLater()
         }
 
         override fun onFailure(webSocket: WebSocket, t: Throwable, response: okhttp3.Response?) {
             socket = null
             AgentStateStore.addLog("Socket failure: ${t.message}")
-            AgentStateStore.setConnectionState(ConnectionState.DISCONNECTED)
-            AgentStateStore.setStatus("Connection failed")
+            AgentStateStore.setConnectionState(ConnectionState.RECONNECTING)
+            AgentStateStore.setStatus("Connection lost - retrying")
             reconnectLater()
         }
     }

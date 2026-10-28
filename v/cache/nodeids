@@ -1,0 +1,21 @@
+[
+  "tests/test_autonomous_evolution.py::test_executor_auto_heal_error_recording",
+  "tests/test_autonomous_evolution.py::test_executor_skill_forge_immediate_execution",
+  "tests/test_autonomous_evolution.py::test_planner_prompt_has_stella_evo_rebrand_and_rules",
+  "tests/test_autonomous_evolution.py::test_planner_system_prompt_includes_learned_rules",
+  "tests/test_evo_integrations.py::test_circuit_hud_escapes_model_provided_markup",
+  "tests/test_evo_integrations.py::test_circuit_hud_renders_upstream_preset",
+  "tests/test_evo_integrations.py::test_generated_skill_module_is_not_imported_during_registry_startup",
+  "tests/test_evo_integrations.py::test_geospatial_route_has_expected_waypoints",
+  "tests/test_evo_integrations.py::test_manifest_marks_paired_feature_as_generated",
+  "tests/test_evo_integrations.py::test_spotify_mcp_actions_and_legacy_fallback",
+  "tests/test_skill_forge.py::test_crucible_detects_error_dictionary_in_sandbox",
+  "tests/test_skill_forge.py::test_forge_repairs_skill_when_sandbox_returns_error_dict",
+  "tests/test_skill_forge.py::test_forged_feature_registers_and_executes",
+  "tests/test_spotify_settings_card.py::test_spotify_credentials_helpers",
+  "tests/test_spotify_settings_card.py::test_system_connectivity_page_spotify_card",
+  "tests/test_stella_connect.py::test_command_router_reports_offline_device",
+  "tests/test_stella_connect.py::test_device_manager_persists_and_authenticates",
+  "tests/test_stella_connect.py::test_pairing_manager_returns_expiring_offer",
+  "tests/test_stella_connect.py::test_protocol_message_has_required_fields"
+]

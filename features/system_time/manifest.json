@@ -1,0 +1,47 @@
+{
+    "name": "system_time",
+    "aliases": ["system_time", "time", "world_clock", "timezone", "current_time", "world_time"],
+    "description": "Get the current system time, convert between timezones, list available timezones, and perform timezone-aware time calculations. All operations are local and do not require network access.",
+    "triggers": [
+        "time", "timezone", "current time", "world clock", "what time is it",
+        "what time is it in", "convert time", "timezone conversion",
+        "list timezones", "current datetime", "utc time", "local time"
+    ],
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "operation": {
+                "type": "STRING",
+                "description": "One of: current_time | convert_timezone | list_timezones | system_info. Defaults to current_time."
+            },
+            "timezone": {
+                "type": "STRING",
+                "description": "IANA timezone name (e.g., 'America/New_York', 'Europe/London', 'Asia/Tokyo', 'UTC'). Defaults to local timezone."
+            },
+            "target_timezone": {
+                "type": "STRING",
+                "description": "Target IANA timezone for conversion (e.g., 'Asia/Tokyo'). Required for convert_timezone."
+            },
+            "source_timezone": {
+                "type": "STRING",
+                "description": "Source IANA timezone (defaults to local timezone)."
+            },
+            "source_time": {
+                "type": "STRING",
+                "description": "Source time in ISO 8601 format (e.g., '2024-01-15T14:30:00'). Defaults to current time."
+            },
+            "format": {
+                "type": "STRING",
+                "description": "Output format: 'iso', 'readable', 'rfc2822', 'timestamp'. Defaults to 'readable'."
+            }
+        },
+        "required": []
+    },
+    "version": "1.0.0",
+    "active": true,
+    "author": "Stella",
+    "category": "system",
+    "surface": "both",
+    "requires": [],
+    "optional_dependencies": []
+}

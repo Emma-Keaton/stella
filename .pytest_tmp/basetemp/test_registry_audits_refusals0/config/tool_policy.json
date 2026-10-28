@@ -1,0 +1,1 @@
+{"version": 1, "rules": [{"name": "deny-all-active", "deny": ["*"], "activity": ["active"], "reason": "no"}]}

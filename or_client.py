@@ -1,3 +1,14 @@
+"""or_client.py - legacy OpenRouter client.
+
+The API key is resolved per request through
+`core.providers.keys.resolve_key()` (T1.9). It used to be snapshotted at
+import time, which meant a key saved in the Cloud Providers UI did not take
+effect until the app was restarted.
+
+New code should use `core.providers.adapters` / the router instead. This module
+is kept because `main.py` and `llm_client.py` still import it (D9: route all
+six paths through the router, delete none until the router is proven).
+"""
 from core.user_paths import get_user_data_dir
 import json
 import sys
@@ -22,15 +33,17 @@ BASE_DIR     = _get_base_dir()
 API_KEY_PATH = get_user_data_dir() / "config" / "api_keys.json"
 
 def _load_api_key() -> str:
+    """Resolve the OpenRouter key.
+
+    Delegates to the single resolution path in core.providers.keys, which
+    prefers the encrypted provider store and falls back to the legacy file
+    and the environment.
+    """
     try:
-        with open(API_KEY_PATH, "r", encoding="utf-8") as f:
-            data = json.load(f)
-        key = data.get("openrouter_api_key", "").strip()
-        return key
-    except FileNotFoundError:
-        return ""
+        from core.providers.keys import resolve_key
+        return resolve_key("openrouter")
     except Exception as e:
-        logger.warning(f"[OpenRouter] Failed to load API key: {e}")
+        logger.warning(f"[OpenRouter] Failed to resolve API key: {e}")
         return ""
 
 TEXT_MODELS: list[str] = [
@@ -82,9 +95,22 @@ _rate_limited: dict[str, float] = {}
 class OpenRouterClient:
 
     def __init__(self) -> None:
-        self.api_key  = _load_api_key()
-        self._headers = {
-            "Authorization": f"Bearer {self.api_key}",
+        self.api_key = _load_api_key()
+
+    def _current_key(self) -> str:
+        """Resolve the key for this request.
+
+        The key is re-read every time so a key saved in the Cloud Providers UI
+        takes effect immediately, without restarting the app (T1.9).
+        """
+        key = _load_api_key()
+        if key:
+            self.api_key = key
+        return self.api_key
+
+    def _headers_for(self) -> dict[str, str]:
+        return {
+            "Authorization": f"Bearer {self._current_key()}",
             "Content-Type":  "application/json",
             "HTTP-Referer":  "https://github.com/stella-ai",
             "X-Title":       "Stella",
@@ -123,16 +149,16 @@ class OpenRouterClient:
         if response_format:
             payload["response_format"] = response_format
 
-        if not self.api_key:
+        if not self._current_key():
             raise PermissionError(
-                "[OpenRouter] API key is missing. Add a valid sk-or- key in config/api_keys.json."
+                "[OpenRouter] API key is missing. Add one in Settings > Cloud Providers."
             )
 
         for attempt in range(1, MAX_RETRIES_PER_MODEL + 1):
             try:
                 resp = requests.post(
                     API_URL,
-                    headers=self._headers,
+                    headers=self._headers_for(),
                     json=payload,
                     timeout=REQUEST_TIMEOUT,
                 )
@@ -140,7 +166,7 @@ class OpenRouterClient:
                 if resp.status_code == 401:
                     raise PermissionError(
                         f"[OpenRouter] Authentication failed for model {model}. "
-                        "Check your API key in config/api_keys.json."
+                        "Check your API key in Settings > Cloud Providers."
                     )
 
                 if resp.status_code == 403:

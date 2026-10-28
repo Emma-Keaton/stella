@@ -8,5 +8,4 @@ from . import spotify_mcp
 from . import circuit_schematic
 
 from . import show_gif
-from . import show_headphones_image
 from . import system_monitor_ascii

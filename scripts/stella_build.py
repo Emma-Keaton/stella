@@ -1,6 +1,6 @@
 ﻿#!/usr/bin/env python3
 """
-scripts/stella_build.py â€” one command to build, bundle, and release Stella
+scripts/stella_build.py — one command to build, bundle, and release Stella
 for any OS/platform, in any edition.
 
 Why this exists
@@ -8,12 +8,12 @@ Why this exists
 The old flow was Windows-only, always bundled every heavy dependency, and
 produced a folder instead of an installable file. This script replaces it:
 
-  * Edition-aware  â€” ship only the deps an edition actually uses
+  * Edition-aware  — ship only the deps an edition actually uses
                      (lite / core / full), which is the biggest win for size
                      and cold-start time.
-  * Cross-platform â€” detects the host or takes an explicit --os, and drives the
+  * Cross-platform — detects the host or takes an explicit --os, and drives the
                      right packager (Inno Setup / hdiutil / appimagetool).
-  * Release-ready  â€” zips the build, computes a SHA-256, and writes
+  * Release-ready  — zips the build, computes a SHA-256, and writes
                      dist/manifest.json so the in-app updater can check versions
                      and self-update without git.
 
@@ -84,7 +84,7 @@ GROUP_COST_GB = {
 # Each feature group maps to the requirements file(s) that satisfy it. The build
 # publishes an ordered, de-duplicated pip list per edition as manifest["packages"]
 # so the in-app updater (core/updater.py::_install_new_packages) can pull in any
-# dependency a new release added â€” core/desktop FIRST so a small or slow device
+# dependency a new release added — core/desktop FIRST so a small or slow device
 # gets a minimum viable set even if an optional tier fails to fetch.
 #
 # local_llm intentionally ships no wheels here: the K2 local model runs on a
@@ -124,7 +124,7 @@ def _read_reqs(filename: str) -> list[str]:
 def _edition_packages(edition: str) -> list[str]:
     """Ordered, de-duplicated pip packages this edition needs.
 
-    Core/desktop first, optional feature tiers after â€” exactly the order the
+    Core/desktop first, optional feature tiers after — exactly the order the
     updater installs them in, so a flaky fetch can't strand the essentials.
     """
     ed = EDITIONS[edition]
@@ -156,8 +156,8 @@ def _venv_pyinstaller() -> list[str] | None:
     Order of preference:
       1. The .venv console-script shim (local dev).
       2. `python -m PyInstaller` from the .venv interpreter (shim missing but
-         the package present â€” seen in practice).
-      3. The interpreter running this script â€” GitHub Actions pip-installs
+         the package present — seen in practice).
+      3. The interpreter running this script — GitHub Actions pip-installs
          PyInstaller into its system Python, and there is no .venv there.
     Returns the argv prefix, or None when PyInstaller is not installed.
     """
@@ -216,7 +216,7 @@ def cmd_plan(edition: str, target: str) -> int:
     groups = ed["include"]
     est = sum(GROUP_COST_GB.get(g, 0.0) for g in groups)
     print("=" * 66)
-    print(_printable(f"  STELLA BUILD PLAN â€” edition '{edition}' â†’ {target}"))
+    print(_printable(f"  STELLA BUILD PLAN — edition '{edition}' → {target}"))
     print("=" * 66)
     print(f"  {ed['blurb']}")
     print("-" * 66)
@@ -295,10 +295,12 @@ def _pyinstaller_build(edition: str, target: str, k2: bool = False) -> Path:
 
     variant = "k2" if k2 else "public"
     if k2:
-        model, server = _k2_payload()
-        env["STELLA_K2_BUNDLE"] = "1"
-        env["STELLA_K2_MODEL"] = str(model)
-        env["STELLA_K2_SERVER"] = str(server)
+        # Pass the target: the toolchain holds both a Windows and an Android
+        # server, and picking the wrong one yields a bundle that cannot start.
+        model, server = _k2_payload(target)
+        env["STELLA_SERVER_BUNDLE"] = "1"
+        env["STELLA_SERVER_MODEL"] = str(model)
+        env["STELLA_SERVER"] = str(server)
 
     print(f"==> PyInstaller: edition={edition} target={target} variant={variant}")
     # `pyi` is an argv prefix (a list), so it must be unpacked, not nested --
@@ -323,45 +325,116 @@ def _pyinstaller_build(edition: str, target: str, k2: bool = False) -> Path:
 K2_STAGING = Path(os.environ.get("STELLA_K2_STAGING", REPO / "build" / "k2-stage"))
 
 
-def _find_local(filename: str, env_var: str) -> Path | None:
-    """Locate a K2 payload file, preferring an explicit env override."""
+def _platform_ok(path: Path, platform: str = "") -> bool:
+    """True when `path` is a llama-server built for `platform`.
+
+    The toolchain keeps the Windows x64 build (`build-win/bin/llama-server.exe`,
+    ~29 MB) and the Android ARM64 build (`build-android/bin/llama-server`,
+    ~183 MB) side by side. They differ in size by more than 6x and in
+    extension, so either signal rejects the wrong one - and both are cheaper
+    than shipping a binary that cannot exec on the target OS. Without this
+    check a desktop Windows build silently bundled the ARM64 server.
+    """
+    try:
+        size = path.stat().st_size
+    except OSError:
+        return False
+    plat = platform or kr.host_platform()
+    if not plat:
+        return True
+    is_windows_target = plat.startswith("windows")
+    has_exe = path.suffix.lower() == ".exe"
+
+    # The ARM64 cross-build is ~183 MB; the Windows x64 one ~29 MB.
+    android_band = size > 100 * 1024 * 1024
+    if is_windows_target and (android_band or not has_exe):
+        return False
+    # A .exe cannot run on POSIX; native linux/macOS servers have no suffix.
+    if plat.startswith(("linux", "macos")) and has_exe:
+        return False
+    return True
+
+
+def _find_local(filename: str, env_var: str, platform: str = "") -> Path | None:
+    """Locate a K2 payload file, preferring an explicit env override.
+
+    `filename` may be a tuple of accepted spellings, because the K2 weights
+    ship upstream under both the 0.9B and the 1B name (same checkpoint, same
+    666,184,352 bytes) - see engine_runtime.K2_MODEL_ALIASES.
+
+    `platform` is used only for the server, where two architectures live in the
+    same toolchain directory and picking the wrong one yields a bundle that
+    cannot start.
+    """
+    names = (filename,) if isinstance(filename, str) else tuple(filename)
     explicit = os.environ.get(env_var, "").strip()
     if explicit:
         p = Path(explicit)
         return p if p.is_file() else None
+
+    looking_for_server = names[0].startswith("llama-server")
+    if looking_for_server:
+        # The exact per-platform name is what we actually want; keep the rest
+        # of the list as fallbacks.
+        try:
+            if str(REPO) not in sys.path:
+                sys.path.insert(0, str(REPO))
+            from core import engine_runtime as _kr
+            wanted = _kr.SERVER_BASENAME.get(platform or _kr.host_platform(), "")
+        except Exception:
+            wanted = ""
+        if wanted and wanted not in names:
+            names = (wanted,) + tuple(names)
+
     toolchain = Path.home() / ".stella-toolchain"
     for base in (toolchain, K2_STAGING, REPO / "models"):
-        direct = base / filename
-        if direct.is_file():
-            return direct
+        for name in names:
+            direct = base / name
+            if direct.is_file() and (not looking_for_server
+                                     or _platform_ok(direct, platform)):
+                return direct
         # llama-server lands under the cross-compile build dirs. Only fall back
-        # to globbing for it when we are actually looking for the server -
-        # otherwise a model lookup would silently resolve to a llama-server
-        # binary and bundle no weights at all.
-        if filename.startswith("llama-server"):
-            for pat in ("llama-k2/build-*/bin/llama-server*", "**/llama-server*"):
+        # to globbing when we are actually looking for the server - otherwise a
+        # model lookup would silently resolve to a llama-server binary and
+        # bundle no weights.
+        if looking_for_server:
+            for pat in ("llama-k2/build-*/bin/llama-server*",
+                        "**/llama-server*"):
                 for hit in sorted(base.glob(pat)):
-                    if hit.is_file():
+                    if hit.is_file() and _platform_ok(hit, platform):
                         return hit
     return None
 
 
-def _k2_payload() -> tuple[Path, Path]:
+_PLATFORM_KEYS = {
+    "windows": "windows-x64", "linux": "linux-x64",
+    "macos": "macos-arm64", "android": "android-arm64",
+}
+
+
+def _k2_payload(target: str = "") -> tuple[Path, Path]:
     """Return (model_gguf, llama_server), raising with actionable guidance."""
     if str(REPO) not in sys.path:
         sys.path.insert(0, str(REPO))
-    from core import k2_runtime as kr
-    model = _find_local(kr.K2_MODEL_FILENAME, "STELLA_K2_MODEL")
-    server = _find_local("llama-server", "STELLA_K2_SERVER")
+    from core import engine_runtime as kr
+    # Building for a different OS than the host (cross-build) must still pick
+    # that OS's binary, so prefer the requested target over the host.
+    plat = _PLATFORM_KEYS.get(target) or kr.host_platform()
+    model = _find_local(kr.K2_MODEL_ALIASES, "STELLA_SERVER_MODEL", plat)
+    server = _find_local("llama-server", "STELLA_SERVER", plat)
     if not model:
         raise RuntimeError(
-            f"K2 weights not found ({kr.K2_MODEL_FILENAME}).\n"
-            f"  Put it in {REPO / 'models'}/ or set STELLA_K2_MODEL."
+            f"K2 weights not found (any of {list(kr.K2_MODEL_ALIASES)}).\n"
+            f"  Put one in {REPO / 'models'}/ or set STELLA_SERVER_MODEL."
         )
     if not server:
         raise RuntimeError(
-            "llama-server not found.\n"
-            "  Build it from the pinned K2 fork, or set STELLA_K2_SERVER."
+            f"llama-server for '{plat}' not found.\n"
+            "  Point STELLA_SERVER at the correct binary, or place it in\n"
+            f"  {Path.home() / '.stella-toolchain'} named "
+            f"{kr.SERVER_BASENAME.get(plat, 'llama-server')}.\n"
+            "  The Android ARM64 and Windows x64 builds are NOT interchangeable;"
+            "\n  a desktop target needs the Windows binary."
         )
     return model, server
 
@@ -372,7 +445,7 @@ def _k2_payload() -> tuple[Path, Path]:
 # any host, needs no extra tool). On top of that, if the native packager for the
 # target is present (Inno Setup / hdiutil / appimagetool / Gradle) we ALSO emit
 # the native installable. That way `python stella_build.py --release` never
-# hard-fails just because a machine is missing one optional tool â€” it warns and
+# hard-fails just because a machine is missing one optional tool — it warns and
 # gives you the universal zip, and the manifest points at the zip so updates
 # work no matter how the app was first installed.
 # ---------------------------------------------------------------------------
@@ -402,11 +475,11 @@ def _sha256(path: Path) -> str:
 def _make_windows_installer(collect: Path, edition: str, version: str) -> Path | None:
     iscc = _tool("ISCC")
     if not iscc:
-        print("  (Inno Setup 'ISCC' not on PATH â€” skipping .exe, zip is portable)")
+        print("  (Inno Setup 'ISCC' not on PATH — skipping .exe, zip is portable)")
         return None
     iss = REPO / "installer" / "Stella.iss"
     if not iss.exists():
-        print(f"  (missing {iss} â€” skipping Inno build)")
+        print(f"  (missing {iss} — skipping Inno build)")
         return None
     print("==> Inno Setup: building .exe installer")
     subprocess.run([iscc, f"/DMyAppVersion={version}", f"/DMySourceDir={collect}",
@@ -419,7 +492,7 @@ def _make_macos_dmg(collect: Path, version: str) -> Path | None:
     if _host_os() != "macos":
         return None
     if not _tool("hdiutil"):
-        print("  (hdiutil unavailable â€” skipping .dmg)")
+        print("  (hdiutil unavailable — skipping .dmg)")
         return None
     print("==> hdiutil: building .dmg")
     dmg = DIST / f"Stella-{version}.dmg"
@@ -432,7 +505,7 @@ def _make_macos_dmg(collect: Path, version: str) -> Path | None:
 def _make_linux_appimage(collect: Path, version: str) -> Path | None:
     tool = _tool("appimagetool") or _tool("appimagetool-x86_64.AppImage")
     if not tool:
-        print("  (appimagetool unavailable â€” skipping .AppImage; try .deb via dpkg-deb)")
+        print("  (appimagetool unavailable — skipping .AppImage; try .deb via dpkg-deb)")
         return None
     print("==> appimagetool: building .AppImage")
     stage = DIST / "AppDir"
@@ -612,10 +685,10 @@ def _find_keytool() -> str | None:
 def _build_android(edition: str, version: str, k2: bool = False) -> Path | None:
     gradlew = _gradlew("android")
     if not gradlew:
-        print("  (Android Gradle wrapper not found â€” skipping mobile build)")
+        print("  (Android Gradle wrapper not found — skipping mobile build)")
         return None
     if not (ANDROID_DIR / "gradle" / "wrapper" / "gradle-wrapper.jar").exists():
-        print("  (gradle-wrapper.jar missing â€” cannot bootstrap Gradle offline)")
+        print("  (gradle-wrapper.jar missing — cannot bootstrap Gradle offline)")
         return None
     variant = "k2-bundled" if k2 else "public"
     print(f"==> Gradle: assembling Android APK (release, {variant})")
@@ -634,7 +707,10 @@ def _build_android(edition: str, version: str, k2: bool = False) -> Path | None:
         # Personal build: stage the locally-built runtime + weights into the
         # APK. The Gradle side switches applicationId to com.stella.connect.k2
         # so it installs beside the public app rather than replacing it.
-        model, server = _k2_payload()
+        #
+        # Android is always the ARM64 cross-build; passing the platform is what
+        # stops the Windows server being bundled into the APK.
+        model, server = _k2_payload("android")
         extra = [
             "-PstellaK2Bundle=true",
             f"-PstellaK2Model={model}",
@@ -786,7 +862,7 @@ def _write_manifest(version: str, edition: str, artifacts: dict,
     `k2_release` is true AND the pinned versions moved."""
     try:
         sys.path.insert(0, str(REPO))
-        from core import k2_runtime as kr
+        from core import engine_runtime as kr
         k2_block = kr.k2_manifest_block(server_sha_android)
         k2_block["k2_release"] = bool(k2_release)
     except Exception:
@@ -904,6 +980,7 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
 
 
 

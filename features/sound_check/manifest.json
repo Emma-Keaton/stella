@@ -1,0 +1,57 @@
+{
+    "name": "sound_check",
+    "aliases": [
+        "sound_check", "test my mic", "test microphone", "mic test", "audio test",
+        "test speakers", "audio devices", "list microphones", "list speakers",
+        "can you hear me", "why can't you hear me", "set volume", "change volume"
+    ],
+    "description": "Prove the machine's audio actually works: list the microphones and speakers the operating system reports as usable, measure a speaker test tone, show a live microphone input meter and report the peak it heard, and read back the output volume after setting it. A muted microphone and a level slider at zero both pass every automated probe on silence, so the only real proof is a person speaking - and the meter says what it heard instead of assuming.",
+    "triggers": [
+        "test my mic", "test the microphone", "mic test", "audio test",
+        "test my speakers", "play a test tone", "list microphones", "list speakers",
+        "audio devices", "can you hear me", "why can't you hear me",
+        "set volume", "change volume", "volume up", "mute", "how loud is it"
+    ],
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "operation": {
+                "type": "string",
+                "description": "One of: devices | tone | meter | volume | diagnosis. Defaults to devices."
+            },
+            "kind": {
+                "type": "string",
+                "description": "Device kind for devices: input | output | all. Defaults to all."
+            },
+            "device": {
+                "type": "string",
+                "description": "Device name for tone, meter or volume. Defaults to the selected device."
+            },
+            "target": {
+                "type": "string",
+                "description": "Alias for device."
+            },
+            "volume": {
+                "type": "integer",
+                "description": "Volume percentage 0-100 for the volume operation."
+            },
+            "seconds": {
+                "type": "number",
+                "description": "How long the meter listens. Defaults to 3, capped at 20."
+            },
+            "frequency": {
+                "type": "integer",
+                "description": "Test-tone frequency in Hz. Defaults to 440."
+            }
+        },
+        "required": []
+    },
+    "version": "1.0.0",
+    "active": true,
+    "author": "Stella",
+    "category": "media",
+    "surface": "both",
+    "requires": [],
+    "optional_dependencies": ["sounddevice", "numpy"],
+    "notes": "Backends: sounddevice for devices and metering, pycaw/AppleScript/pactl/amixer for volume, ffplay/numpy for the test tone. Each is probed per call and named when missing."
+}

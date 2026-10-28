@@ -1,0 +1,30 @@
+Found 28 files
+
+103	E:\Projects\stella\ui.py
+36	E:\Projects\stella\assets\web_background\index_golden_orb_backup.html
+36	E:\Projects\stella\dist\Stella\_internal\assets\web_background\index_golden_orb_backup.html
+36	E:\Projects\stella\dist\Stella-core-1.0.0-windows\Stella\_internal\assets\web_background\index_golden_orb_backup.html
+36	E:\Projects\stella\stella-connect-android\app\build\intermediates\assets\debug\mergeDebugAssets\web_background\index_golden_orb_backup.html
+36	E:\Projects\stella\stella-connect-android\app\src\main\assets\web_background\index_golden_orb_backup.html
+16	E:\Projects\stella\dashboard\static\app.html
+16	E:\Projects\stella\dist\Stella\_internal\dashboard\static\app.html
+16	E:\Projects\stella\dist\Stella-core-1.0.0-windows\Stella\_internal\dashboard\static\app.html
+13	E:\Projects\stella\scan_mojibake.py
+8	E:\Projects\stella\dist\Stella-core-1.0.0-windows\Stella\_internal\README.md
+6	E:\Projects\stella\assets\web_background\index.html
+6	E:\Projects\stella\dist\Stella\_internal\assets\web_background\index.html
+6	E:\Projects\stella\dist\Stella-core-1.0.0-windows\Stella\_internal\assets\web_background\index.html
+6	E:\Projects\stella\stella-connect-android\app\build\intermediates\assets\debug\mergeDebugAssets\web_background\index.html
+6	E:\Projects\stella\stella-connect-android\app\src\main\assets\web_background\index.html
+5	E:\Projects\stella\check_main_mojibake.py
+5	E:\Projects\stella\mojibake_scan2.py
+4	E:\Projects\stella\mojibake_scan.py
+3	E:\Projects\stella\todo.md
+3	E:\Projects\stella\installer\Stella.iss
+2	E:\Projects\stella\dashboard\static\login.html
+2	E:\Projects\stella\dist\Stella\_internal\dashboard\static\login.html
+2	E:\Projects\stella\dist\Stella-core-1.0.0-windows\Stella\_internal\dashboard\static\login.html
+2	E:\Projects\stella\installer\Stella.spec
+1	E:\Projects\stella\build.ps1
+1	E:\Projects\stella\update.ps1
+1	E:\Projects\stella\dist\Stella-core-1.0.0-windows\Stella\_internal\agent\executor.py

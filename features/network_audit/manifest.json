@@ -1,0 +1,66 @@
+{
+    "name": "network_audit",
+    "aliases": [
+        "network_audit", "network scan", "port scan", "open ports", "who is on my network",
+        "network audit", "tls audit", "ssl audit", "security headers", "arp table",
+        "listening ports", "wifi audit", "vpn leak", "arp spoofing"
+    ],
+    "description": "Audits the network this machine is attached to: interfaces, routes and gateways, listening sockets, the ARP table, parallel host discovery on a subnet, parallel port scanning with service identification, a TLS handshake audit (protocol versions, cipher suites, certificate chain and expiry), an HTTP security-header audit, Wi-Fi and BLE beacon sweep, ARP-spoofing detection and a VPN-leak check. Read-only by default; anything that contacts a named target is gated by core/tool_policy.py and names its target. Never scans a network the caller did not name.",
+    "triggers": [
+        "network scan", "scan my network", "port scan", "what ports are open",
+        "who is on my network", "network audit", "tls audit", "ssl audit",
+        "check ssl", "security headers", "check headers", "arp table",
+        "listening ports", "netstat", "wifi scan", "vpn leak", "arp spoofing",
+        "man in the middle", "network devices"
+    ],
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "operation": {
+                "type": "string",
+                "description": "One of: tools | interfaces | listeners | arp | subnet_scan | port_scan | wifi_scan | ble_scan | tls_audit | header_audit | arp_spoof | vpn_leak | latency | sources. Defaults to tools."
+            },
+            "target": {
+                "type": "string",
+                "description": "Host, domain or IP for the tls/header audits, e.g. example.com. Required by tls_audit and header_audit."
+            },
+            "network": {
+                "type": "string",
+                "description": "CIDR or dotted-quad base for subnet_scan, e.g. 192.168.1.0/24. Defaults to this machine's /24."
+            },
+            "ports": {
+                "type": "string",
+                "description": "Port list for port_scan: 'common', a comma list, or a range like 1-1024. Defaults to common."
+            },
+            "host": {
+                "type": "string",
+                "description": "Host for port_scan. Defaults to the named target, or a discovered host."
+            },
+            "authorized": {
+                "type": "boolean",
+                "description": "Must be true to run an operation that contacts a target (subnet_scan, port_scan, tls/header audits). Read-only local operations never need it."
+            },
+            "confirm": {
+                "type": "boolean",
+                "description": "Must be true to start an operation that contacts a target."
+            },
+            "timeout": {
+                "type": "number",
+                "description": "Per-probe timeout in seconds. Defaults to 1.0 for scans, 8 for audits."
+            },
+            "limit": {
+                "type": "integer",
+                "description": "Maximum items to return. Defaults to 50."
+            }
+        },
+        "required": []
+    },
+    "version": "1.0.0",
+    "active": true,
+    "author": "Stella",
+    "category": "security",
+    "surface": "both",
+    "requires": ["cmd"],
+    "optional_dependencies": [],
+    "notes": "Local reads use psutil/socket; scanning is bounded and parallel with a stated cap. Operations that contact a target are active class in core/tool_policy.py."
+}

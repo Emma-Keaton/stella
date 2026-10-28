@@ -1,0 +1,76 @@
+{
+    "name": "wireless_audit",
+    "aliases": [
+        "wireless_audit", "wifi pentest", "wireless pentest", "handshake capture",
+        "capture handshake", "pmkid", "wpa crack", "wifi audit", "site survey",
+        "monitor mode", "aircrack", "wifite", "bettercap", "hcxdumptool", "wps audit",
+        "reaver", "evil twin", "rogue ap", "airgeddon"
+    ],
+    "description": "Audit a wireless network you own or have written permission to test: inventory interfaces and monitor-mode capability, survey visible access points, capture a WPA handshake or a PMKID with the aircrack-ng suite, wifite2, bettercap or hcxdumptool, run a WPS audit with reaver/bully, or - only behind an explicit policy rule - stand up a rogue AP. Every operation needs an explicit target and an explicit authorisation, and each result states which tool it used, whether that tool is installed, and what this machine's adapter can actually do. Never runs against an interface or access point the caller did not name.",
+    "triggers": [
+        "wifi pentest", "wireless pentest", "capture handshake", "get the handshake",
+        "pmkid attack", "wpa handshake", "monitor mode", "site survey",
+        "scan for networks", "list wifi networks", "wps pin", "reaver", "bully",
+        "evil twin", "rogue access point", "captive portal", "deauthenticate",
+        "deauth client", "aircrack-ng", "wifite", "bettercap", "hcxdumptool",
+        "airgeddon", "can i capture on this adapter", "what wifi networks are around"
+    ],
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "operation": {
+                "type": "string",
+                "description": "One of: tools | interfaces | monitor | survey | capture_handshake | capture_pmkid | deauth | wps | rogue_ap | sources. Defaults to tools."
+            },
+            "interface": {
+                "type": "string",
+                "description": "Wireless interface to use, e.g. wlan0. Required by the capture, deauth, WPS and rogue-AP operations."
+            },
+            "bssid": {
+                "type": "string",
+                "description": "Access point BSSID (MAC) the operation targets. Required to target one AP."
+            },
+            "essid": {
+                "type": "string",
+                "description": "Network name (ESSID) being targeted, recorded with the target."
+            },
+            "channel": {
+                "type": "integer",
+                "description": "Channel to lock the interface to for capture, e.g. 6."
+            },
+            "client": {
+                "type": "string",
+                "description": "Client MAC to deauthenticate. When omitted, the operation refuses rather than broadcasting to every station in range."
+            },
+            "authorized": {
+                "type": "boolean",
+                "description": "Must be true to run an operation that sends frames. Without it, only read-only operations (tools, interfaces, monitor, survey) run."
+            },
+            "duration_seconds": {
+                "type": "integer",
+                "description": "Capture window in seconds. Defaults to 60, capped at 1800."
+            },
+            "output": {
+                "type": "string",
+                "description": "Where to write the capture file. Defaults to a timestamped file under Stella's deliverables directory."
+            },
+            "wordlist": {
+                "type": "string",
+                "description": "Wordlist path for WPS or rogue-AP operations that accept one."
+            },
+            "confirm": {
+                "type": "boolean",
+                "description": "Must be true to start an operation that transmits. Defaults to false."
+            }
+        },
+        "required": []
+    },
+    "version": "1.0.0",
+    "active": true,
+    "author": "Stella",
+    "category": "security",
+    "surface": "both",
+    "requires": ["wireless_tools"],
+    "optional_dependencies": [],
+    "notes": "External tools: aircrack-ng (airmon-ng, airodump-ng, aireplay-ng), wifite2, bettercap, hcxdumptool, reaver, bully, airgeddon, iw. Each is probed per call and reported when missing. Authorisation, target naming and policy gating are enforced by core/tool_policy.py."
+}

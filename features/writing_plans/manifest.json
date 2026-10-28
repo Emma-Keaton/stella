@@ -1,0 +1,45 @@
+{
+    "name": "writing_plans",
+    "aliases": ["writing_plans", "writing plan", "create plan", "implementation plan",
+                "task list", "step by step plan", "project plan", "roadmap"],
+    "description": "Writing plans: creates step-by-step implementation plans for features, tasks, or projects. Breaks a goal into ordered steps with statuses (pending/doing/done/failed), notes on why the plan changed, and dependencies. Pure-Python, no external dependencies, runs on any surface.",
+    "triggers": [
+        "writing plan", "writing_plans", "create plan", "implementation plan",
+        "task list", "step by step plan", "project plan", "roadmap",
+        "plan this", "break down", "steps to implement"
+    ],
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "operation": {
+                "type": "string",
+                "description": "One of: create | list | update | sources. Defaults to sources."
+            },
+            "goal": {
+                "type": "string",
+                "description": "The goal or feature to plan."
+            },
+            "steps": {
+                "type": "string",
+                "description": "JSON array of step descriptions (create/update)."
+            },
+            "note": {
+                "type": "string",
+                "description": "Why the plan changed, if it did."
+            },
+            "limit": {
+                "type": "integer",
+                "description": "Maximum plans to return. Defaults to 10."
+            }
+        },
+        "required": []
+    },
+    "version": "1.0.0",
+    "active": true,
+    "author": "Stella",
+    "category": "development",
+    "surface": "both",
+    "requires": [],
+    "optional_dependencies": [],
+    "notes": "Pure-Python skill. Plans are held in memory for the session; nothing is written to disk unless paired with write_note or document_ops."
+}

@@ -1,0 +1,42 @@
+{
+    "name": "device_cleanup",
+    "aliases": ["device_cleanup", "clean_device", "clean_storage", "free_space",
+                "clear_cache", "clean_memory", "disk_cleanup", "cleanup_device",
+                "free up space", "remove cache", "clear temporary files",
+                "clean system"],
+    "description": "Clean up device storage, memory, and cache safely. All operations are real-time and do not require network access. Supports dry-run mode to preview cleanup before execution.",
+    "triggers": [
+        "clean up", "cleanup", "clean disk", "free space", "clear cache",
+        "clean memory", "disk cleanup", "storage cleanup", "clean device",
+        "free up space", "remove cache", "clear temporary files", "clean system"
+    ],
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "operation": {
+                "type": "STRING",
+                "description": "One of: scan_storage | clean_cache | clean_temp | clean_memory | system_info. Defaults to scan_storage."
+            },
+            "target": {
+                "type": "STRING",
+                "description": "Target to clean: 'temp', 'cache', 'all', or a specific path."
+            },
+            "confirm": {
+                "type": "BOOLEAN",
+                "description": "Must be true to actually perform destructive cleanup. Defaults to false (dry run)."
+            },
+            "dry_run": {
+                "type": "BOOLEAN",
+                "description": "If true, only scan and report without deleting anything. Defaults to true."
+            }
+        },
+        "required": []
+    },
+    "version": "1.0.0",
+    "active": true,
+    "author": "Stella",
+    "category": "system",
+    "surface": "both",
+    "requires": ["host metrics"],
+    "optional_dependencies": []
+}

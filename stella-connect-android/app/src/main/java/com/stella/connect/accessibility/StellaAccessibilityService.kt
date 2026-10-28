@@ -62,7 +62,7 @@ class StellaAccessibilityService : AccessibilityService() {
             val child = node.getChild(i)
             if (child != null) {
                 traverseNode(child, nodes)
-                child.recycle()
+                // recycle() deprecated - system manages lifecycle
             }
         }
     }
@@ -102,7 +102,7 @@ class StellaAccessibilityService : AccessibilityService() {
             if (child != null) {
                 val found = findFocusedNode(child)
                 if (found != null) return found
-                child.recycle()
+                // recycle() deprecated - system manages lifecycle
             }
         }
         return null

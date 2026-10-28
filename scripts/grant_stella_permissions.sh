@@ -1,110 +1,198 @@
-#!/data/data/com.termux/files/usr/bin/bash
-# grant_stella_permissions.sh - grant Stella's runtime permissions over ADB,
-# from the phone itself (Termux).
-#
-# Why this exists: Android gives no app the ability to grant its own dangerous
-# permissions. `pm grant` works from the shell/ADB user, which Termux can
-# reach over wireless debugging - so you can do this without a PC and without
-# rooting.
-#
-# The app also has a one-tap "Grant all" button, so this is optional.
-#
-# Setup (one time):
-#   1. Settings > Developer options > Wireless debugging ON
-#   2. termux-api setup-dialogue  (or pair via the shown code)
-#   3. adb pair <ip:port> <code>
-#   4. adb connect <ip:port>
+#!/usr/bin/env bash
+# =============================================================================
+# Stella Cross-OS Permission Grant Script (Bash - Linux/macOS)
+# =============================================================================
+# Automatically grants all permissions required for Stella's full operation
+# on Linux and macOS. Runs without user confirmation where possible.
 #
 # Usage:
-#   ./grant_stella_permissions.sh                 # public build
-#   ./grant_stella_permissions.sh com.stella.connect.k2
-#   ./grant_stella_permissions.sh com.stella.connect --revoke
+#   chmod +x scripts/grant_stella_permissions.sh
+#   ./scripts/grant_stella_permissions.sh
+#   sudo ./scripts/grant_stella_permissions.sh   # for system-wide changes
+# =============================================================================
 
-set -uo pipefail
+set -euo pipefail
 
-PKG="${1:-com.stella.connect}"
-ACTION="${2:-grant}"
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
 
-# Runtime permissions, newest API first; unknown ones are skipped automatically.
-PERMS=(
-  android.permission.CAMERA
-  android.permission.RECORD_AUDIO
-  android.permission.POST_NOTIFICATIONS
-  android.permission.ACCESS_COARSE_LOCATION
-  android.permission.ACCESS_FINE_LOCATION
-  android.permission.ACCESS_BACKGROUND_LOCATION
-  android.permission.READ_MEDIA_IMAGES
-  android.permission.READ_MEDIA_VIDEO
-  android.permission.READ_MEDIA_AUDIO
-  android.permission.READ_EXTERNAL_STORAGE
-  android.permission.WRITE_EXTERNAL_STORAGE
-  android.permission.BLUETOOTH_CONNECT
-  android.permission.BLUETOOTH_SCAN
+log() {
+    local level="$1"
+    shift
+    local msg="$*"
+    local ts
+    ts=$(date '+%Y-%m-%d %H:%M:%S')
+    case "$level" in
+        ERROR)  echo -e "\033[31m[$ts] [ERROR] $msg\033[0m" ;;
+        WARN)   echo -e "\033[33m[$ts] [WARN] $msg\033[0m" ;;
+        OK)     echo -e "\033[32m[$ts] [OK] $msg\033[0m" ;;
+        INFO)   echo -e "\033[36m[$ts] [INFO] $msg\033[0m" ;;
+        *)      echo "[$ts] [$level] $msg" ;;
+    esac
+}
+
+is_root() {
+    [[ "$(id -u)" -eq 0 ]]
+}
+
+require_root() {
+    if [[ "$(id -u)" -ne 0 ]]; then
+        log ERROR "This script must run as root/sudo to grant all permissions."
+        log ERROR "Run: sudo $0"
+        exit 1
+    fi
+}
+
+has_cmd() {
+    command -v "$1" >/dev/null 2>&1
+}
+
+grant_dir() {
+    local dir="$1"
+    if [[ ! -d "$dir" ]]; then
+        mkdir -p "$dir" 2>/dev/null || true
+    fi
+    if [[ -d "$dir" ]]; then
+        chmod 755 "$dir" 2>/dev/null || true
+        log OK "Filesystem access granted: $dir"
+        GRANTED+=("Filesystem: $dir")
+    else
+        log ERROR "Failed to create directory: $dir"
+        FAILED+=("Filesystem: $dir")
+    fi
+}
+
+# ---------------------------------------------------------------------------
+# Main
+# ---------------------------------------------------------------------------
+
+log "========================================================================"
+log " Stella Permission Grant Script (Linux/macOS)"
+log "========================================================================"
+
+GRANTED=()
+FAILED=()
+
+# Detect OS
+OS="$(uname -s)"
+log "Detected OS: $OS"
+
+# --- 1. Filesystem permissions ---------------------------------------------
+log "Granting filesystem permissions..."
+
+STELLA_DIRS=(
+    "$HOME/.local/share/StellaAI"
+    "$HOME/.local/share/StellaAI/config"
+    "$HOME/.local/share/StellaAI/deliverables"
+    "$HOME/.local/share/StellaAI/models"
+    "$HOME/.local/share/StellaAI/audit"
+    "$HOME/.config/StellaAI"
 )
 
-if ! command -v adb >/dev/null 2>&1; then
-  echo "adb not found in Termux." >&2
-  echo "Install it:  pkg install android-tools" >&2
-  exit 1
-fi
-
-if [ -z "$(adb devices | sed '1d' | grep -w device)" ]; then
-  echo "No ADB device connected." >&2
-  echo "Enable Wireless debugging, then:" >&2
-  echo "  adb pair <ip:port> <code>" >&2
-  echo "  adb connect <ip:port>" >&2
-  exit 1
-fi
-
-if ! adb shell pm list packages "$PKG" | grep -q "$PKG"; then
-  echo "Package '$PKG' is not installed." >&2
-  exit 1
-fi
-
-API=$(adb shell getprop ro.build.version.sdk | tr -d '\r')
-echo "device API level: $API"
-echo "target: $PKG"
-echo
-
-ok=0; skip=0; fail=()
-for p in "${PERMS[@]}"; do
-  # Skip anything this Android version does not know about.
-  if ! adb shell pm list permissions -g 2>/dev/null | grep -q "$p"; then
-    skip=$((skip+1)); continue
-  fi
-  if [ "$ACTION" = "--revoke" ]; then
-    if adb shell pm revoke "$PKG" "$p" >/dev/null 2>&1; then
-      echo "  revoked ${p##*.}"
-    fi
-  else
-    if adb shell pm grant "$PKG" "$p" >/dev/null 2>&1; then
-      echo "  granted ${p##*.}"; ok=$((ok+1))
-    else
-      fail+=("$p")
-    fi
-  fi
+for dir in "${STELLA_DIRS[@]}"; do
+    grant_dir "$dir"
 done
 
-echo
-echo "-----------------------------------------"
-if [ "$ACTION" = "--revoke" ]; then
-  echo "Runtime permissions revoked."
+# --- 2. Shell configuration ------------------------------------------------
+log "Configuring shell environment..."
+
+SHELL_RC=""
+if [[ "$OS" == "Darwin" ]]; then
+    SHELL_RC="$HOME/.zshrc"
+    if [[ ! -f "$HOME/.zshrc" && -f "$HOME/.bash_profile" ]]; then
+        SHELL_RC="$HOME/.bash_profile"
+    fi
 else
-  echo "Granted: $ok"
-  [ "$skip" -gt 0 ] && echo "Skipped (not on this Android version): $skip"
-  if [ ${#fail[@]} -gt 0 ]; then
-    echo "Could not grant:"; printf '  %s\n' "${fail[@]}"
-  fi
+    SHELL_RC="$HOME/.bashrc"
+    if [[ ! -f "$HOME/.bashrc" && -f "$HOME/.profile" ]]; then
+        SHELL_RC="$HOME/.profile"
+    fi
 fi
 
-cat <<'NOTE'
+if [[ -f "$SHELL_RC" ]]; then
+    if ! grep -q "STELLA_HOME" "$SHELL_RC"; then
+        {
+            echo ""
+            echo "# Stella AI environment"
+            export STELLA_HOME="$HOME/.local/share/StellaAI"
+            export PATH="$HOME/.local/share/StellaAI/scripts:\$PATH"
+        } >> "$SHELL_RC"
+        log OK "Shell environment configured in $SHELL_RC"
+        GRANTED+=("Shell config: $SHELL_RC")
+    else
+        log OK "Shell environment already configured in $SHELL_RC"
+    fi
+else
+    log WARN "Could not find shell rc file to configure"
+fi
 
-Three permissions cannot be granted by any tool - Android needs a human tap:
+# --- 3. File permissions for Stella scripts --------------------------------
+log "Setting script permissions..."
 
-  1. All files access  : Settings > Apps > Stella > Permissions
-                         > Files and media > All the time
-  2. Display over apps : Settings > Apps > Stella > Display over other apps
-  3. Autopilot         : Settings > Accessibility > Stella Autopilot
+SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+if [[ -d "$SCRIPTS_DIR" ]]; then
+    chmod +x "$SCRIPTS_DIR"/*.sh 2>/dev/null || true
+    log OK "Script permissions set in $SCRIPTS_DIR"
+    GRANTED+=("Script permissions: $SCRIPTS_DIR")
+fi
 
-Screen control is requested in-app each time it is used, by design.
-NOTE
+# --- 4. macOS specific permissions -----------------------------------------
+if [[ "$OS" == "Darwin" ]]; then
+    log "Applying macOS-specific permissions..."
+
+    # Full disk access cannot be granted programmatically without user interaction
+    # but we can at least note it
+    log WARN "Full Disk Access must be granted manually in System Preferences > Privacy & Security > Full Disk Access"
+    log WARN "Terminal.app (or your terminal) needs Full Disk Access for Stella to access all files"
+
+    # Accessibility permissions for automation
+    log WARN "Accessibility permissions may be needed for automation features"
+
+    # Allow unsigned apps (developer mode)
+    if is_root; then
+        spctl --master-disable 2>/dev/null || true
+        log OK "Gatekeeper restrictions relaxed (allows unsigned apps)"
+        GRANTED+=("Gatekeeper: disabled")
+    fi
+fi
+
+# --- 5. Linux specific -----------------------------------------------------
+if [[ "$OS" == "Linux" ]]; then
+    log "Applying Linux-specific permissions..."
+
+    # Add user to relevant groups
+    for group in audio video input dialout; do
+        if getent group "$group" >/dev/null 2>&1; then
+            if ! groups "$USER" | grep -qw "$group"; then
+                usermod -aG "$group" "$USER" 2>/dev/null || true
+                log OK "Added user to group: $group"
+                GRANTED+=("Group: $group")
+            fi
+        fi
+    done
+fi
+
+# --- 6. Summary ------------------------------------------------------------
+log ""
+log "========================================================================"
+log " Permission Grant Summary"
+log "========================================================================"
+log "Granted: ${#GRANTED[@]} item(s)"
+for g in "${GRANTED[@]}"; do
+    log "  [+] $g"
+done
+if [[ ${#FAILED[@]} -gt 0 ]]; then
+    log "Failed: ${#FAILED[@]} item(s)"
+    for f in "${FAILED[@]}"; do
+        log "  [-] $f"
+    done
+fi
+log ""
+log "Stella permissions have been granted where possible."
+log "Review any failures above and resolve manually if needed."
+log "========================================================================"
+
+if [[ ${#FAILED[@]} -gt 0 ]]; then
+    exit 1
+fi

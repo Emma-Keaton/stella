@@ -133,5 +133,311 @@
     "context": "ctx",
     "why": "",
     "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-14T11:42:52.857280+00:00",
+    "outcome": "no_model",
+    "error_type": "ValueError",
+    "error_message": "bad thing",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-14T12:27:23.897216+00:00",
+    "outcome": "no_model",
+    "error_type": "ValueError",
+    "error_message": "bad thing",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-14T12:31:34.735872+00:00",
+    "outcome": "no_model",
+    "error_type": "ValueError",
+    "error_message": "bad thing",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-14T18:00:06.569159+00:00",
+    "outcome": "no_model",
+    "error_type": "ValueError",
+    "error_message": "bad thing",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-21T03:40:50.430458+00:00",
+    "outcome": "no_model",
+    "error_type": "ValueError",
+    "error_message": "bad thing",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-21T06:50:14.270227+00:00",
+    "outcome": "no_model",
+    "error_type": "ValueError",
+    "error_message": "bad thing",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-21T06:53:57.135669+00:00",
+    "outcome": "no_model",
+    "error_type": "ValueError",
+    "error_message": "bad thing",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-21T07:19:43.672908+00:00",
+    "outcome": "no_model",
+    "error_type": "ValueError",
+    "error_message": "bad thing",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-21T07:41:00.972038+00:00",
+    "outcome": "no_model",
+    "error_type": "ValueError",
+    "error_message": "bad thing",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-21T19:38:06.545677+00:00",
+    "outcome": "no_model",
+    "error_type": "ValueError",
+    "error_message": "bad thing",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-22T06:24:32.686037+00:00",
+    "outcome": "no_model",
+    "error_type": "ValueError",
+    "error_message": "bad thing",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-23T08:31:12.282031+00:00",
+    "outcome": "no_model",
+    "error_type": "ValueError",
+    "error_message": "bad thing",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-23T13:08:51.782956+00:00",
+    "outcome": "no_model",
+    "error_type": "ValueError",
+    "error_message": "bad thing",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-23T14:57:05.168617+00:00",
+    "outcome": "no_model",
+    "error_type": "ValueError",
+    "error_message": "bad thing",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-23T15:24:24.549493+00:00",
+    "outcome": "no_model",
+    "error_type": "ValueError",
+    "error_message": "bad thing",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T21:59:14.365290+00:00",
+    "outcome": "no_model",
+    "error_type": "ValueError",
+    "error_message": "bad thing",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T22:02:50.295280+00:00",
+    "outcome": "no_model",
+    "error_type": "ValueError",
+    "error_message": "bad thing",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T22:04:37.654841+00:00",
+    "outcome": "no_model",
+    "error_type": "ValueError",
+    "error_message": "bad thing",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T22:05:45.734172+00:00",
+    "outcome": "no_model",
+    "error_type": "ValueError",
+    "error_message": "bad thing",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T22:26:23.261369+00:00",
+    "outcome": "no_model",
+    "error_type": "ValueError",
+    "error_message": "bad thing",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T22:28:12.963486+00:00",
+    "outcome": "no_model",
+    "error_type": "ValueError",
+    "error_message": "bad thing",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T22:31:19.114442+00:00",
+    "outcome": "no_model",
+    "error_type": "ValueError",
+    "error_message": "bad thing",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T22:58:33.428454+00:00",
+    "outcome": "no_model",
+    "error_type": "ValueError",
+    "error_message": "bad thing",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T23:19:47.837244+00:00",
+    "outcome": "no_model",
+    "error_type": "ValueError",
+    "error_message": "bad thing",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T23:22:17.283311+00:00",
+    "outcome": "no_model",
+    "error_type": "ValueError",
+    "error_message": "bad thing",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T23:23:28.992940+00:00",
+    "outcome": "no_model",
+    "error_type": "ValueError",
+    "error_message": "bad thing",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T23:25:05.224171+00:00",
+    "outcome": "no_model",
+    "error_type": "ValueError",
+    "error_message": "bad thing",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T23:26:39.871419+00:00",
+    "outcome": "no_model",
+    "error_type": "ValueError",
+    "error_message": "bad thing",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-26T23:29:55.207701+00:00",
+    "outcome": "no_model",
+    "error_type": "ValueError",
+    "error_message": "bad thing",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-27T01:55:26.004452+00:00",
+    "outcome": "no_model",
+    "error_type": "ValueError",
+    "error_message": "bad thing",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-27T05:40:08.766729+00:00",
+    "outcome": "no_model",
+    "error_type": "ValueError",
+    "error_message": "bad thing",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-27T05:56:40.729976+00:00",
+    "outcome": "no_model",
+    "error_type": "ValueError",
+    "error_message": "bad thing",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-27T06:07:05.576339+00:00",
+    "outcome": "no_model",
+    "error_type": "ValueError",
+    "error_message": "bad thing",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
+  },
+  {
+    "created": "2026-10-27T08:03:08.016304+00:00",
+    "outcome": "no_model",
+    "error_type": "ValueError",
+    "error_message": "bad thing",
+    "context": "ctx",
+    "why": "",
+    "needs_global_fix": true
   }
 ]

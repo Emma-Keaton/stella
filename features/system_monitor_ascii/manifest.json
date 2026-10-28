@@ -6,20 +6,26 @@
         "resource usage",
         "systemmonitorascii"
     ],
-    "description": "Monitors and displays current CPU and RAM utilization using ASCII progress bars. Useful for quick system resource checks.",
+    "description": "Monitors and displays current CPU and RAM utilization using ASCII progress bars. Requires the `psutil` package; if unavailable, reports that system metrics cannot be read.",
     "triggers": [
         "monitor system",
         "system status",
         "resource usage",
         "show cpu and ram",
         "what is my system load",
-        "Monitor CPU and RAM load and display an ASCII visual progress bar for both CPU utilization and RAM usage.",
-        "monitor cpu and ram load and display an ascii visual progress bar for both cpu utilization and ram usage.",
         "system monitor ascii"
     ],
-    "parameters": {},
+    "parameters": {
+        "type": "OBJECT",
+        "properties": {},
+        "required": []
+    },
     "created_at": 1790779504.7412686,
     "version": "1.0.0",
-    "author": "Project Ultron Autonomous Self-Evolution Engine",
-    "active": true
+    "author": "Project Stella",
+    "category": "system",
+    "surface": "both",
+    "requires": ["host metrics"],
+    "active": true,
+    "optional_dependencies": ["psutil"]
 }

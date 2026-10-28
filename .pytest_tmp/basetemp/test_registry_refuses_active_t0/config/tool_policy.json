@@ -1,0 +1,1 @@
+{"version": 1, "rules": [{"name": "allow-listed-shell", "allow": ["run_command"], "activity": ["active"], "reason": "Explicitly allowed by the user.", "targets": ["notes.txt"]}, {"name": "deny-rest", "deny": ["*"], "activity": ["active"], "reason": "no"}]}

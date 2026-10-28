@@ -1,0 +1,75 @@
+{
+    "name": "anatomy",
+    "aliases": ["anatomy", "technical illustration", "isometric figure", "exploded view",
+                "technical drawing", "interactive explainer", "svg figure", "webgl shader",
+                "anatomy figure", "crafted diagram", "premium technical drawing"],
+    "description": "Build crafted, highly detailed, interactive isometric SVG figures that explain a technical idea as a real physical object. Stella invokes the self-contained Node.js anatomy kit in features/anatomy/ (no external PC-directory references). The skill runs `node features/anatomy/build.mjs` to generate a standalone HTML figure with embedded SVG, returns the SVG markup, the output file path, and the isometric projection used. Read operations (sources, examples, kit, workflow, verify, figure_plan, references) are free; writing a figure file needs authorized=true plus confirm=true plus a policy allow rule.",
+    "triggers": [
+        "anatomy", "technical illustration", "isometric figure", "exploded view",
+        "technical drawing", "interactive explainer", "svg figure", "webgl shader",
+        "anatomy figure", "crafted diagram", "premium technical drawing",
+        "explain how it works", "build a figure", "isometric illustration"
+    ],
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "operation": {
+                "type": "string",
+                "description": "One of: sources | examples | kit | workflow | verify | figure_plan | build | references. Defaults to sources."
+            },
+            "example": {
+                "type": "string",
+                "description": "Name of an example to build (examples/build operation). Defaults to dial-indicator."
+            },
+            "module": {
+                "type": "string",
+                "description": "Name of a kit module to describe (kit operation)."
+            },
+            "concept": {
+                "type": "string",
+                "description": "The technical idea to explain (figure_plan operation)."
+            },
+            "size": {
+                "type": "string",
+                "description": "Figure size tier: Figure | Hero | Epic (figure_plan operation). Defaults to Figure."
+            },
+            "theme": {
+                "type": "string",
+                "description": "Figure theme: dark | light (build operation). Defaults to dark."
+            },
+            "width": {
+                "type": "integer",
+                "description": "Figure width in pixels (build operation). Defaults to 600."
+            },
+            "height": {
+                "type": "integer",
+                "description": "Figure height in pixels (build operation). Defaults to 380."
+            },
+            "turn": {
+                "type": "number",
+                "description": "Dial turns for the needle position (dial-indicator build). Defaults to 0.9."
+            },
+            "authorized": {
+                "type": "boolean",
+                "description": "Must be true for any operation that writes a figure file (build)."
+            },
+            "confirm": {
+                "type": "boolean",
+                "description": "Must be true to actually write a figure file (build)."
+            },
+            "limit": {
+                "type": "integer",
+                "description": "Maximum items to return. Defaults to 20."
+            }
+        },
+        "required": []
+    },
+    "version": "1.0.0",
+    "active": true,
+    "author": "Stella",
+    "category": "development",
+    "surface": "desktop",
+    "requires": ["node"],
+    "optional_dependencies": [],
+    "notes": "Self-contained Node.js kit in features/anatomy/kit/ and features/anatomy/build.mjs. No symlinks or references to any PC skill directory. Build writes to features/anatomy/out/ and needs authorized=true + confirm=true + an allow rule."
+}
