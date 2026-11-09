@@ -23,18 +23,23 @@ const firaCode = Fira_Code({
 export const metadata: Metadata = {
   title: 'Stella - Futuristic AI Voice & Device Assistant',
   description:
-    'Minimalist futuristic voice and text AI assistant featuring real-time speech recognition, wake word activation, and full device control.',
+    'Your AI assistant that molds to your workflow, voice, and daily needs.',
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon.ico',
+    apple: '/favicon.ico',
+  },
   openGraph: {
     title: 'Stella - Futuristic AI Voice & Device Assistant',
     description:
-      'Minimalist futuristic voice and text AI assistant featuring real-time speech recognition, wake word activation, and full device control.',
+      'Your AI assistant that molds to your workflow, voice, and daily needs.',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Stella - Futuristic AI Voice & Device Assistant',
     description:
-      'Minimalist futuristic voice and text AI assistant featuring real-time speech recognition, wake word activation, and full device control.',
+      'Your AI assistant that molds to your workflow, voice, and daily needs.',
   },
 };
 

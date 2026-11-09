@@ -112,7 +112,7 @@ export const THEME_CONFIGS: Record<AssistantTheme, ThemeConfig> = {
 // Helper function to dynamically bind theme CSS custom properties to documentElement
 export function applyTheme(theme: AssistantTheme) {
   if (typeof window === 'undefined') return;
-  const config = THEME_CONFIGS[theme] || THEME_CONFIGS.rainbow;
+  const config = THEME_CONFIGS[theme] || THEME_CONFIGS.void;
   const root = document.documentElement;
 
   root.style.setProperty('--stella-primary', config.primaryHex);

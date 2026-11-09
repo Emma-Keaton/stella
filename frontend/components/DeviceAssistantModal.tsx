@@ -8,7 +8,6 @@ import {
   Mic,
   Camera,
   Layers,
-  Sparkles,
   HelpCircle,
   Sliders,
   ShieldCheck,
@@ -16,8 +15,7 @@ import {
   Sun,
   Palette,
 } from 'lucide-react';
-import { AssistantSettings, AssistantTheme } from '@/lib/types';
-import { THEME_CONFIGS } from '@/lib/theme';
+import { AssistantSettings } from '@/lib/types';
 
 interface DeviceAssistantModalProps {
   isOpen: boolean;
@@ -34,36 +32,9 @@ export function DeviceAssistantModal({
   onUpdateSettings,
   onTriggerAssistant,
 }: DeviceAssistantModalProps) {
-  const themeConfig = THEME_CONFIGS[settings.theme] || THEME_CONFIGS.rainbow;
   const [showOsPrompt, setShowOsPrompt] = useState(false);
   const [showSetupHelp, setShowSetupHelp] = useState(false);
 
-  const themeOptions: Array<{
-    id: AssistantTheme;
-    name: string;
-    colors: string[];
-  }> = [
-    {
-      id: 'rainbow',
-      name: 'Rainbow',
-      colors: ['#38bdf8', '#fb7185', '#facc15', '#4ade80'],
-    },
-    {
-      id: 'nebula',
-      name: 'Nebula',
-      colors: ['#c084fc', '#818cf8', '#e879f9', '#6366f1'],
-    },
-    {
-      id: 'cyan',
-      name: 'Cyber Cyan',
-      colors: ['#22d3ee', '#2dd4bf', '#38bdf8', '#0ea5e9'],
-    },
-    {
-      id: 'solar',
-      name: 'Solar Flare',
-      colors: ['#fbbf24', '#f97316', '#ef4444', '#f59e0b'],
-    },
-  ];
 
   return (
     <AnimatePresence>
@@ -238,76 +209,6 @@ export function DeviceAssistantModal({
                     />
                   </label>
                 </div>
-              </div>
-            </div>
-
-            {/* Section: THEME & AURA */}
-            <div className="space-y-3">
-              <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase px-1">
-                Theme
-              </span>
-
-              {/* Theme Selector Cards */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {themeOptions.map((th) => (
-                  <button
-                    key={th.id}
-                    type="button"
-                    onClick={() => onUpdateSettings({ theme: th.id })}
-                    className={`p-3.5 rounded-2xl text-left border transition-all ${
-                      settings.theme === th.id
-                        ? 'bg-[#1a1d26] border-white shadow-lg ring-1 ring-white/20'
-                        : 'bg-[#15181f] border-slate-800 hover:border-slate-700'
-                    }`}
-                  >
-                    <div className="flex items-center gap-1.5 mb-2.5">
-                      {th.colors.map((c, i) => (
-                        <span
-                          key={i}
-                          className="w-3.5 h-3.5 rounded-full shadow-sm"
-                          style={{ backgroundColor: c }}
-                        />
-                      ))}
-                    </div>
-                    <span className="text-xs font-medium text-slate-200">{th.name}</span>
-                  </button>
-                ))}
-              </div>
-
-              <p className="text-xs text-slate-400 px-1">
-                The animated background behind the assistant while it is open.
-              </p>
-
-              {/* Animate Background toggle */}
-              <div className="p-4 rounded-2xl bg-[#15181f] border border-slate-800 flex items-start justify-between gap-4">
-                <div className="flex items-start gap-3">
-                  <Sparkles className="w-5 h-5 mt-0.5 shrink-0" style={{ color: themeConfig.primaryHex }} />
-                  <div>
-                    <h3 className="text-sm font-medium text-white">Animate background</h3>
-                    <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">
-                      Turn off to show the background as a still picture. This uses less battery and
-                      keeps your phone cooler.
-                    </p>
-                  </div>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer shrink-0 mt-0.5">
-                  <input
-                    type="checkbox"
-                    checked={settings.animateBackground}
-                    onChange={(e) =>
-                      onUpdateSettings({ animateBackground: e.target.checked })
-                    }
-                    className="sr-only peer"
-                  />
-                  <div
-                    className="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"
-                    style={{
-                      backgroundColor: settings.animateBackground
-                        ? themeConfig.primaryHex
-                        : undefined,
-                    }}
-                  />
-                </label>
               </div>
             </div>
           </div>

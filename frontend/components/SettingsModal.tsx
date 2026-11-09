@@ -69,7 +69,7 @@ export function SettingsModal({
   localGgufModel,
   onSelectLocalGgufModel,
 }: SettingsModalProps) {
-  const themeConfig = THEME_CONFIGS[settings.theme] || THEME_CONFIGS.rainbow;
+  const themeConfig = THEME_CONFIGS[settings.theme] || THEME_CONFIGS.void;
 
   // Provider & API Key State
   const [selectedProvider, setSelectedProvider] = useState<ProviderType>(activeProvider || 'gemini');
@@ -1020,7 +1020,7 @@ export function SettingsModal({
                 <div>
                   <h4 className="text-sm font-medium text-white">Stella</h4>
                   <p className="text-xs text-slate-400">
-                    An adaptive, self-improving AI companion that molds to your workflow, voice, and daily needs.
+                    Your AI assistant that molds to your workflow, voice, and daily needs.
                   </p>
                 </div>
               </div>

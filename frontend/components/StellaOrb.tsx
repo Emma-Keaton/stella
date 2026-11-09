@@ -26,7 +26,7 @@ export function StellaOrb({
   onClick,
   size = 'md',
 }: StellaOrbProps) {
-  // Theme gradients with high-vibrancy neon colors matching Stella's brand
+  // Theme gradients matching themes.json source of truth
   const themeGradients: Record<
     AssistantTheme,
     {
@@ -36,48 +36,59 @@ export function StellaOrb({
       secondaryGlow: string;
     }
   > = {
-    rainbow: {
-      gradientId: 'stella-star-rainbow',
+    void: {
+      gradientId: 'stella-star-void',
       stops: [
-        { offset: '0%', color: '#00f0ff' }, // Electric Cyan (top)
-        { offset: '35%', color: '#00ff88' }, // Neon Mint
-        { offset: '68%', color: '#ffd000' }, // Vibrant Solar Amber
-        { offset: '100%', color: '#ff007f' }, // Hot Neon Magenta (bottom)
+        { offset: '0%', color: '#00E5A3' },
+        { offset: '35%', color: '#00F0FF' },
+        { offset: '68%', color: '#8D80F0' },
+        { offset: '100%', color: '#00F0FF' },
       ],
-      glowRgba: 'rgba(0, 240, 255, 0.65)',
-      secondaryGlow: 'rgba(255, 0, 127, 0.45)',
+      glowRgba: 'rgba(0, 229, 163, 0.35)',
+      secondaryGlow: 'rgba(141, 128, 240, 0.35)',
     },
-    nebula: {
-      gradientId: 'stella-star-nebula',
+    oled: {
+      gradientId: 'stella-star-oled',
       stops: [
-        { offset: '0%', color: '#e879f9' },
+        { offset: '0%', color: '#00E5A3' },
+        { offset: '35%', color: '#00F0FF' },
+        { offset: '68%', color: '#8D80F0' },
+        { offset: '100%', color: '#00F0FF' },
+      ],
+      glowRgba: 'rgba(0, 229, 163, 0.45)',
+      secondaryGlow: 'rgba(141, 128, 240, 0.35)',
+    },
+    aurora: {
+      gradientId: 'stella-star-aurora',
+      stops: [
+        { offset: '0%', color: '#8D80F0' },
         { offset: '45%', color: '#a855f7' },
-        { offset: '80%', color: '#6366f1' },
-        { offset: '100%', color: '#ec4899' },
+        { offset: '80%', color: '#e879f9' },
+        { offset: '100%', color: '#8D80F0' },
       ],
-      glowRgba: 'rgba(217, 70, 239, 0.65)',
-      secondaryGlow: 'rgba(99, 102, 241, 0.45)',
+      glowRgba: 'rgba(141, 128, 240, 0.35)',
+      secondaryGlow: 'rgba(232, 121, 249, 0.35)',
     },
-    cyan: {
-      gradientId: 'stella-star-cyan',
+    light: {
+      gradientId: 'stella-star-light',
       stops: [
-        { offset: '0%', color: '#67e8f9' },
-        { offset: '45%', color: '#00f0ff' },
-        { offset: '80%', color: '#0284c7' },
-        { offset: '100%', color: '#3b82f6' },
+        { offset: '0%', color: '#007A57' },
+        { offset: '35%', color: '#007C8A' },
+        { offset: '68%', color: '#5A4BD1' },
+        { offset: '100%', color: '#007C8A' },
       ],
-      glowRgba: 'rgba(0, 240, 255, 0.75)',
-      secondaryGlow: 'rgba(59, 130, 246, 0.45)',
+      glowRgba: 'none',
+      secondaryGlow: 'none',
     },
     solar: {
       gradientId: 'stella-star-solar',
       stops: [
-        { offset: '0%', color: '#ffe600' },
+        { offset: '0%', color: '#fbbf24' },
         { offset: '45%', color: '#fb8500' },
         { offset: '80%', color: '#ff0054' },
-        { offset: '100%', color: '#ff5400' },
+        { offset: '100%', color: '#ef4444' },
       ],
-      glowRgba: 'rgba(255, 183, 3, 0.7)',
+      glowRgba: 'rgba(251, 191, 36, 0.6)',
       secondaryGlow: 'rgba(255, 0, 84, 0.45)',
     },
   };

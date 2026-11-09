@@ -32,7 +32,7 @@ export function LocalGgufSelector({
   onSelectModel,
   theme,
 }: LocalGgufSelectorProps) {
-  const themeConfig = THEME_CONFIGS[theme] || THEME_CONFIGS.rainbow;
+  const themeConfig = THEME_CONFIGS[theme] || THEME_CONFIGS.void;
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [isLoadingFile, setIsLoadingFile] = useState(false);

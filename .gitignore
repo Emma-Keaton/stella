@@ -93,11 +93,9 @@ models/
 *.gguf
 
 # Compiled LLM runtime binaries & build artifacts (do not commit to git)
-src/backend/core/runtimes/llama.cpp/windows-x64/*.exe
-src/backend/core/runtimes/llama.cpp/windows-x64/*.dll
-upstream_llama/*.exe
-upstream_llama/*.dll
-k2/server/*.exe
+src/backend/core/runtimes/llama.cpp/
+upstream_llama/
+k2/server/
 *.zip
 
 # K2 architecture is now tracked for local development
@@ -105,6 +103,11 @@ k2/server/*.exe
 
 # Cross-compiled fork checkouts and outputs from the K2 runtime build.
 llama-k2/
+
+# llama.cpp server downloads (mbuzai and upstream)
+llama-servers/
+*.exe
+*.dll
 
 # Personal Android signing keystore + credentials (never commit).
 .stella-signing.txt

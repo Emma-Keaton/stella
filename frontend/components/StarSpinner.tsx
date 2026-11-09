@@ -19,20 +19,25 @@ export function StarSpinner({
 }: StarSpinnerProps) {
   // Theme gradients
   const themeGradients: Record<AssistantTheme, { id: string; stops: string[]; glow: string }> = {
-    rainbow: {
-      id: 'spinner-rainbow',
-      stops: ['#00f0ff', '#00ff88', '#ffd000', '#ff007f'],
-      glow: 'rgba(0, 240, 255, 0.6)',
+    void: {
+      id: 'spinner-void',
+      stops: ['#00E5A3', '#00F0FF', '#8D80F0', '#00F0FF'],
+      glow: 'rgba(0, 229, 163, 0.6)',
     },
-    nebula: {
-      id: 'spinner-nebula',
-      stops: ['#e879f9', '#a855f7', '#818cf8', '#6366f1'],
-      glow: 'rgba(217, 70, 239, 0.6)',
+    oled: {
+      id: 'spinner-oled',
+      stops: ['#00E5A3', '#00F0FF', '#8D80F0', '#00F0FF'],
+      glow: 'rgba(0, 229, 163, 0.7)',
     },
-    cyan: {
-      id: 'spinner-cyan',
-      stops: ['#67e8f9', '#00f0ff', '#0284c7', '#3b82f6'],
-      glow: 'rgba(0, 240, 255, 0.7)',
+    aurora: {
+      id: 'spinner-aurora',
+      stops: ['#8D80F0', '#a855f7', '#e879f9', '#8D80F0'],
+      glow: 'rgba(141, 128, 240, 0.6)',
+    },
+    light: {
+      id: 'spinner-light',
+      stops: ['#007A57', '#007C8A', '#5A4BD1', '#007C8A'],
+      glow: 'rgba(0, 122, 87, 0.4)',
     },
     solar: {
       id: 'spinner-solar',
@@ -41,7 +46,7 @@ export function StarSpinner({
     },
   };
 
-  const currentTheme = themeGradients[theme] || themeGradients.rainbow;
+  const currentTheme = themeGradients[theme] || themeGradients.void;
 
   const sizePixels = {
     xs: 18,
@@ -194,7 +199,7 @@ export function StarSpinner({
 
           <div className="space-y-1.5 text-center pt-2">
             <p className="text-sm font-semibold text-slate-100">
-              {text || 'Initializing Stella...'}
+              {text || 'initializing stella'}
             </p>
             <p className="text-xs text-slate-500 font-mono">
               Real-time voice &bull; Multi-device mesh &bull; Gemini 3.8 Flash
