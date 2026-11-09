@@ -1,0 +1,5 @@
+pywinauto
+win10toast
+playwright
+duckduckgo-search
+youtube-transcript-api

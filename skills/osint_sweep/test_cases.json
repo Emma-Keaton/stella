@@ -1,0 +1,37 @@
+[
+    {
+        "name": "sweep sites are listed by activity class",
+        "query": "what osint sources do you have",
+        "operation": "tools",
+        "expect": "ok",
+        "note": "P0 passive sites are separated from P2 direct-contact sites."
+    },
+    {
+        "name": "username sweep defaults to passive",
+        "query": "find accounts for username johndoe",
+        "operation": "username",
+        "expect": "ok_or_reason",
+        "note": "P2 sites are listed as skipped, not silently queried."
+    },
+    {
+        "name": "person search is refused",
+        "query": "find out where this person lives",
+        "operation": "person",
+        "expect": "refused",
+        "note": "Identifying a private individual is out of scope."
+    },
+    {
+        "name": "breach check names the missing key",
+        "query": "has this email been in a breach",
+        "operation": "breach_check",
+        "expect": "refused",
+        "note": "HIBP needs a key the skill does not ship."
+    },
+    {
+        "name": "phone lookup reports only what the numbering plan says",
+        "query": "who owns this number",
+        "operation": "phone",
+        "expect": "refused",
+        "note": "No number means no lookup; line type needs a keyed provider."
+    }
+]

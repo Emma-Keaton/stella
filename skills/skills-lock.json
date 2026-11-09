@@ -1,0 +1,336 @@
+{
+  "version": 1,
+  "skills": {
+    "anatomy": {
+      "hash": "f26645aacdcc",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "brainstorming": {
+      "hash": "e0c898381950",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "dependency_manager": {
+      "hash": "dbc40ea38df8",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "device_cleanup": {
+      "hash": "de88f4552fda",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "doc_forensics": {
+      "hash": "f615634555cc",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "document_ops": {
+      "hash": "b06ff029038b",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "domain_intel": {
+      "hash": "7267dc66d05a",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "hash_cracker": {
+      "hash": "f91344187c50",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "media_streams": {
+      "hash": "9190d2ebae47",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "memory_inspector": {
+      "hash": "c337864a4cc4",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "network_audit": {
+      "hash": "e625d3425d4d",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "nvidia_api": {
+      "hash": "3c43cece1eb8",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "osint_sweep": {
+      "hash": "2ad31d0f24a9",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "pentest_lab": {
+      "hash": "2869f3286363",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "presentation_ops": {
+      "hash": "790898e3750d",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "rea": {
+      "hash": "a91fb7435337",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "self_evolution": {
+      "hash": "322cf44e0349",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "show_gif": {
+      "hash": "560521a75b8b",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "skill_add": {
+      "hash": "31f35c062099",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "skill_build": {
+      "hash": "056863852c17",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "skill_catalog": {
+      "hash": "c48d1e3b5329",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "skill_update": {
+      "hash": "f1d8b1e57fad",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "sound_check": {
+      "hash": "715601845c6c",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "system_monitor_ascii": {
+      "hash": "7387610bad40",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "system_time": {
+      "hash": "6330fceb3757",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "wireless_audit": {
+      "hash": "f79c35cbcdc1",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "world_watch": {
+      "hash": "5fd8193ef415",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "writing_plans": {
+      "hash": "0af9f45b6089",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "check_current_stock_prices": {
+      "hash": "cde9c17ddf81",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "circuit_schematic": {
+      "hash": "d97acb9cf048",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "crypto_live_price": {
+      "hash": "39cdceba076e",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "flights_specific_area": {
+      "hash": "0f8f8990d67f",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "internet_speed_test": {
+      "hash": "8a40aa2248fc",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "live_cricket_scores": {
+      "hash": "4435d66e2136",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "make_stickman_dance_when": {
+      "hash": "3e0c2a702c2c",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "market_analysis": {
+      "hash": "433997e97024",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "spotify_mcp": {
+      "hash": "adb70746bc5c",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "tracks_international_space_station": {
+      "hash": "9e49625caeb9",
+      "version": "1.0.0",
+      "source": "features"
+    },
+    "writing": {
+      "hash": "writing-skill-v1",
+      "version": "1.0.0",
+      "source": "stella"
+    },
+    "social": {
+      "hash": "social-skill-v1",
+      "version": "1.0.0",
+      "source": "stella"
+    },
+    "coding": {
+      "hash": "coding-skill-v1",
+      "version": "1.0.0",
+      "source": "stella"
+    },
+    "anatomy_3d_modeling": {
+      "hash": "anatomy_3d-v1",
+      "version": "1.0.0",
+      "source": "stella"
+    },
+    "engineering_design": {
+      "hash": "engineering-v1",
+      "version": "1.0.0",
+      "source": "stella"
+    },
+    "chemistry_research": {
+      "hash": "chemistry-v1",
+      "version": "1.0.0",
+      "source": "stella"
+    },
+    "physics_research": {
+      "hash": "physics-v1",
+      "version": "1.0.0",
+      "source": "stella"
+    },
+    "biology_research": {
+      "hash": "biology-v1",
+      "version": "1.0.0",
+      "source": "stella"
+    },
+    "medicine_research": {
+      "hash": "medicine-v1",
+      "version": "1.0.0",
+      "source": "stella"
+    },
+    "math_research": {
+      "hash": "math-v1",
+      "version": "1.0.0",
+      "source": "stella"
+    },
+    "branding_design": {
+      "hash": "branding-v1",
+      "version": "1.0.0",
+      "source": "stella"
+    },
+    "research_methodology": {
+      "hash": "research-v1",
+      "version": "1.0.0",
+      "source": "stella"
+    },
+    "market_intelligence": {
+      "hash": "market_intel-v1",
+      "version": "1.0.0",
+      "source": "stella"
+    },
+    "market_prediction": {
+      "hash": "market_pred-v1",
+      "version": "1.0.0",
+      "source": "stella"
+    },
+    "weather_live": {
+      "hash": "weather_live-v2",
+      "version": "2.0.0",
+      "source": "stella"
+    },
+    "currency_exchange": {
+      "hash": "currency_exchange-v1",
+      "version": "1.0.0",
+      "source": "stella"
+    },
+    "news_headlines": {
+      "hash": "news_headlines-v1",
+      "version": "1.0.0",
+      "source": "stella"
+    },
+    "openbb_market_data": {
+      "hash": "openbb_market_data-v1",
+      "version": "1.0.0",
+      "source": "openbb"
+    },
+    "openbb_technical_analysis": {
+      "hash": "openbb_technical_analysis-v1",
+      "version": "1.0.0",
+      "source": "openbb"
+    },
+    "openbb_options_data": {
+      "hash": "openbb_options_data-v1",
+      "version": "1.0.0",
+      "source": "openbb"
+    },
+    "openalice_portfolio": {
+      "hash": "openalice_portfolio-v1",
+      "version": "1.0.0",
+      "source": "openalice"
+    },
+    "openalice_trading_journal": {
+      "hash": "openalice_trading_journal-v1",
+      "version": "1.0.0",
+      "source": "openalice"
+    },
+    "openalice_research_workflow": {
+      "hash": "openalice_research_workflow-v1",
+      "version": "1.0.0",
+      "source": "openalice"
+    },
+    "stella_multi_agent": {
+      "hash": "stella_multi_agent-v1",
+      "version": "1.0.0",
+      "source": "openmaic"
+    },
+    "stella_knowledge": {
+      "hash": "stella_knowledge-v1",
+      "version": "1.0.0",
+      "source": "paperclip"
+    },
+    "stella_trading": {
+      "hash": "stella_trading-v1",
+      "version": "1.0.0",
+      "source": "vibetrading"
+    },
+    "stella_security_integrated": {
+      "hash": "stella_security_integrated-v1",
+      "version": "1.0.0",
+      "source": "pentagi"
+    },
+    "stella_oversight_integrated": {
+      "hash": "stella_oversight_integrated-v1",
+      "version": "1.0.0",
+      "source": "gods-eye-view"
+    }
+  }
+}\   " s t e l l a _ t r a d i n g _ o r d e r f l o w \ :   { "  
+ 

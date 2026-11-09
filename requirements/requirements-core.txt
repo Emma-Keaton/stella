@@ -1,0 +1,10 @@
+PyQt6
+requests
+pillow
+numpy
+psutil
+send2trash
+beautifulsoup4
+google-genai
+edge-tts
+python-dotenv

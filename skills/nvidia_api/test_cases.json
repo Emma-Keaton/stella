@@ -1,0 +1,29 @@
+[
+    {
+        "name": "ping with no key reports keyless reachability",
+        "query": "ping nvidia",
+        "expect": "ok_or_unavailable",
+        "note": "Without a key the skill reports reachability only and never fabricates latency."
+    },
+    {
+        "name": "unknown operation is refused",
+        "query": "nvidia frobnicate",
+        "operation": "frobnicate",
+        "expect": "error",
+        "note": "Only ping, models, chat and check are operations."
+    },
+    {
+        "name": "models without a key reports no-key",
+        "query": "list nvidia models",
+        "operation": "models",
+        "expect": "error_or_models",
+        "note": "A missing key is a no-key failure class, not an empty list."
+    },
+    {
+        "name": "chat without a key is refused",
+        "query": "smoke test nvidia",
+        "operation": "chat",
+        "expect": "error",
+        "note": "No key means no completion is attempted."
+    }
+]

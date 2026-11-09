@@ -1,0 +1,7 @@
+openpyxl
+python-pptx
+python-docx
+reportlab
+matplotlib
+speedtest-cli
+qrcode[pil]

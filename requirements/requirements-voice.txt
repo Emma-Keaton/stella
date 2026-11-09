@@ -1,0 +1,5 @@
+sounddevice
+SpeechRecognition
+pycaw
+comtypes
+piper-tts

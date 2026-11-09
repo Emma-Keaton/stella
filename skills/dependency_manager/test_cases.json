@@ -1,0 +1,39 @@
+{
+    "name": "dependency_manager",
+    "version": "1.0.0",
+    "test_cases": [
+        {
+            "name": "platform info",
+            "operation": "platform",
+            "expect_ok": true,
+            "expect_keys": ["platform", "package_manager"]
+        },
+        {
+            "name": "bundles list",
+            "operation": "bundles",
+            "expect_ok": true,
+            "expect_keys": ["bundles", "count"]
+        },
+        {
+            "name": "status missing name",
+            "operation": "status",
+            "expect_ok": false
+        },
+        {
+            "name": "install without confirm",
+            "operation": "install",
+            "name": "ffmpeg",
+            "expect_ok": false
+        },
+        {
+            "name": "audit missing skill",
+            "operation": "audit",
+            "expect_ok": false
+        },
+        {
+            "name": "unknown operation",
+            "operation": "frobnicate",
+            "expect_ok": false
+        }
+    ]
+}

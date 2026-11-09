@@ -1,0 +1,41 @@
+{
+  "name": "stella-vite",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "lint": "oxlint src --clear cache",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@google/genai": "^3.0.0",
+    "@hookform/resolvers": "^7.0.5",
+    "@vis.gl/react-google-maps": "^1.10.2",
+    "autoprefixer": "^10.6.2",
+    "canvas-confetti": "^1.9.4",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "framer-motion": "^10.12.0",
+    "lucide-react": "^1.70.0",
+    "postcss": "^8.5.32",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "react-hook-form": "^7.53.2",
+    "tailwind-merge": "^3.7.0",
+    "zustand": "^5.1.0",
+    "jsqr": "^1.4.0",
+    "uuid": "^14.0.3",
+    "react-router-dom": "^6.29.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^4.2.0",
+    "oxlint": "^1.90.0",
+    "typescript": "~7.0.2",
+    "vite": "^5.4.0"
+  }
+}

@@ -1,0 +1,47 @@
+{
+    "name": "skill_catalog",
+    "version": "1.0.0",
+    "test_cases": [
+        {
+            "name": "sources",
+            "operation": "sources",
+            "expect_ok": true,
+            "expect_keys": ["local_dirs", "policy", "note"]
+        },
+        {
+            "name": "list skills",
+            "operation": "list",
+            "expect_ok": true,
+            "expect_keys": ["skills", "count", "total"]
+        },
+        {
+            "name": "find without keyword",
+            "operation": "find",
+            "expect_ok": false
+        },
+        {
+            "name": "find skill_catalog",
+            "operation": "find",
+            "keyword": "skill",
+            "expect_ok": true,
+            "expect_keys": ["keyword", "skills", "count"]
+        },
+        {
+            "name": "install without authorized",
+            "operation": "install",
+            "path": "features/skill_catalog",
+            "expect_ok": false
+        },
+        {
+            "name": "run unknown skill",
+            "operation": "run",
+            "name": "does_not_exist",
+            "expect_ok": false
+        },
+        {
+            "name": "unknown operation",
+            "operation": "frobnicate",
+            "expect_ok": false
+        }
+    ]
+}

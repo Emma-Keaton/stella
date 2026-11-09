@@ -1,0 +1,56 @@
+{
+    "name": "reverse_engineer_anything",
+    "version": "1.0.0",
+    "test_cases": [
+        {
+            "name": "backends listing",
+            "operation": "backends",
+            "expect_ok": true,
+            "expect_keys": ["backends", "stella_rea_available"]
+        },
+        {
+            "name": "static_scan on features dir",
+            "operation": "static_scan",
+            "target": "features",
+            "patterns": "reverse_engineer,skill",
+            "expect_ok": true
+        },
+        {
+            "name": "analyze destination (repo root)",
+            "operation": "analyze",
+            "destination": ".",
+            "expect_ok": true,
+            "expect_keys": ["destination", "project_type", "backends"]
+        },
+        {
+            "name": "extract missing target reports error",
+            "operation": "extract",
+            "target": "does_not_exist.apk",
+            "expect_ok": false
+        },
+        {
+            "name": "apply missing destination reports error",
+            "operation": "apply",
+            "destination": "nonexistent_project",
+            "files": "{\"README.md\": \"# test\"}",
+            "expect_ok": false
+        },
+        {
+            "name": "apply missing files reports error",
+            "operation": "apply",
+            "destination": ".",
+            "expect_ok": false
+        },
+        {
+            "name": "unknown operation reports error",
+            "operation": "frobnicate",
+            "expect_ok": false
+        },
+        {
+            "name": "graph backends",
+            "operation": "graph",
+            "graph_command": "backends",
+            "expect_ok": true
+        }
+    ]
+}

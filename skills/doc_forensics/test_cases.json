@@ -1,0 +1,30 @@
+[
+    {
+        "name": "metadata is read locally",
+        "query": "what is the metadata of this pdf",
+        "operation": "metadata",
+        "expect": "refused",
+        "note": "A path is required; only a local file is read."
+    },
+    {
+        "name": "secret scan masks what it finds",
+        "query": "scan this file for secrets",
+        "operation": "secrets_scan",
+        "expect": "refused",
+        "note": "A path is required and matches are masked."
+    },
+    {
+        "name": "link extraction is local",
+        "query": "what urls are in this file",
+        "operation": "links",
+        "expect": "refused",
+        "note": "A path is required."
+    },
+    {
+        "name": "unknown operation is refused",
+        "query": "steganography please",
+        "operation": "stego",
+        "expect": "refused",
+        "note": "Only metadata, secret scan, links and comparison exist."
+    }
+]

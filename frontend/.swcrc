@@ -1,0 +1,1 @@
+{"jsc":{"parser":{"jsx":true},"transform":{"react":{"runtime":"automatic","development":false,"refresh":false},"experimental":{"jsx-import-source":"framer-motion"}}},"module":{"type":"esnext"}}

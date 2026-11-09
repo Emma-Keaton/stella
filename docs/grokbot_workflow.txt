@@ -1,0 +1,279 @@
+3 Grok Bot Workflows
+You Can Set Up Today
+Grok Bot now reads X by itself, runs Claude Code and Codex on its
+own computer, and writes you a local newsletter every morning.
+Here is how to set up each one.
+
+ The short version
+Grok Bot now reads X with no setup. It can search posts, follow accounts, and
+watch a topic for you.
+You can run Claude Code and Codex inside Grok Bot. They use the Claude and
+ChatGPT plans you already pay for. No API keys.
+Grok Bot can write you a local newsletter. It scans X and the web for your city
+every morning.
+Send the newsletter anywhere. Save it to Google Docs, post it in Slack, or email
+it to your family.
+Every workflow has a prompt you can paste. Setup takes minutes, not hours.
+
+W O R K F L O W 1
+ Grok Bot reads X for you
+No plugin. No connector. It works for all users today.
+
+ What changed
+Grok Bot can now search, read, and monitor X on its own. The official announcement
+says you can ask it to track feedback on your product, follow a breaking story, or send a
+weekly roundup of your industry.
+
+ What it can do
+ What it cannot do
+ Try it now
+Search X for posts from the past 7 days about [YOUR TOPIC]. Give me the 5
+most-discussed points, with a link to the best post for each.
+Every Monday at 9 AM, scan the last 30 posts from [@HANDLE] and send me the
+3 that got the most replies, with one line on why each one worked.
+Search posts by keyword, hashtag, or topic.
+Read a creator's recent posts. For example: "Scan the last 30 posts from @handle."
+Look up profiles and mentions, and see who quoted or reposted a post.
+Check trends and news.
+Watch an account or topic on a schedule and tell you when something new
+appears.
+It only sees public posts. It cannot see your DMs, bookmarks, or home timeline.
+It cannot post. It reads only.
+It has daily limits. In testing: 30 reads a minute, 1,000 a day, and up to 25 results
+per read.
+Search covers recent posts, about the last month in testing.
+
+ Want it to read your own account?
+Connect the X plugin and sign in once. Then Grok Bot can read your bookmarks, DMs,
+and home timeline. It still cannot post, and it does not seem to manage bookmark
+folders.
+If you need something the plugin cannot do, Grok Bot can use X in its own browser
+while you are logged in. That works, but it is slower.
+
+ Why X beats the web for some jobs
+In a test briefing about one city, about two thirds of the useful items came from X.
+X is better for Why
+Speed Stories appear on X hours before any article exists.
+Direct sources City, police, transit, and weather accounts post their own
+updates.
+What people are
+saying
+Local chatter and rumours only exist as posts.
+Checking a story You can see if several separate accounts report the same thing.
+The web is still better for exact details: event times, prices, forecasts, and explainers.
+The best results come from using both.
+
+W O R K F L O W 2
+ Claude Code and Codex inside Grok Bot
+Use the Claude and ChatGPT plans you already pay for. No API keys.
+Grok Bot has its own always-on computer in the cloud. Install Claude Code (Anthropic)
+and Codex (OpenAI) there. Grok Bot handles your schedule, X, and apps. They do the
+heavy coding and analysis.
+
+ Why this is useful
+ Things to know first
+Log in once, every bot can use it. All your Grok Bot bots share the same computer.
+No API keys. It uses your existing Claude and ChatGPT plans.
+Your Claude connectors come with it. Gmail, Google Drive, Calendar, Slack, and
+Notion connectors from your Claude account show up in Claude Code when you
+sign in.
+It runs while you sleep. Your own computer can be off.
+The chats stay on Grok Bot's computer. They do not appear in the Claude or
+ChatGPT apps on your own computer. Grok Bot sends you the results, and it can
+share the full log if you ask.
+Usage counts against your plans for every bot that uses them.
+Local tools do not come along. MCP servers set up only in the Claude desktop app
+must be installed separately. Some connectors may also need you to sign in again.
+
+D O T H I S F I R S T
+ Switch on one ChatGPT setting
+Codex signs in with a device code, a short code you type into a web page. ChatGPT
+blocks this by default.
+Open ChatGPT.
+Go to Settings → Security.
+Switch on Device code authorization.
+Skip this and the Codex sign-in fails. On a ChatGPT work or school account,
+your admin may need to switch it on for you.
+
+ The setup prompt
+Paste this into Grok Bot:
+Install Claude Code and Codex on your computer and connect them to my Claude
+and ChatGPT subscriptions. Use Codex's device-code login and Claude's
+claude.ai login. Give me the sign-in links and codes, and I'll approve them.
+Then confirm that both are logged in.
+1.
+2.
+3.
+
+Paste the prompt into the message box of any Grok Bot chat and send it.
+
+ What happens next (about 3 minutes)
+Grok Bot installs both tools.
+Codex: Grok Bot sends a sign-in link and a one-time code. Open the link, sign in
+with ChatGPT, and enter the code.
+Claude: Grok Bot sends a Claude sign-in link. Approve it, copy the code Claude
+shows you, and paste it back into the chat.
+Grok Bot checks that both logins work.
+Then check which Claude connectors came along:
+Show me which of my Claude connectors your Claude Code can see.
+1.
+2.
+3.
+4.
+
+ 5 things to do with it
+Workflow How it works
+X research into a
+report
+Grok Bot pulls a creator's last 30 posts. Claude Code finds the
+themes and top performers. You get a weekly digest.
+Build small tools Claude Code writes the script. Codex reviews and tests it. Grok
+Bot runs it and sends you the file.
+Two reviews on every
+code change
+Both agents review your pull request. Grok Bot combines what
+they found.
+Overnight jobs Big clean-ups, data work, or document batches finish while you
+sleep.
+Content start to finish Research, then a draft, then charts. Nothing goes out without
+your approval.
+Stay safe. You are giving Grok Bot's computer access to your Claude and
+ChatGPT accounts. Connect only what you need, keep approval on for anything
+that sends, posts, or spends, and ask Grok Bot to log out of both tools when you
+stop using them.
+
+W O R K F L O W 3
+ Your own local newsletter
+Grok Bot scans X and the web for your city and writes a short briefing every
+morning.
+You get weather, top stories, traffic, events, food, local decisions, and what people are
+talking about. You can read it in two minutes. Every item gets a label, so you know how
+much to trust it.
+It works best in busy cities. In a small town, expect more sections that say "Quiet
+today."
+Label Meaning
+ Confirmed From an official account or a known news outlet.
+ Developing Several people report it. Nothing official yet.
+ Unverified One post or a rumour. Only included if it matters for safety.
+
+ The prompt (fill in the brackets)
+You are my local newsletter editor. Build a briefing for my area using the latest posts on X
+plus any web sources you can access.
+MY AREA: [City / neighborhood, e.g. "Austin, Texas - focus on Downtown, East Austin, South
+Congress"]
+TIME WINDOW: [Past 24 hours for daily / Past 7 days for weekly]
+MY INTERESTS: [e.g. food, live music, family events, traffic, housing, local politics]
+HOW TO RESEARCH
+- Search X for recent posts about my area. Search with the city name, neighborhood names,
+local hashtags, and local landmarks.
+- Prioritize these sources, in this order:
+ 1) Official accounts: city government, mayor, police/fire, transit, school district,
+utilities, weather service.
+ 2) Local news outlets and verified local reporters.
+ 3) Venues, event organizers, restaurants, and community organizations posting their own
+news.
+ 4) Regular residents, but only when several independent posts report the same thing.
+- Ignore anything older than the TIME WINDOW, spam, engagement bait, and national stories
+with no local angle.
+- Do not invent details. If you can't confirm a date, time, location, or price, say so.
+LABEL EVERY ITEM WITH A RELIABILITY TAG
+- CONFIRMED: from an official account or a credible outlet.
+- DEVELOPING: several reports, nothing official yet.
+- UNVERIFIED: a single post or a rumor. Include it only if it's important for safety or
+highly relevant.
+OUTPUT FORMAT (keep it short and easy to skim, like a morning newsletter)
+[AREA] Briefing: [Date]
+WEATHER & HEADS-UP: One or two lines on the forecast, air quality, and any alerts.
+TOP STORIES (3-5): For each one, a bold headline, 1-2 sentences, a line starting "Why it
+matters:", the reliability tag, and a source link.
+GETTING AROUND: Road closures, transit changes, traffic, and parking or street cleaning.
+EVENTS (5-8, soonest first): For each one, Name, Day/Date, Time, Venue, Price (or "Free"),
+and a link. Flag anything free or family-friendly.
+FOOD & NEW SPOTS: Openings, closures, pop-ups, and deals.
+CIVIC & COMMUNITY: Council decisions, schools, housing and development, and public meetings.
+WHAT LOCALS ARE TALKING ABOUT: The 1-2 most-discussed topics, summarized neutrally.
+COMING UP: Key dates in the next 7 days.
+RULES
+- Total length under 500 words for daily, under 900 for weekly.
+- Neutral tone, no opinions. Leave out personal information about private individuals.
+- If a section has nothing worth reporting, write "Quiet today".
+- End with: "Sources: X posts and web results from [time window]. Verify important details
+before acting."
+
+ Make it arrive every morning
+Paste this right after the prompt:
+Turn this into a routine that runs every morning at 7:00 AM my time and
+sends me the briefing here.
+Want it weekly? Use "every Saturday at 8:00 AM" and set TIME WINDOW to the past
+7 days. Grok Bot asks you to confirm the routine once. After that it runs by itself, even
+when you are away.
+
+ Send it where you will read it
+The briefing does not have to stay in the Grok Bot chat. If you connect an app with
+Connect apps in Grok Bot, add one line to the routine:
+ Save it to Google Docs
+Save each briefing as a new Google
+Doc in a Drive folder called
+"Local Briefings", named with
+today's date.
+ Post it in Slack
+Post the briefing in my #localnews Slack channel.
+ Email it to your family
+Email the briefing to me and
+[NAME@EMAIL.COM] with the subject
+"Morning briefing: [date]".
+ Add it to Notion
+Add each briefing as a new page in
+my Notion "Local News" database.
+
+R E A L S A M P L E
+ What a real briefing looks like
+We tested it on Austin, Texas. One run pulled two new Michelin stars, festival transit
+plans, a police update, an air quality alert, 6 events with prices, two council decisions,
+and local robotaxi chatter.
+About 410 words. Every item linked to a source. Only 13 X reads used out of 1,000.
+
+Austin Briefing: Fri, Oct 9, 2026
+WEATHER & HEADS-UP
+Sunny, high near 94°F through Sunday. Ozone Action Day today, so sensitive
+groups should limit time outdoors.
+TOP STORIES
+Two Austin restaurants earn first Michelin stars. Fabrik and Kappo Kappo each
+got one star, giving Austin seven starred restaurants, the most in Texas.
+Why it matters: Reservations will get harder.  Confirmed
+EVENTS
+Lone Star Zine Fest · Sat–Sun · Noon–6 p.m. · Blue Genie Art Bazaar · Free, all
+ages
+WHAT LOCALS ARE TALKING ABOUT
+Robotaxi surge: Trackers say the city's registered fleet jumped by about 150
+overnight.  Nothing official yet
+
+S A V E T H I S P A G E
+ Cheat sheet
+Workflow What you paste Setup time
+Read X "Search X for posts about [topic]..." None. It already
+works.
+Claude Code +
+Codex
+The setup prompt, after the ChatGPT device
+code setting
+About 3 minutes
+Local newsletter The newsletter prompt, the routine line, and
+one "send it to" line
+About 5 minutes
+
+ Before you start
+ The one thing to do today
+Paste the newsletter prompt into Grok Bot, fill in your city, and add the
+7 AM routine. Tomorrow morning, your own local newsletter is waiting
+for you.
+These features are new. Limits and behaviour may change quickly.
+The read limits come from testing, not from an official page. Treat them as a guide.
+Check important details yourself. A briefing is a starting point, not the final word.
+Read the first briefing before it posts. Slack and email send messages for you.
+Watch your plan usage. Claude Code and Codex draw from your plans every time a
+bot uses them.
+
+Set it up once.
+Let it work for you
+every single day.

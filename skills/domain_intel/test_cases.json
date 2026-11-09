@@ -1,0 +1,58 @@
+[
+    {
+        "name": "dns records are resolved from dnspython",
+        "query": "what are the dns records for example.com",
+        "operation": "dns",
+        "expect": "ok_or_reason",
+        "note": "Names the dnspython dependency when it is missing."
+    },
+    {
+        "name": "whois uses RDAP",
+        "query": "who owns example.com",
+        "operation": "whois",
+        "expect": "ok_or_reason",
+        "note": "RDAP is structured WHOIS; redactions are the registrar's doing."
+    },
+    {
+        "name": "subdomain enumeration is passive",
+        "query": "what subdomains does example.com have",
+        "operation": "subdomains",
+        "expect": "ok_or_reason",
+        "note": "Certificate transparency is passive; a name there is not proof of a live host."
+    },
+    {
+        "name": "jwt is decoded locally",
+        "query": "decode this jwt",
+        "operation": "jwt_audit",
+        "expect": "refused",
+        "note": "A token is required; a wrong part count is reported, not parsed."
+    },
+    {
+        "name": "pcap analysis reads a local file only",
+        "query": "analyze this pcap",
+        "operation": "pcap_analyze",
+        "expect": "refused",
+        "note": "A path is required and only a local file is read."
+    },
+    {
+        "name": "email security is gated",
+        "query": "check the email security of example.com",
+        "operation": "email_security",
+        "expect": "refused",
+        "note": "DNS TXT/CAA lookups need authorized + confirm plus a policy rule."
+    },
+    {
+        "name": "tech fingerprint is gated",
+        "query": "fingerprint this site",
+        "operation": "tech_fingerprint",
+        "expect": "refused",
+        "note": "Contacting the site needs named target plus authorisation."
+    },
+    {
+        "name": "unknown operation is refused",
+        "query": "dox this person",
+        "operation": "dox",
+        "expect": "refused",
+        "note": "Only domain-intelligence operations exist; there is no people-search."
+    }
+]

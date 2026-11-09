@@ -1,0 +1,110 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: var(--font-orbitron), 'Orbitron', sans-serif;
+  --font-sans: var(--font-exo), 'Exo 2', sans-serif;
+  --font-mono: var(--font-mono), 'Fira Code', 'Space Mono', monospace;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  html, body {
+    height: 100%;
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden !important;
+    overflow-y: hidden !important;
+    position: relative;
+  }
+
+  body {
+    font-family: var(--font-exo), 'Exo 2', system-ui, sans-serif;
+    background-color: var(--stella-bg, #030509);
+    color: var(--stella-text-primary, #f1f5f9);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden !important;
+    max-width: 100vw;
+  }
+
+  h1, h2, h3, .font-display {
+    font-family: var(--font-orbitron), 'Orbitron', sans-serif;
+    letter-spacing: -0.01em;
+  }
+
+  code, pre, .font-mono {
+    font-family: var(--font-mono), 'Fira Code', 'Space Mono', monospace;
+  }
+}
+
+/* Custom soundwave pulse animation */
+@keyframes soundwave {
+  0%, 100% {
+    height: 4px;
+    opacity: 0.4;
+  }
+  50% {
+    height: 24px;
+    opacity: 1;
+  }
+}
+
+.animate-soundwave {
+  animation: soundwave 0.8s ease-in-out infinite;
+}
+
+/* Custom scrollbars with theme tint */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--stella-primary, rgba(0, 240, 255, 0.25));
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--stella-primary, rgba(0, 240, 255, 0.5));
+}
+
+/* Glass morphism utilities */
+.glass {
+  background: var(--stella-glass, rgba(18, 20, 31, 0.72));
+  border: 1px solid var(--stella-glass-border, rgba(255, 255, 255, 0.08));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+.glass-strong {
+  background: var(--stella-glass, rgba(18, 20, 31, 0.85));
+  border: 1px solid var(--stella-glass-border, rgba(255, 255, 255, 0.12));
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  box-shadow: var(--stella-elevation-shadow, 0 8px 32px rgba(0, 0, 0, 0.6));
+}
+
+/* Gradient text utility */
+.text-gradient {
+  background: linear-gradient(135deg, var(--stella-stop-0), var(--stella-stop-1), var(--stella-stop-2), var(--stella-stop-3));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Focus ring */
+*:focus-visible {
+  outline: 2px solid var(--stella-focus-ring, #00f0ff);
+  outline-offset: 2px;
+}
+
+/* Selection */
+::selection {
+  background: var(--stella-primary, #00f0ff);
+  color: var(--stella-on-primary, #020305);
+}

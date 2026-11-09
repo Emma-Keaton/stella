@@ -1,0 +1,55 @@
+{
+    "name": "network_audit",
+    "version": "1.0.0",
+    "test_cases": [
+        {
+            "name": "toolchain listing",
+            "operation": "tools",
+            "expect_ok": true,
+            "expect_keys": ["present", "missing", "psutil"]
+        },
+        {
+            "name": "interfaces",
+            "operation": "interfaces",
+            "expect_ok": true,
+            "expect_keys": ["entries", "gateway", "hostname"]
+        },
+        {
+            "name": "targeted op without authorized/confirm",
+            "operation": "tls_audit",
+            "target": "example.com",
+            "expect_ok": false
+        },
+        {
+            "name": "targeted op without target",
+            "operation": "tls_audit",
+            "authorized": true,
+            "confirm": true,
+            "expect_ok": false
+        },
+        {
+            "name": "header audit missing target",
+            "operation": "header_audit",
+            "authorized": true,
+            "confirm": true,
+            "expect_ok": false
+        },
+        {
+            "name": "latency (read-only, no target)",
+            "operation": "latency",
+            "expect_ok": true,
+            "expect_keys": ["samples", "average_ms"]
+        },
+        {
+            "name": "sources",
+            "operation": "sources",
+            "expect_ok": true,
+            "expect_keys": ["local", "targeted", "audits"]
+        },
+        {
+            "name": "unknown operation",
+            "operation": "frobnicate",
+            "expect_ok": false
+        }
+    ]
+}

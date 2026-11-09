@@ -1,0 +1,58 @@
+{
+    "name": "skill_build",
+    "version": "1.0.0",
+    "test_cases": [
+        {
+            "name": "sources",
+            "operation": "sources",
+            "expect_ok": true,
+            "expect_keys": ["skill_dir", "operations", "note"]
+        },
+        {
+            "name": "list skills",
+            "operation": "list",
+            "expect_ok": true,
+            "expect_keys": ["skills", "count", "total"]
+        },
+        {
+            "name": "inspect without skill",
+            "operation": "inspect",
+            "expect_ok": false
+        },
+        {
+            "name": "inspect nonexistent skill",
+            "operation": "inspect",
+            "skill": "does_not_exist",
+            "expect_ok": false
+        },
+        {
+            "name": "validate nonexistent skill",
+            "operation": "validate",
+            "skill": "does_not_exist",
+            "expect_ok": false
+        },
+        {
+            "name": "compile nonexistent skill",
+            "operation": "compile",
+            "skill": "does_not_exist",
+            "expect_ok": false
+        },
+        {
+            "name": "test nonexistent skill",
+            "operation": "test",
+            "skill": "does_not_exist",
+            "expect_ok": false
+        },
+        {
+            "name": "build nonexistent skill",
+            "operation": "build",
+            "skill": "does_not_exist",
+            "expect_ok": false
+        },
+        {
+            "name": "unknown operation",
+            "operation": "frobnicate",
+            "expect_ok": false
+        }
+    ]
+}

@@ -1,0 +1,60 @@
+{
+    "name": "device_cleanup",
+    "version": "1.0.0",
+    "test_cases": [
+        {
+            "name": "backends listing",
+            "operation": "backends",
+            "expect_ok": true,
+            "expect_keys": ["backends"]
+        },
+        {
+            "name": "scan_storage",
+            "operation": "scan_storage",
+            "expect_ok": true,
+            "expect_keys": ["total_reclaimable_bytes", "results"]
+        },
+        {
+            "name": "scan_storage dry run (default)",
+            "operation": "scan_storage",
+            "target": "temp",
+            "expect_ok": true,
+            "expect_keys": ["results"]
+        },
+        {
+            "name": "clean_temp dry run",
+            "operation": "clean_temp",
+            "expect_ok": true,
+            "expect_keys": ["dry_run", "total_freed_bytes"]
+        },
+        {
+            "name": "clean_cache dry run",
+            "operation": "clean_cache",
+            "expect_ok": true,
+            "expect_keys": ["dry_run", "total_freed_bytes"]
+        },
+        {
+            "name": "clean_temp without confirm (should fail)",
+            "operation": "clean_temp",
+            "expect_ok": false,
+            "expect_error": "confirm=true"
+        },
+        {
+            "name": "clean_cache without confirm (should fail)",
+            "operation": "clean_cache",
+            "expect_ok": false,
+            "expect_error": "confirm=true"
+        },
+        {
+            "name": "system_info",
+            "operation": "system_info",
+            "expect_ok": true,
+            "expect_keys": ["storage", "memory"]
+        },
+        {
+            "name": "unknown operation",
+            "operation": "frobnicate",
+            "expect_ok": false
+        }
+    ]
+}

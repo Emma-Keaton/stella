@@ -1,0 +1,33 @@
+{
+    "name": "memory_inspector",
+    "version": "1.0.0",
+    "test_cases": [
+        {
+            "name": "count empty",
+            "operation": "count",
+            "expect_ok": true,
+            "expect_keys": ["count"]
+        },
+        {
+            "name": "list empty",
+            "operation": "list",
+            "expect_ok": true,
+            "expect_keys": ["facts", "count", "total_on_disk"]
+        },
+        {
+            "name": "search missing query",
+            "operation": "search",
+            "expect_ok": false
+        },
+        {
+            "name": "clear without confirm",
+            "operation": "clear",
+            "expect_ok": false
+        },
+        {
+            "name": "unknown operation",
+            "operation": "frobnicate",
+            "expect_ok": false
+        }
+    ]
+}

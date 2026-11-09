@@ -1,0 +1,80 @@
+{
+    "name": "anatomy",
+    "version": "1.0.0",
+    "test_cases": [
+        {
+            "name": "sources",
+            "operation": "sources",
+            "expect_ok": true,
+            "expect_keys": ["source", "kit_dir", "build_entry", "output_dir", "node_required"]
+        },
+        {
+            "name": "examples list",
+            "operation": "examples",
+            "expect_ok": true,
+            "expect_keys": ["examples", "count", "total"]
+        },
+        {
+            "name": "single example dial-indicator",
+            "operation": "examples",
+            "example": "dial-indicator",
+            "expect_ok": true,
+            "expect_keys": ["example", "count"]
+        },
+        {
+            "name": "unknown example",
+            "operation": "examples",
+            "example": "frobnicate",
+            "expect_ok": false
+        },
+        {
+            "name": "kit list",
+            "operation": "kit",
+            "expect_ok": true,
+            "expect_keys": ["modules", "count", "total"]
+        },
+        {
+            "name": "workflow",
+            "operation": "workflow",
+            "expect_ok": true,
+            "expect_keys": ["steps", "count"]
+        },
+        {
+            "name": "verify",
+            "operation": "verify",
+            "expect_ok": true,
+            "expect_keys": ["checks", "count"]
+        },
+        {
+            "name": "figure plan",
+            "operation": "figure_plan",
+            "concept": "a cache key that skips work",
+            "expect_ok": true,
+            "expect_keys": ["concept", "size", "estimate", "workflow_steps"]
+        },
+        {
+            "name": "figure plan epic without authorized",
+            "operation": "figure_plan",
+            "concept": "a whole factory",
+            "size": "Epic",
+            "expect_ok": true,
+            "expect_keys": ["concept", "warning"]
+        },
+        {
+            "name": "build without authorized",
+            "operation": "build",
+            "expect_ok": false
+        },
+        {
+            "name": "references",
+            "operation": "references",
+            "expect_ok": true,
+            "expect_keys": ["references", "count"]
+        },
+        {
+            "name": "unknown operation",
+            "operation": "frobnicate",
+            "expect_ok": false
+        }
+    ]
+}

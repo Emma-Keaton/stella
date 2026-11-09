@@ -1,0 +1,67 @@
+{
+    "name": "skill_add",
+    "version": "1.0.0",
+    "test_cases": [
+        {
+            "name": "sources",
+            "operation": "sources",
+            "expect_ok": true,
+            "expect_keys": ["templates", "template_details", "valid_categories", "valid_surfaces"]
+        },
+        {
+            "name": "list templates",
+            "operation": "list_templates",
+            "expect_ok": true,
+            "expect_keys": ["templates", "count", "total"]
+        },
+        {
+            "name": "validate valid spec",
+            "operation": "validate",
+            "name": "my_test_skill",
+            "description": "A test skill",
+            "expect_ok": true,
+            "expect_keys": ["valid", "errors", "spec"]
+        },
+        {
+            "name": "validate missing name",
+            "operation": "validate",
+            "description": "A test skill",
+            "expect_ok": true,
+            "expect_keys": ["valid", "errors"]
+        },
+        {
+            "name": "validate invalid name",
+            "operation": "validate",
+            "name": "Bad Name!",
+            "description": "A test skill",
+            "expect_ok": true,
+            "expect_keys": ["valid", "errors"]
+        },
+        {
+            "name": "preview without name",
+            "operation": "preview",
+            "expect_ok": false
+        },
+        {
+            "name": "create without authorized",
+            "operation": "create",
+            "name": "preview_only_skill",
+            "description": "Not actually created",
+            "expect_ok": false
+        },
+        {
+            "name": "create duplicate skill",
+            "operation": "create",
+            "name": "anatomy",
+            "description": "Duplicate",
+            "authorized": true,
+            "confirm": true,
+            "expect_ok": false
+        },
+        {
+            "name": "unknown operation",
+            "operation": "frobnicate",
+            "expect_ok": false
+        }
+    ]
+}
