@@ -131,7 +131,7 @@ function MapsCanvas({
     if (!map) return;
     map.setMapTypeId(mapType);
     if (mapType === 'roadmap') {
-      const styles = MAP_THEME_STYLES[theme] || MAP_THEME_STYLES.rainbow;
+      const styles = MAP_THEME_STYLES[theme] || MAP_THEME_STYLES.solar;
       map.setOptions({ styles });
     } else {
       map.setOptions({ styles: [] });
@@ -155,7 +155,7 @@ function MapsCanvas({
     }
 
     if (routePath.length > 0) {
-      const themeConfig = THEME_CONFIGS[theme as AssistantTheme] || THEME_CONFIGS.rainbow;
+      const themeConfig = THEME_CONFIGS[theme as AssistantTheme] || THEME_CONFIGS.void;
       const polyline = new google.maps.Polyline({
         path: routePath,
         geodesic: true,
@@ -173,7 +173,7 @@ function MapsCanvas({
     }
   }, [map, mapsLib, routePath, theme]);
 
-  const themeConfig = THEME_CONFIGS[theme as AssistantTheme] || THEME_CONFIGS.rainbow;
+  const themeConfig = THEME_CONFIGS[theme as AssistantTheme] || THEME_CONFIGS.void;
 
   return (
     <Map
@@ -534,7 +534,7 @@ export function LocationMapsModal({
     }
   }, [distanceDestination, distanceOrigin, geocodeAddress]);
 
-  const themeConfig = THEME_CONFIGS[theme as AssistantTheme] || THEME_CONFIGS.rainbow;
+  const themeConfig = THEME_CONFIGS[theme as AssistantTheme] || THEME_CONFIGS.void;
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
   if (!isOpen) return null;

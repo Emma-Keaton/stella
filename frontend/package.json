@@ -5,13 +5,19 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "export": "cross-env TAURI_BUILD=1 npx next build",
     "start": "next start",
     "lint": "eslint .",
-    "clean": "next clean"
+    "clean": "next clean",
+    "tauri": "tauri",
+    "tauri:dev": "tauri dev",
+    "tauri:build": "tauri build",
+    "desktop:build": "npm run export && npm run tauri:build"
   },
   "dependencies": {
     "@google/genai": "^3.0.0",
     "@hookform/resolvers": "^5.2.1",
+    "@tauri-apps/api": "^2.0.0",
     "@types/canvas-confetti": "^1.9.0",
     "@types/qrcode": "^1.5.6",
     "@vis.gl/react-google-maps": "^1.10.2",
@@ -29,6 +35,9 @@
     "tailwind-merge": "^3.3.1"
   },
   "devDependencies": {
+    "@capacitor/cli": "^6.0.0",
+    "@capacitor/core": "^6.0.0",
+    "@tauri-apps/cli": "^2.0.0",
     "@tailwindcss/postcss": "4.1.11",
     "@tailwindcss/typography": "^0.5.19",
     "@types/node": "^20",

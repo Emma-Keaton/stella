@@ -93,7 +93,7 @@ export function StellaOrb({
     },
   };
 
-  const currentTheme = themeGradients[theme] || themeGradients.rainbow;
+  const currentTheme = themeGradients[theme] || themeGradients.void;
 
   const sizeClasses = {
     sm: 'w-24 h-24',

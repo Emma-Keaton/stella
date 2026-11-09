@@ -4,6 +4,8 @@ import React, { useState, useEffect, useRef, useCallback, useSyncExternalStore }
 
 const emptySubscribe = () => () => {};
 import { motion, AnimatePresence } from 'motion/react';
+import { useStellaConnection } from '@/hooks/use-stella-connection';
+import { createWSMessage, stellaWS } from '@/lib/websocket';
 import {
   Menu,
   Sparkles,
@@ -47,9 +49,7 @@ import {
 import { SAMPLE_LOCAL_MODELS } from '@/lib/gguf';
 import { sounds, speakText, stopSpeaking, SpeechStreamQueue, setMasterAudioVolume, LEOKANI_TTS_CONFIG } from '@/lib/audio';
 
-// Stella backend WebSocket IPC ({id, endpoint, payload} -> {id, endpoint, ok, payload})
-// All providers, agent routing and skills live in the Python backend (ws://localhost:8765).
-const STELLA_WS_URL = 'ws://localhost:8765';
+// Stella backend WebSocket IPC (persistent connection via stellaWS, see lib/websocket.ts)
 
 async function queryStellaBackend({
   prompt,
@@ -57,99 +57,56 @@ async function queryStellaBackend({
   deviceState,
   screenContext,
   onChunk,
+  provider = 'gemini',
+  localGgufModel = null,
 }: {
   prompt: string;
   history: any[];
   deviceState: any;
   screenContext: string | undefined;
   onChunk: (text: string) => void;
+  provider?: ProviderType;
+  localGgufModel?: LocalGgufModel | null;
 }): Promise<string> {
-  return new Promise((resolve, reject) => {
-    let settled = false;
-    let socket: WebSocket | null = null;
-    const id = 'stella-' + Date.now();
+  const contextPromptParts: string[] = [];
+  if (deviceState) {
+    contextPromptParts.push(
+      `[CURRENT DEVICE STATUS: Volume=${deviceState.volume}%, Brightness=${deviceState.brightness}%, Flashlight=${deviceState.flashlight ? 'ON' : 'OFF'}, Wi-Fi=${deviceState.wifi ? 'CONNECTED' : 'DISCONNECTED'}, Bluetooth=${deviceState.bluetooth ? 'ON' : 'OFF'}, DND=${deviceState.dnd ? 'ACTIVE' : 'OFF'}, Battery=${deviceState.batteryLevel}%]`
+    );
+  }
+  if (screenContext) {
+    contextPromptParts.push(`[ATTACHED ACTIVE SCREEN CONTEXT: "${screenContext}"]`);
+  }
+  const fullPrompt = [...contextPromptParts, `User: ${prompt || 'Analyze my current screen'}`].join('\n');
 
-    const contextPromptParts: string[] = [];
-    if (deviceState) {
-      contextPromptParts.push(
-        `[CURRENT DEVICE STATUS: Volume=${deviceState.volume}%, Brightness=${deviceState.brightness}%, Flashlight=${deviceState.flashlight ? 'ON' : 'OFF'}, Wi-Fi=${deviceState.wifi ? 'CONNECTED' : 'DISCONNECTED'}, Bluetooth=${deviceState.bluetooth ? 'ON' : 'OFF'}, DND=${deviceState.dnd ? 'ACTIVE' : 'OFF'}, Battery=${deviceState.batteryLevel}%]`
-      );
-    }
-    if (screenContext) {
-      contextPromptParts.push(`[ATTACHED ACTIVE SCREEN CONTEXT: "${screenContext}"]`);
-    }
-    const fullPrompt = [...contextPromptParts, `User: ${prompt || 'Analyze my current screen'}`].join('\n');
+  const id = 'stella-' + Date.now() + '-' + Math.random().toString(36).slice(2, 9);
 
-    try {
-      socket = new WebSocket(STELLA_WS_URL);
-    } catch (err) {
-      reject(err);
-      return;
-    }
+  const result = await stellaWS.request(
+    createWSMessage('agent.run', {
+      text: fullPrompt,
+      provider,
+      localGgufModel,
+      context: { source: 'web', history, deviceState, screenContext },
+    }),
+    60000
+  );
 
-    socket.onopen = () => {
-      socket!.send(
-        JSON.stringify({
-          id,
-          endpoint: 'agent.run',
-          payload: {
-            text: fullPrompt,
-            context: { source: 'web', history, deviceState, screenContext },
-          },
-        })
-      );
-    };
+  const resultText: string = result?.result ?? result?.reply ?? '';
 
-    socket.onmessage = (event) => {
-      try {
-        const msg = JSON.parse(event.data);
-        if (msg.id !== id || msg.endpoint !== 'agent.run') return;
-        if (!msg.ok) {
-          if (!settled) {
-            settled = true;
-            reject(new Error((msg.error as any)?.message || 'backend error'));
-          }
-          socket?.close();
-          return;
-        }
-        const result: string = msg.payload?.result ?? msg.payload?.reply ?? '';
-        // Simulate token streaming for typing + speech
-        const words = result.split(/(\s+)/);
-        let i = 0;
-        const pump = () => {
-          if (i >= words.length) {
-            if (!settled) {
-              settled = true;
-              resolve(result);
-            }
-            socket?.close();
-            return;
-          }
-          onChunk(words[i]);
-          i++;
-          setTimeout(pump, 15);
-        };
-        pump();
-      } catch (err) {
-        if (!settled) {
-          settled = true;
-          reject(err);
-        }
-        socket?.close();
+  // Simulate token streaming for typing + speech
+  const words = resultText.split(/(\s+)/);
+  let i = 0;
+  return new Promise((resolve) => {
+    const pump = () => {
+      if (i >= words.length) {
+        resolve(resultText);
+        return;
       }
+      onChunk(words[i]);
+      i++;
+      setTimeout(pump, 15);
     };
-
-    socket.onerror = (err) => {
-      if (!settled) {
-        settled = true;
-        reject(err);
-      }
-      socket?.close();
-    };
-
-    socket.onclose = () => {
-      socket = null;
-    };
+    pump();
   });
 }
 import { THEME_CONFIGS, applyTheme } from '@/lib/theme';
@@ -205,6 +162,9 @@ export default function StellaApp() {
     ],
     recentApps: ['Camera', 'Maps', 'Notes', 'Settings'],
   });
+
+  // Backend WebSocket connection status (persistent connection with auto-reconnect)
+  const { status: connStatus, isConnected: wsConnected, connect: wsConnect, lastConnectedAt, lastDisconnectedAt } = useStellaConnection();
 
   // Hydration-safe theme retrieval from localStorage
   const savedTheme = useSyncExternalStore(
@@ -919,7 +879,16 @@ export default function StellaApp() {
     setMessages([]);
   };
 
-  const themeConfig = THEME_CONFIGS[settings.theme] || THEME_CONFIGS.rainbow;
+  const themeConfig = THEME_CONFIGS[settings.theme] || THEME_CONFIGS.void;
+
+  const connPillDotClass =
+    connStatus === 'connected'
+      ? 'w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping'
+      : connStatus === 'reconnecting'
+        ? 'w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse'
+        : 'w-1.5 h-1.5 rounded-full bg-rose-500';
+  const connPillLabel =
+    connStatus === 'connected' ? 'Backend Connected' : connStatus === 'reconnecting' ? 'Reconnecting...' : 'Disconnected';
 
   // Handle task deferred from Device Link Hub
   const handleTaskDeferred = (task: DeferredTask) => {
@@ -1032,6 +1001,22 @@ export default function StellaApp() {
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
               active
             </span>
+          </button>
+
+          {/* Backend Connection Status Pill */}
+          <button
+            type="button"
+            onClick={wsConnect}
+            className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border transition-all hover:opacity-90"
+            style={{
+    background: connStatus === 'connected' ? '#064e3b15' : connStatus === 'reconnecting' ? '#713f1215' : '#451a0315',
+    borderColor: connStatus === 'connected' ? '#4ade8050' : connStatus === 'reconnecting' ? '#fbbf2450' : '#78350f50',
+    color: connStatus === 'connected' ? '#4ade80' : connStatus === 'reconnecting' ? '#fbbf24' : '#f97316'
+}}
+            title={"Backend WebSocket: " + connStatus}
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+            <span>{connStatus === 'connected' ? 'Backend Connected' : connStatus === 'reconnecting' ? 'Reconnecting...' : 'Disconnected'}</span>
           </button>
 
           {/* Device Link Hub Pill */}

@@ -1,5 +1,5 @@
 @echo off
 echo Starting Stella Unified Launcher...
-cd /d E:\Projects\stella
-node start-all.js
+cd /d "%~dp0.."
+node scripts/start-all.js
 pause

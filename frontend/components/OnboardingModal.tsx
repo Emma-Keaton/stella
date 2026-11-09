@@ -25,7 +25,7 @@ interface OnboardingModalProps {
 
 export function OnboardingModal({ isOpen, onComplete, theme }: OnboardingModalProps) {
   const [currentStep, setCurrentStep] = useState(0);
-  const themeConfig = THEME_CONFIGS[theme] || THEME_CONFIGS.rainbow;
+  const themeConfig = THEME_CONFIGS[theme] || THEME_CONFIGS.void;
 
   const steps = [
     {

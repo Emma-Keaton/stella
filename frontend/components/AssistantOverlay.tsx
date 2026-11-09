@@ -92,13 +92,13 @@ export function AssistantOverlay({
         {/* Ambient background glow according to assistant theme */}
         <div
           className={`absolute inset-x-0 bottom-0 h-96 pointer-events-none transition-all ${
-            settings.theme === 'rainbow'
+            settings.theme === 'aurora'
               ? 'bg-gradient-to-t from-blue-600/20 via-emerald-500/10 to-transparent'
-              : settings.theme === 'nebula'
-              ? 'bg-gradient-to-t from-purple-600/20 via-fuchsia-500/10 to-transparent'
-              : settings.theme === 'cyan'
-              ? 'bg-gradient-to-t from-cyan-600/20 via-blue-500/10 to-transparent'
-              : 'bg-gradient-to-t from-amber-600/20 via-rose-500/10 to-transparent'
+              : settings.theme === 'solar'
+                ? 'bg-gradient-to-t from-purple-600/20 via-fuchsia-500/10 to-transparent'
+                : settings.theme === 'light'
+                  ? 'bg-gradient-to-t from-cyan-600/20 via-blue-500/10 to-transparent'
+                  : 'bg-gradient-to-t from-amber-600/20 via-rose-500/10 to-transparent'
           }`}
         />
 

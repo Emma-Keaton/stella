@@ -995,7 +995,7 @@ export function SettingsModal({
                       startListeningOnOpen: true,
                       attachScreenshotOnInvoke: true,
                       wakeWordEnabled: true,
-                      theme: 'rainbow',
+                      theme: 'void',
                       animateBackground: true,
                       autoSpeakResponse: true,
                     });

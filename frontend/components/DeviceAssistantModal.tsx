@@ -16,6 +16,7 @@ import {
   Palette,
 } from 'lucide-react';
 import { AssistantSettings } from '@/lib/types';
+import { THEME_CONFIGS } from '@/lib/theme';
 
 interface DeviceAssistantModalProps {
   isOpen: boolean;
@@ -32,6 +33,7 @@ export function DeviceAssistantModal({
   onUpdateSettings,
   onTriggerAssistant,
 }: DeviceAssistantModalProps) {
+  const themeConfig = THEME_CONFIGS[settings.theme] || THEME_CONFIGS.void;
   const [showOsPrompt, setShowOsPrompt] = useState(false);
   const [showSetupHelp, setShowSetupHelp] = useState(false);
 

@@ -15,9 +15,9 @@ interface AskWithStellaMenuProps {
 export function AskWithStellaMenu({
   enabled,
   onAsk,
-  theme = 'rainbow',
+  theme = 'void',
 }: AskWithStellaMenuProps) {
-  const themeConfig = THEME_CONFIGS[theme] || THEME_CONFIGS.rainbow;
+  const themeConfig = THEME_CONFIGS[theme] || THEME_CONFIGS.void;
   const menuRef = useRef<HTMLDivElement>(null);
   const [selectedText, setSelectedText] = useState('');
   const [position, setPosition] = useState<{

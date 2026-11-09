@@ -13,10 +13,10 @@ interface BatteryIndicatorProps {
 
 export function BatteryIndicator({
   deviceState,
-  theme = 'rainbow',
+  theme = 'void',
   onClick,
 }: BatteryIndicatorProps) {
-  const themeConfig = THEME_CONFIGS[theme] || THEME_CONFIGS.rainbow;
+  const themeConfig = THEME_CONFIGS[theme] || THEME_CONFIGS.void;
   const level = Math.min(100, Math.max(0, deviceState.batteryLevel ?? 92));
   const isCharging = deviceState.isCharging;
   const isLow = level <= 20;

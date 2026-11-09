@@ -13,7 +13,7 @@ interface StarSpinnerProps {
 
 export function StarSpinner({
   size = 'md',
-  theme = 'rainbow',
+  theme = 'void',
   text,
   isSplash = false,
 }: StarSpinnerProps) {

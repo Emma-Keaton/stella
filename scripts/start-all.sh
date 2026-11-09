@@ -1,7 +1,7 @@
 #!/bin/bash
 # Stella Unified Launcher for Linux/Mac
 
-cd "$(dirname "$0")/stella" || exit 1
+cd "$(dirname "$0")/.." || exit 1
 
 echo "Starting Stella Unified Launcher..."
-node start-all.js
+node scripts/start-all.js

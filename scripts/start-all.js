@@ -14,7 +14,9 @@ const path = require('path');
 const fs = require('fs');
 
 // Absolute paths
-const REPO_ROOT = path.resolve('E:/Projects/stella');
+// Resolve paths relative to this script so it works from any machine
+const SCRIPT_DIR = path.resolve(__dirname);
+const REPO_ROOT = path.resolve(SCRIPT_DIR, '..');
 const FRONTEND_DIR = path.join(REPO_ROOT, 'frontend');
 
 const processes = [];
@@ -37,6 +39,25 @@ function log(component, message, color = colors.reset) {
   const timestamp = new Date().toLocaleTimeString();
   const prefix = `${colors.dim}[${timestamp}]${colors.reset} ${color}${component}${colors.reset}`;
   console.log(`${prefix} ${message}`);
+}
+
+function loadEnv() {
+  const envPath = path.join(REPO_ROOT, '.env');
+  if (fs.existsSync(envPath)) {
+    const raw = fs.readFileSync(envPath, 'utf-8');
+    for (const line of raw.split(/\r?\n/)) {
+      const t = line.trim();
+      if (!t || t.startsWith('#')) continue;
+      const eq = t.indexOf('=');
+      if (eq === -1) continue;
+      const key = t.slice(0, eq).trim();
+      const val = t.slice(eq + 1).trim().replace(/^"|"$|^'|'$/g, '');
+      if (key && process.env[key] === undefined) {
+        process.env[key] = val;
+      }
+    }
+    log('launcher', 'Loaded .env file', colors.blue);
+  }
 }
 
 function spawnProcess(name, command, args, options = {}) {
@@ -149,6 +170,7 @@ ${colors.reset}
   }
 
   await checkDependencies();
+  loadEnv();
   process.on('SIGINT', shutdown);
   process.on('SIGTERM', shutdown);
 
