@@ -70,52 +70,30 @@ export function DeviceLinkModal({
   const [joinInputCode, setJoinInputCode] = useState('');
   const [joinStatus, setJoinStatus] = useState<string | null>(null);
 
-  // Connected Devices (Up to 5 in Hub)
-  const [devices, setDevices] = useState<ConnectedDevice[]>([
-    {
-      id: 'dev-1',
-      name: 'Pixel 9 Pro (This Device)',
-      type: 'phone',
-      role: 'voice_primary',
-      ip: '192.168.1.104',
-      status: 'online',
-      battery: 84,
-      cpuLoad: 18,
-      memoryUsage: '3.2 / 12 GB',
-      isCurrentDevice: true,
-    },
-    {
-      id: 'dev-2',
-      name: 'Workstation RTX 4090',
-      type: 'pc',
-      role: 'heavy_compute',
-      ip: '192.168.1.50',
-      status: 'online',
-      cpuLoad: 24,
-      memoryUsage: '14.5 / 64 GB',
-    },
-    {
-      id: 'dev-3',
-      name: 'MacBook Pro M3 Max',
-      type: 'pc',
-      role: 'heavy_compute',
-      ip: '192.168.1.88',
-      status: 'online',
-      battery: 92,
-      cpuLoad: 12,
-      memoryUsage: '11.0 / 36 GB',
-    },
-    {
-      id: 'dev-4',
-      name: 'Secure Enclave Vault',
-      type: 'vault',
-      role: 'confidential_vault',
-      ip: '10.0.0.99 (Encrypted)',
-      status: 'online',
-      cpuLoad: 6,
-      memoryUsage: '1.1 / 8 GB',
-    },
-  ]);
+  // Connected Devices (Up to 5 in Hub) — persisted via backend API
+  const [devices, setDevices] = useState<ConnectedDevice[]>([]);
+  const [isLoadingDevices, setIsLoadingDevices] = useState(false);
+
+  // ── Load linked devices from backend on mount ──
+  useEffect(() => {
+    const fetchDevices = async () => {
+      setIsLoadingDevices(true);
+      try {
+        const res = await fetch('/api/stella/device/link');
+        if (res.ok) {
+          const data = await res.json();
+          if (data.devices) {
+            setDevices(data.devices);
+          }
+        }
+      } catch {
+        // Backend not available yet; devices remain empty.
+      } finally {
+        setIsLoadingDevices(false);
+      }
+    };
+    fetchDevices();
+  }, []);
 
   // Task Deferral State
   const [selectedTargetDevice, setSelectedTargetDevice] = useState<string>('dev-2');
@@ -184,7 +162,7 @@ export function DeviceLinkModal({
   };
 
   // Join a device using 8-character code
-  const handleJoinDevice = (e: React.FormEvent) => {
+  const handleJoinDevice = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanCode = joinInputCode.trim().toUpperCase();
     if (!cleanCode) return;
@@ -196,33 +174,65 @@ export function DeviceLinkModal({
 
     setJoinStatus('Handshaking with ' + cleanCode + '...');
 
-    setTimeout(() => {
-      // Add joined device
-      const newDev: ConnectedDevice = {
-        id: `dev-${Date.now()}`,
-        name: cleanCode.includes('PC') ? 'Home Linux Rig' : 'Linked Tablet Galaxy S9',
-        type: cleanCode.includes('PC') ? 'pc' : 'tablet',
-        role: cleanCode.includes('PC') ? 'heavy_compute' : 'standby',
-        ip: createRandomIp(),
-        status: 'online',
-        battery: 95,
-        cpuLoad: 8,
-        memoryUsage: '4.8 / 16 GB',
-      };
+    try {
+      const res = await fetch('/api/stella/device/link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          device: {
+            id: `dev-${Date.now()}`,
+            name: cleanCode.includes('PC') ? 'Home Linux Rig' : 'Linked Tablet Galaxy S9',
+            type: cleanCode.includes('PC') ? 'pc' : 'tablet',
+            role: cleanCode.includes('PC') ? 'heavy_compute' : 'standby',
+            ip: createRandomIp(),
+            status: 'online',
+            battery: 95,
+            cpuLoad: 8,
+            memoryUsage: '4.8 / 16 GB',
+            platform: 'desktop',
+            capabilities: ['coding', 'web_search', 'file_ops'],
+          },
+        }),
+      });
 
-      setDevices((prev) => [...prev, newDev]);
-      setJoinStatus(`Successfully linked ${newDev.name}!`);
-      setJoinInputCode('');
-      setTimeout(() => {
-        setJoinStatus(null);
-        setActiveTab('hub');
-      }, 1200);
-    }, 1000);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.devices) {
+          setDevices(data.devices);
+        }
+        setJoinStatus(`Successfully linked!`);
+        setJoinInputCode('');
+        setTimeout(() => {
+          setJoinStatus(null);
+          setActiveTab('hub');
+        }, 1200);
+      } else {
+        setJoinStatus('Link failed. Backend unavailable.');
+      }
+    } catch {
+      setJoinStatus('Link failed. Backend unavailable.');
+    }
   };
 
-  // Remove a device from hub
-  const handleRemoveDevice = (id: string) => {
-    setDevices((prev) => prev.filter((d) => d.id !== id));
+  // Remove a device from hub (persists to backend)
+  const handleRemoveDevice = async (id: string) => {
+    try {
+      const res = await fetch(`/api/stella/device/link?id=${id}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.devices) {
+          setDevices(data.devices);
+        }
+      } else {
+        // Fallback: remove locally if backend fails
+        setDevices((prev) => prev.filter((d) => d.id !== id));
+      }
+    } catch {
+      // Fallback: remove locally if backend fails
+      setDevices((prev) => prev.filter((d) => d.id !== id));
+    }
   };
 
   // Execute Task Deferral to specific device
@@ -361,7 +371,7 @@ export function DeviceLinkModal({
                       color: themeConfig.primaryHex,
                     }}
                   >
-                    {devices.length}/5 Active
+                    {devices.length === 0 ? 'No Devices Linked' : devices.length + '/5 Active'}
                   </span>
                 </div>
                 <p className="text-xs text-slate-400">
@@ -455,9 +465,42 @@ export function DeviceLinkModal({
                   </button>
                 </div>
 
-                {/* Device Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {devices.map((dev) => (
+                {/* Empty State */}
+                {devices.length === 0 && (
+                  <div className="flex flex-col items-center justify-center py-20 text-center">
+                    <div className="w-16 h-16 rounded-2xl bg-slate-800/50 border border-slate-700/50 flex items-center justify-center mb-4">
+                      <Layers className="w-8 h-8 text-slate-500" />
+                    </div>
+                    <h3 className="text-sm font-semibold text-white mb-1">No Devices Linked</h3>
+                    <p className="text-xs text-slate-400 max-w-xs mx-auto">
+                      Connect your devices through the Stella Device Link Hub to enable
+                      cross-device task deferral, shared memory, and distributed compute.
+                    </p>
+                    <div className="mt-8 flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab('host')}
+                        className={`px-4 py-2 rounded-xl text-xs font-semibold text-white flex items-center gap-1.5 transition-all ${themeConfig.buttonGradient} ${themeConfig.buttonShadow}`}
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        <span>Host a Device</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab('join')}
+                        className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-300 flex items-center gap-1.5 hover:text-white transition-colors bg-slate-800 border border-slate-700"
+                      >
+                        <KeyRound className="w-3.5 h-3.5" />
+                        <span>Join with Code</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+                {devices.length > 0 && (
+                  <div>
+                    {/* Device Cards */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {devices.map((dev) => (
                     <div
                       key={dev.id}
                       className={`p-4 rounded-2xl border transition-all relative ${
@@ -514,8 +557,10 @@ export function DeviceLinkModal({
                           {dev.battery !== undefined && <span>🔋 {dev.battery}%</span>}
                         </div>
                       </div>
-                    </div>
                   ))}
+                </div>
+                  </div>
+                )}
                 </div>
 
                 {/* Quick Deferral Action CTA */}

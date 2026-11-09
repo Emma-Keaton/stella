@@ -211,12 +211,12 @@ export default function StellaApp() {
     emptySubscribe,
     () => {
       try {
-        return (localStorage.getItem('stella_theme') as any) || 'rainbow';
+        return (localStorage.getItem('stella_theme') as any) || 'void';
       } catch {
-        return 'rainbow';
+        return 'void';
       }
     },
-    () => 'rainbow'
+    () => 'void'
   );
 
   // Assistant Configuration & Settings
@@ -240,7 +240,7 @@ export default function StellaApp() {
 
   // Sync theme to root CSS & localStorage on mount/update
   useEffect(() => {
-    const currentTh = settings.theme || savedTheme || 'rainbow';
+    const currentTh = settings.theme || savedTheme || 'void';
     applyTheme(currentTh);
     try {
       localStorage.setItem('stella_theme', currentTh);

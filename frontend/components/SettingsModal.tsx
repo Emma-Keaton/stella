@@ -338,7 +338,7 @@ export function SettingsModal({
                 </p>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                  {(['rainbow', 'nebula', 'cyan', 'solar'] as AssistantTheme[]).map((thm) => {
+                  {(['void', 'oled', 'aurora', 'light', 'solar'] as AssistantTheme[]).map((thm) => {
                     const cfg = THEME_CONFIGS[thm];
                     const isSelected = settings.theme === thm;
                     return (
