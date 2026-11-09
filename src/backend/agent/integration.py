@@ -59,10 +59,12 @@ class AgentIntegration:
         self.loop = AgentLoop(llm=llm, executor=self.executor)
         self.honesty = HonestyTracker()
 
-        # Register built-in tools into the registry
-        from .tools import BUILTIN_TOOLS
-        for tool in BUILTIN_TOOLS:
-            self.tool_registry.register(tool)
+        # Register built-in tools into the registry (only when we own the registry;
+        # if a registry was passed in, it is assumed to already be populated).
+        if tool_registry is None:
+            from .tools import BUILTIN_TOOLS
+            for tool in BUILTIN_TOOLS:
+                self.tool_registry.register(tool)
 
     def send(self, text: str, context: Optional[Dict[str, Any]] = None) -> str:
         """

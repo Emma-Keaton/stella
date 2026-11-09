@@ -1,6 +1,6 @@
 ---
 name: hummingbot_live_trade
-description: Live trade with Hummingbot when wallet connected.
+description: Run Hummingbot in live-trading mode (requires wallet connection).
 category: trading
 source: stella
 version: 1.0.0

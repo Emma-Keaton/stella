@@ -1,0 +1,6 @@
+{
+  "name": "Stella - Futuristic AI Voice & Device Assistant",
+  "description": "Minimalist futuristic voice and text AI assistant with real-time transcription, wake word activation, and full device controls.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -325,3 +325,111 @@ class SmartHomeStorage:
         with self._lock, self._connect() as conn:
             row = conn.execute("SELECT COUNT(*) AS c FROM devices").fetchone()
         return int(row["c"]) if row else 0
+
+
+def _op(operation: str, ok: bool, value=None, error: str = "") -> dict:
+    return {"operation": operation, "ok": ok, "value": value, "error": error}
+
+
+def _op_count_devices(kwargs: dict) -> dict:
+    storage = SmartHomeStorage()
+    return _op("count_devices", True, {"count": storage.count_devices()})
+
+
+def _op_list_devices(kwargs: dict) -> dict:
+    storage = SmartHomeStorage()
+    return _op("list_devices", True, {"devices": storage.list_devices(), "total": len(storage.list_devices())})
+
+
+def _op_recent_activity(kwargs: dict) -> dict:
+    storage = SmartHomeStorage()
+    limit = int(kwargs.get("limit", 10))
+    return _op("recent_activity", True, {"activities": storage.recent_activity(limit), "total": len(storage.recent_activity(limit))})
+
+
+def _op_sources(kwargs: dict) -> dict:
+    return _op("sources", True, {
+        "sources": ["smart_home_storage"],
+        "content": "Smart home storage layer (SQLite + Fernet encryption).",
+    })
+
+
+_OPERATIONS = {
+    "count_devices": _op_count_devices,
+    "list_devices": _op_list_devices,
+    "recent_activity": _op_recent_activity,
+    "sources": _op_sources,
+}
+
+_OPERATION_TITLES = {
+    "count_devices": "Count Devices",
+    "list_devices": "List Devices",
+    "recent_activity": "Recent Activity",
+    "sources": "Storage Sources",
+}
+
+_ALIASES = {
+    "count": "count_devices",
+    "devices": "list_devices",
+    "activity": "recent_activity",
+    "list_sources": "sources",
+}
+
+
+def _summary(operation: str, record: dict) -> str:
+    value = record.get("value") or {}
+    if operation == "count_devices":
+        return f"{value.get('count')} device(s) in storage."
+    if operation == "list_devices":
+        return f"{value.get('total')} device(s) listed."
+    if operation == "recent_activity":
+        return f"{value.get('total')} recent activity(ies)."
+    if operation == "sources":
+        return f"{len(value.get('sources') or [])} source(s): {', '.join(value.get('sources') or [])}"
+    return record.get("error") or "No operation ran."
+
+
+def execute(**kwargs) -> dict:
+    """Smart home storage layer for encrypted credential storage and device management."""
+    operation = (kwargs.get("operation") or "count_devices").strip().lower()
+    operation = _ALIASES.get(operation, operation)
+    handler = _OPERATIONS.get(operation)
+    if handler is None:
+        return {
+            "title": "Smart Home Storage",
+            "summary": f"Unknown operation '{operation}'. One of: {', '.join(sorted(_OPERATIONS))}.",
+            "spoken_narrative": f"Unknown operation {operation}.",
+            "ok": False,
+            "operation": operation,
+        }
+    try:
+        record = handler(kwargs)
+    except TypeError as exc:
+        return {
+            "title": "Smart Home Storage",
+            "summary": f"Bad arguments for '{operation}': {exc}",
+            "spoken_narrative": f"Bad arguments for {operation}.",
+            "ok": False,
+            "operation": operation,
+        }
+    except Exception as exc:
+        return {
+            "title": "Smart Home Storage",
+            "summary": f"{type(exc).__name__}: {exc}",
+            "spoken_narrative": f"Storage error: {type(exc).__name__}.",
+            "ok": False,
+            "operation": operation,
+        }
+    return {
+        "title": _OPERATION_TITLES.get(operation, "Smart Home Storage"),
+        "summary": _summary(operation, record),
+        "spoken_narrative": _summary(operation, record),
+        "operation": operation,
+        "ok": bool(record.get("ok")),
+        "record": record,
+    }
+
+
+if __name__ == "__main__":  # pragma: no cover
+    import pprint
+    pprint.pprint(execute(operation="count_devices"))

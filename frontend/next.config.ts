@@ -1,27 +1,27 @@
-/** @type {import('next').NextConfig} */
-const nextConfig = {
+import type {NextConfig} from 'next';
+
+const nextConfig: NextConfig = {
   reactStrictMode: true,
-  transpilePackages: ['@vis.gl/react-google-maps'],
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: false,
+  },
+  // Allow access to remote image placeholder.
   images: {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: '**',
+        hostname: 'picsum.photos',
+        port: '',
+        pathname: '/**', // This allows any path under the hostname
       },
     ],
   },
-  turbopack: {},
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-        net: false,
-        tls: false,
-      };
-    }
-    return config;
-  },
+  output: 'standalone',
+  transpilePackages: ['motion'],
+  webpack: (config) => config,
 };
 
-module.exports = nextConfig;
+export default nextConfig;

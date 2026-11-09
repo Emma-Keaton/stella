@@ -1,19 +1,21 @@
 #!/usr/bin/env node
 /**
  * Stella Unified Launcher
- * Spawns all three components:
+ * Starts all Stella endpoints together at once and stays alive
+ * until the user shuts down (Ctrl+C).
+ *
+ * Endpoints:
  * 1. Python Backend (main.py) - WebSocket on port 8765
- * 2. Python Dashboard (server.py) - HTTP on port 8000
- * 3. Next.js Frontend (npm run dev) - HTTP on port 3000
+ * 2. Next.js Frontend (npm run dev) - HTTP on port 3000
  */
 
 const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
-// Use absolute paths - script is at E:/Projects/stella/start-all.js
+// Absolute paths
 const REPO_ROOT = path.resolve('E:/Projects/stella');
-const DASHBOARD_DIR = path.join(REPO_ROOT, 'dashboard');
+const FRONTEND_DIR = path.join(REPO_ROOT, 'frontend');
 
 const processes = [];
 let isShuttingDown = false;
@@ -39,12 +41,12 @@ function log(component, message, color = colors.reset) {
 
 function spawnProcess(name, command, args, options = {}) {
   const env = { ...process.env, ...options.env };
-  
+
   // Set PYTHONPATH for Python processes to include repo root
-  if (name === 'python-dashboard' || name === 'python-backend') {
+  if (name === 'python-backend') {
     env.PYTHONPATH = REPO_ROOT + (env.PYTHONPATH ? path.delimiter + env.PYTHONPATH : '');
   }
-  
+
   const proc = spawn(command, args, {
     cwd: options.cwd || REPO_ROOT,
     stdio: ['ignore', 'pipe', 'pipe'],
@@ -55,7 +57,6 @@ function spawnProcess(name, command, args, options = {}) {
 
   const color = {
     'python-backend': colors.magenta,
-    'python-dashboard': colors.cyan,
     'nextjs-frontend': colors.green,
   }[name] || colors.yellow;
 
@@ -83,145 +84,91 @@ function spawnProcess(name, command, args, options = {}) {
     }
   });
 
-  processes.push({ name, proc, color });
+  processes.push({ name, proc });
   return proc;
-}
-
-async function checkDependencies() {
-  log('launcher', 'Checking dependencies...', colors.blue);
-  
-  // Check Python
-  const pythonCmd = process.platform === 'win32' ? 'python.exe' : 'python3';
-  
-  // Check if main.py exists
-  if (!fs.existsSync(path.join(REPO_ROOT, 'main.py'))) {
-    log('launcher', 'main.py not found in repo root', colors.red);
-    process.exit(1);
-  }
-  
-  // Check if dashboard server.py exists
-  if (!fs.existsSync(path.join(DASHBOARD_DIR, 'server.py'))) {
-    log('launcher', 'dashboard/server.py not found', colors.red);
-    process.exit(1);
-  }
-  
-  // Check if package.json exists
-  if (!fs.existsSync(path.join(DASHBOARD_DIR, 'package.json'))) {
-    log('launcher', 'dashboard/package.json not found', colors.red);
-    process.exit(1);
-  }
-  
-  // Check node_modules
-  if (!fs.existsSync(path.join(DASHBOARD_DIR, 'node_modules'))) {
-    log('launcher', 'node_modules not found. Run "npm install" in dashboard/ first.', colors.yellow);
-    log('launcher', 'Installing dependencies...', colors.blue);
-    
-    await new Promise((resolve, reject) => {
-      const install = spawn('npm', ['install'], {
-        cwd: DASHBOARD_DIR,
-        stdio: 'inherit',
-        shell: process.platform === 'win32',
-      });
-      install.on('close', (code) => {
-        if (code === 0) resolve();
-        else reject(new Error(`npm install failed with code ${code}`));
-      });
-    });
-  }
-  
-  log('launcher', 'All dependencies satisfied', colors.green);
 }
 
 function shutdown() {
   if (isShuttingDown) return;
   isShuttingDown = true;
-  
-  log('launcher', 'Shutting down all processes...', colors.yellow);
-  
+  log('launcher', 'Shutting down all Stella endpoints...', colors.yellow);
+
   processes.forEach(({ name, proc }) => {
     if (proc && !proc.killed) {
       log('launcher', `Stopping ${name}...`, colors.dim);
-      proc.kill('SIGTERM');
+      try { proc.kill('SIGTERM'); } catch (e) {}
     }
   });
-  
+
+  // Force kill any still-alive processes after a grace period
   setTimeout(() => {
     processes.forEach(({ name, proc }) => {
       if (proc && !proc.killed) {
         log('launcher', `Force killing ${name}...`, colors.red);
-        proc.kill('SIGKILL');
+        try { proc.kill('SIGKILL'); } catch (e) {}
       }
     });
     process.exit(0);
   }, 5000);
 }
 
+async function checkDependencies() {
+  log('launcher', 'Checking dependencies...', colors.blue);
+
+  const pythonCmd = process.platform === 'win32' ? 'python.exe' : 'python3';
+
+  if (!fs.existsSync(path.join(REPO_ROOT, 'main.py'))) {
+    log('launcher', 'main.py not found in repo root', colors.red);
+    process.exit(1);
+  }
+
+  if (!fs.existsSync(path.join(FRONTEND_DIR, 'package.json'))) {
+    log('launcher', 'frontend/package.json not found', colors.red);
+    process.exit(1);
+  }
+}
+
 async function main() {
   console.log(`\n${colors.bright}${colors.cyan}
-╔═══════════════════════════════════════════════════════════════╗\n║                    STELLA UNIFIED LAUNCHER                     ║\n║     Backend (8765) │ Dashboard (8000) │ Frontend (3000)       ║\n╚═══════════════════════════════════════════════════════════════╝\n${colors.reset}
+╔═══════════════════════════════════════════════════════════════╗
+║                    STELLA UNIFIED LAUNCHER                     ║
+║     Backend (8765) │ Frontend (3000)                           ║
+╚═══════════════════════════════════════════════════════════════╝
+${colors.reset}
 `);
 
   const isDev = process.argv.includes('--dev') || process.env.STELLA_DEV === 'true';
-  
   if (isDev) {
     process.env.STELLA_DEV_MODE = 'true';
     process.env.NODE_ENV = 'development';
-    log('launcher', 'Running in DEVELOPMENT mode (Next.js dev server on 3000)', colors.yellow);
+    log('launcher', 'Running in DEVELOPMENT mode', colors.yellow);
   } else {
     process.env.STELLA_DEV_MODE = 'false';
     process.env.NODE_ENV = 'production';
-    process.env.NEXT_STATIC_EXPORT = 'true';
-    log('launcher', 'Running in PRODUCTION mode (static export served by Python)', colors.green);
-    
-    const outDir = path.join(DASHBOARD_DIR, 'out');
-    if (!fs.existsSync(outDir)) {
-      log('launcher', 'Building Next.js static export...', colors.blue);
-      await new Promise((resolve, reject) => {
-        const build = spawn('npm', ['run', 'build'], {
-          cwd: DASHBOARD_DIR,
-          stdio: 'inherit',
-          shell: process.platform === 'win32',
-          env: { ...process.env, NODE_ENV: 'production', NEXT_STATIC_EXPORT: 'true' },
-        });
-        build.on('close', (code) => {
-          if (code === 0) resolve();
-          else reject(new Error('Next.js build failed with code ' + code));
-        });
-      });
-      log('launcher', 'Next.js build complete', colors.green);
-    }
+    log('launcher', 'Running in PRODUCTION mode', colors.green);
   }
 
   await checkDependencies();
   process.on('SIGINT', shutdown);
   process.on('SIGTERM', shutdown);
-  process.on('exit', shutdown);
 
   const pythonCmd = process.platform === 'win32' ? 'python.exe' : 'python3';
+
+  // ── Start ALL endpoints together at once (no artificial delays) ──
   spawnProcess('python-backend', pythonCmd, ['main.py'], { cwd: REPO_ROOT });
-  await new Promise(resolve => setTimeout(resolve, 2000));
-
-  const dashboardEnv = { STELLA_DEV_MODE: isDev ? 'true' : 'false' };
-  spawnProcess('python-dashboard', pythonCmd, ['-m', 'dashboard.server'], {
-    cwd: REPO_ROOT,
-    env: dashboardEnv 
-  });
-  await new Promise(resolve => setTimeout(resolve, 1500));
-
-  if (isDev) {
-    spawnProcess('nextjs-frontend', 'npm', ['run', 'dev'], {
-      cwd: DASHBOARD_DIR,
-      env: { ...process.env, NODE_ENV: 'development' }
-    });
-    log('launcher', 'Frontend dev server:  http://localhost:3000', colors.green);
-  } else {
-    log('launcher', 'Frontend served by Python dashboard at http://localhost:8000', colors.green);
-  }
-
-  log('launcher', 'All services starting...', colors.green);
   log('launcher', 'Backend WebSocket:  ws://localhost:8765', colors.magenta);
-  log('launcher', 'Dashboard HTTP:     http://localhost:8000', colors.cyan);
-  log('launcher', 'Press Ctrl+C to stop all services', colors.dim);
+
+  spawnProcess('nextjs-frontend', 'npm', ['run', 'dev'], {
+    cwd: FRONTEND_DIR,
+    env: { ...process.env, NODE_ENV: 'development', BROWSER: 'none' },
+  });
+  log('launcher', 'Frontend dev server: http://localhost:3000', colors.green);
+
+  log('launcher', 'All Stella endpoints started.', colors.green);
+  log('launcher', 'Press Ctrl+C to stop all services and shut down.', colors.dim);
+
+  // Keep the process alive indefinitely until the user shuts down.
+  // Child process stdio pipes keep the Node event loop alive.
 }
 
 main().catch(err => {

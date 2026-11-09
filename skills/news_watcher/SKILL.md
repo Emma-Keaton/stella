@@ -1,6 +1,6 @@
 ---
 name: news_watcher
-description: Watch crypto news.
+description: Fetch latest crypto/forex news headlines.
 category: trading
 source: stella
 version: 1.0.0

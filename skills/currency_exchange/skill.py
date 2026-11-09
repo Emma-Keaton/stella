@@ -157,6 +157,17 @@ def _op_historical(kwargs: dict) -> dict:
         "rates": rates,
         "content": content,
     })
+
+
+def _op_sources(kwargs: dict) -> dict:
+    """Return list of available currency data sources."""
+    sources = []
+    for key, info in API_SOURCES.items():
+        sources.append(
+            f"{key}: {info['name']} ({info['auth_tier']}) - {info['url']}"
+        )
+    content = "Available currency sources:\n" + "\n".join(f"  - {s}" for s in sources)
+    return _op("sources", True, {"sources": sources, "content": content})
 _OPERATIONS = {
     "sources": _op_sources,
     "latest": _op_latest,

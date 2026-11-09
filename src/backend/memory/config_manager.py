@@ -2,6 +2,10 @@
 src/backend/memory/config_manager.py — Single source of truth for all Stella
 configuration. Everything lives in one file: `config/api_keys.json`.
 
+Provider API keys are stored in `config/api_keys.json` (per-user, gitignored).
+Values from the backend `.env` file (repo root) are loaded as defaults /
+fallbacks so all provider keys live backend-side, not in the frontend.
+
 Follows Mark-LVI's pattern: one JSON file, read-modify-write with mtime cache,
 atomic writes, thread-safe. Default mode is "gemini" — providers package is
 never imported unless the user selects pipeline mode.
@@ -21,17 +25,74 @@ from core.user_paths import get_user_data_dir
 CONFIG_DIR = get_user_data_dir() / "config"
 API_KEYS_FILE = CONFIG_DIR / "api_keys.json"
 
+# Repo root: <repo>/src/backend/memory/config_manager.py -> 3 levels up
+REPO_ROOT = Path(__file__).resolve().parents[3]
+ENV_FILE = REPO_ROOT / ".env"
+
 _lock = threading.RLock()
 _cache: Optional[dict] = None
 _cache_mtime: Optional[float] = None
+
+# All provider keys that Stella supports, in canonical order.
+ALL_PROVIDERS: list[str] = [
+    "gemini",
+    "nvidia",
+    "openrouter",
+    "openai",
+    "groq",
+    "anthropic",
+    "google_maps",
+    "local_gguf",
+]
 
 
 def _ensure_config() -> None:
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
 
 
+def _load_env_defaults() -> dict:
+    """Parse the backend `.env` file and return provider keys as a dict.
+
+    Missing / empty values are skipped. These serve as defaults that are
+    overlaid on top of `config/api_keys.json` (per-user keys take priority).
+    """
+    defaults: dict[str, str] = {}
+    if not ENV_FILE.exists():
+        return defaults
+
+    # Mapping from .env variable name -> config key
+    env_mapping = {
+        "GEMINI_API_KEY": "gemini_api_key",
+        "NVIDIA_API_KEY": "nvidia_api_key",
+        "OPENROUTER_API_KEY": "openrouter_api_key",
+        "OPENAI_API_KEY": "openai_api_key",
+        "GROQ_API_KEY": "groq_api_key",
+        "ANTHROPIC_API_KEY": "anthropic_api_key",
+        "GOOGLE_MAPS_API_KEY": "google_maps_api_key",
+    }
+
+    try:
+        for line in ENV_FILE.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, value = line.partition("=")
+            key = key.strip()
+            value = value.strip().strip('"').strip("'")
+            if key in env_mapping and value:
+                defaults[env_mapping[key]] = value
+    except OSError:
+        pass
+
+    return defaults
+
+
 def _read() -> dict:
-    """Read api_keys.json, using mtime cache to avoid redundant disk reads."""
+    """Read api_keys.json, using mtime cache to avoid redundant disk reads.
+
+    `.env` defaults are merged in first, then overlaid by per-user keys from
+    `config/api_keys.json`.
+    """
     global _cache, _cache_mtime
     _ensure_config()
 
@@ -43,21 +104,27 @@ def _read() -> dict:
     if _cache is not None and _cache_mtime == mtime:
         return _cache
 
+    # Start with .env defaults
+    data: dict = {}
+    data.update(_load_env_defaults())
+
     if not API_KEYS_FILE.exists():
-        _cache = {}
+        _cache = data
         _cache_mtime = mtime
-        return _cache
+        return data
 
     try:
-        data = json.loads(API_KEYS_FILE.read_text(encoding="utf-8"))
-        if not isinstance(data, dict):
+        user_keys = json.loads(API_KEYS_FILE.read_text(encoding="utf-8"))
+        if isinstance(user_keys, dict):
+            data.update(user_keys)
+        else:
             data = {}
     except (json.JSONDecodeError, OSError):
-        data = {}
+        pass
 
     _cache = data
     _cache_mtime = mtime
-    return _cache
+    return data
 
 
 def _write(data: dict) -> None:
@@ -138,6 +205,36 @@ def save_anthropic_key(key: str) -> None:
     _update(fn)
 
 
+def get_nvidia_key() -> str:
+    return str(_read().get("nvidia_api_key", "") or "")
+
+
+def save_nvidia_key(key: str) -> None:
+    def fn(d):
+        d["nvidia_api_key"] = key
+    _update(fn)
+
+
+def get_openai_key() -> str:
+    return str(_read().get("openai_api_key", "") or "")
+
+
+def save_openai_key(key: str) -> None:
+    def fn(d):
+        d["openai_api_key"] = key
+    _update(fn)
+
+
+def get_google_maps_key() -> str:
+    return str(_read().get("google_maps_api_key", "") or "")
+
+
+def save_google_maps_key(key: str) -> None:
+    def fn(d):
+        d["google_maps_api_key"] = key
+    _update(fn)
+
+
 def get_provider_key(provider_id: str) -> str:
     """Generic key getter for any provider id."""
     return str(_read().get(f"{provider_id}_api_key", "") or "")
@@ -150,10 +247,34 @@ def save_provider_key(provider_id: str, key: str) -> None:
     _update(fn)
 
 
+def load_all_provider_keys() -> dict[str, str]:
+    """Return every configured provider key (used by the frontend Settings UI)."""
+    data = _read()
+    return {p: str(data.get(f"{p}_api_key", "") or "") for p in ALL_PROVIDERS}
+
+
+def save_all_provider_keys(keys: dict[str, str]) -> None:
+    """Atomically write all provider keys at once (used by the frontend Settings UI)."""
+    def fn(d):
+        for p in ALL_PROVIDERS:
+            key = (keys.get(p) or "").strip()
+            if key:
+                d[f"{p}_api_key"] = key
+    _update(fn)
+
+
 def is_configured() -> bool:
     """Whether at least one provider key is configured."""
     data = _read()
-    for k in ("gemini_api_key", "openrouter_api_key", "groq_api_key", "anthropic_api_key"):
+    for k in (
+        "gemini_api_key",
+        "nvidia_api_key",
+        "openrouter_api_key",
+        "openai_api_key",
+        "groq_api_key",
+        "anthropic_api_key",
+        "google_maps_api_key",
+    ):
         if data.get(k):
             return True
     return False

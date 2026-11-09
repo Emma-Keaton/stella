@@ -1,27 +1,17 @@
+"""
+hummingbot_backtest - Run a Hummingbot backtest for any supported market.
+"""
+
 from __future__ import annotations
+
+import json
+import os
+import shutil
+import subprocess
+import tempfile
 from typing import Any, Dict
-import subprocess, tempfile, json, os, pathlib, importlib.util
 
-FEATURE_METADATA = {
-    "name": "hummingbot_backtest",
-    "description": "Run a Hummingbot backtest for any supported market (CEX, DEX, Polymarket, Forex, ...).",
-    "triggers": ["backtest"],
-    "parameters": {
-        "type": "OBJECT",
-        "properties": {
-            "strategy": {"type": "STRING", "description": "Hummingbot strategy name (e.g. pure_market_making)"},
-            "symbol": {"type": "STRING", "description": "Trading pair, e.g. ETH-USDT, BTC/USD, POLY/USDC"},
-            "exchange": {"type": "STRING", "description": "Hummingbot connector name – see list below", "default": "binance"},
-            "start_date": {"type": "STRING", "description": "YYYY-MM-DD (optional)"},
-            "end_date": {"type": "STRING", "description": "YYYY-MM-DD (optional)"},
-            "config_overrides": {"type": "OBJECT", "description": "Any extra Hummingbot config keys/values", "default": {}}
-        },
-        "required": ["strategy", "symbol"]
-    }
-}
-
-# Mapping of user‑friendly market names → Hummingbot connector IDs
-CONNECTOR_ALIASES = {
+CONNECTOR_ALIASES: dict[str, str] = {
     "binance": "binance",
     "binance_us": "binance_us",
     "coinbase_pro": "coinbase_pro",
@@ -38,61 +28,147 @@ CONNECTOR_ALIASES = {
     "oanda": "oanda",
 }
 
+
 def _resolve_connector(user_input: str) -> str:
-    key = user_input.strip().lower()
+    key = (user_input or "binance").strip().lower()
     return CONNECTOR_ALIASES.get(key, key)
 
-def _make_backtest_config(params: Dict[str, Any]) -> Dict[str, Any]:
-    connector = _resolve_connector(params.get("exchange", "binance"))
-    cfg = {
-        "strategy": params["strategy"],
-        "market": connector,
-        "symbol": params["symbol"],
-        "start_date": params.get("start_date"),
-        "end_date": params.get("end_date"),
+
+def _op(operation: str, ok: bool, value=None, error: str = "") -> dict:
+    return {"operation": operation, "ok": ok, "value": value, "error": error}
+
+
+def _op_backtest(kwargs: dict) -> dict:
+    strategy = (kwargs.get("strategy") or "").strip()
+    symbol = (kwargs.get("symbol") or "").strip()
+    if not strategy or not symbol:
+        return _op("backtest", False, None, "Missing required parameters: strategy, symbol.")
+
+    exchange = _resolve_connector(kwargs.get("exchange", "binance"))
+    start_date = (kwargs.get("start_date") or "").strip() or None
+    end_date = (kwargs.get("end_date") or "").strip() or None
+    config_overrides = kwargs.get("config_overrides") or {}
+
+    cfg: Dict[str, Any] = {
+        "strategy": strategy,
+        "market": exchange,
+        "symbol": symbol,
+        "start_date": start_date,
+        "end_date": end_date,
     }
-    cfg.update(params.get("config_overrides", {}))
-    return cfg
+    cfg.update(config_overrides)
 
-def run(params: Dict[str, Any]) -> Dict[str, Any]:
-    # ---- 1️⃣ Validate required args -------------------------------------------------
-    for req in ("strategy", "symbol"):
-        if not params.get(req):
-            return {"ok": False, "error": f"Missing required parameter: {req}"}
+    hummingbot_bin = shutil.which("hummingbot") or os.getenv("HUMMINGBOT_BIN")
+    if not hummingbot_bin:
+        return _op("backtest", False, None, {
+            "config": cfg,
+            "message": "Hummingbot binary not found. Install Hummingbot first.",
+        })
 
-    # ---- 2️⃣ Ensure Hummingbot is installed -----------------------------------------
-    installer_path = pathlib.Path(r"E:\Projects\stella\skills\hummingbot_installer\skill.py")
-    spec = importlib.util.spec_from_file_location("installer", installer_path)
-    installer_mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(installer_mod)
-    install_res = installer_mod.run({"force_reinstall": False})
-    if not install_res.get("ok"):
-        return {"ok": False, "error": f"Hummingbot install failed: {install_res.get('error')}"}
-    hummingbot_bin = install_res["hummingbot_bin"]
-
-    # ---- 3️⃣ Build config file -------------------------------------------------------
-    cfg = _make_backtest_config(params)
-    with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as tf:
-        json.dump(cfg, tf, indent=2)
-        config_path = tf.name
-
-    # ---- 4️⃣ Execute backtest --------------------------------------------------------
+    config_path: str | None = None
     try:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False) as tf:
+            json.dump(cfg, tf, indent=2)
+            config_path = tf.name
         cmd = [hummingbot_bin, "backtest", "--config", config_path]
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=600)
-        return {
-            "ok": result.returncode == 0,
+        return _op("backtest", result.returncode == 0, {
             "returncode": result.returncode,
             "stdout": result.stdout,
             "stderr": result.stderr,
-            "config": cfg
-        }
+            "config": cfg,
+        })
     except subprocess.TimeoutExpired:
-        return {"ok": False, "error": "Backtest timed out after 10 minutes"}
-    except Exception as e:
-        return {"ok": False, "error": str(e)}
+        return _op("backtest", False, None, "Backtest timed out after 10 minutes.", {"config": cfg})
+    except Exception as exc:
+        return _op("backtest", False, None, f"Backtest failed: {exc}", {"config": cfg})
     finally:
-        try:
-            os.unlink(config_path)
-        except Exception:
-            pass
+        if config_path:
+            try:
+                os.unlink(config_path)
+            except Exception:
+                pass
+
+
+def _op_sources(kwargs: dict) -> dict:
+    return _op("sources", True, {
+        "sources": ["hummingbot"],
+        "content": "Backtesting via Hummingbot (hummingbot.org). Hummingbot binary must be installed.",
+        "connectors": list(CONNECTOR_ALIASES.keys()),
+    })
+
+
+_OPERATIONS = {
+    "backtest": _op_backtest,
+    "sources": _op_sources,
+}
+
+_OPERATION_TITLES = {
+    "backtest": "Hummingbot Backtest",
+    "sources": "Hummingbot Sources",
+}
+
+_ALIASES = {
+    "run_backtest": "backtest",
+    "backtest_strategy": "backtest",
+    "list_sources": "sources",
+}
+
+
+def _summary(operation: str, record: dict) -> str:
+    value = record.get("value") or {}
+    if operation == "backtest":
+        cfg = value.get("config") or {}
+        msg = value.get("message", "")
+        if not record.get("ok"):
+            return f"Backtest '{cfg.get('strategy')}' on {cfg.get('symbol')} - {msg or 'failed'}"
+        return f"Backtest '{cfg.get('strategy')}' on {cfg.get('symbol')} completed (rc={value.get('returncode')})."
+    if operation == "sources":
+        return f"{len(value.get('sources') or [])} source(s): {', '.join(value.get('sources') or [])}"
+    return record.get("error") or "No operation ran."
+
+
+def execute(**kwargs) -> dict:
+    """Run a Hummingbot backtest for any supported market."""
+    operation = (kwargs.get("operation") or "backtest").strip().lower()
+    operation = _ALIASES.get(operation, operation)
+    handler = _OPERATIONS.get(operation)
+    if handler is None:
+        return {
+            "title": "Hummingbot Backtest",
+            "summary": f"Unknown operation '{operation}'. One of: {', '.join(sorted(_OPERATIONS))}.",
+            "spoken_narrative": f"Unknown operation {operation}.",
+            "ok": False,
+            "operation": operation,
+        }
+    try:
+        record = handler(kwargs)
+    except TypeError as exc:
+        return {
+            "title": "Hummingbot Backtest",
+            "summary": f"Bad arguments for '{operation}': {exc}",
+            "spoken_narrative": f"Bad arguments for {operation}.",
+            "ok": False,
+            "operation": operation,
+        }
+    except Exception as exc:
+        return {
+            "title": "Hummingbot Backtest",
+            "summary": f"{type(exc).__name__}: {exc}",
+            "spoken_narrative": f"Backtest error: {type(exc).__name__}.",
+            "ok": False,
+            "operation": operation,
+        }
+    return {
+        "title": _OPERATION_TITLES.get(operation, "Hummingbot Backtest"),
+        "summary": _summary(operation, record),
+        "spoken_narrative": _summary(operation, record),
+        "operation": operation,
+        "ok": bool(record.get("ok")),
+        "record": record,
+    }
+
+
+if __name__ == "__main__":  # pragma: no cover
+    import pprint
+    pprint.pprint(execute(operation="sources"))

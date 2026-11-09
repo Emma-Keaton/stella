@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: var(--font-orbitron), 'Orbitron', sans-serif;
+  --font-sans: var(--font-exo), 'Exo 2', sans-serif;
+  --font-mono: var(--font-mono), 'Fira Code', 'Space Mono', monospace;
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  html, body {
+    height: 100%;
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden !important;
+    overflow-y: hidden !important;
+    position: relative;
+  }
+
+  body {
+    font-family: var(--font-exo), 'Exo 2', system-ui, sans-serif;
+    background-color: #030509;
+    color: #f1f5f9;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden !important;
+    max-width: 100vw;
+  }
+
+  h1, h2, h3, .font-display {
+    font-family: var(--font-orbitron), 'Orbitron', sans-serif;
+    letter-spacing: -0.01em;
+  }
+
+  code, pre, .font-mono {
+    font-family: var(--font-mono), 'Fira Code', 'Space Mono', monospace;
+  }
+}
+
+/* Custom soundwave pulse animation */
+@keyframes soundwave {
+  0%, 100% {
+    height: 4px;
+    opacity: 0.4;
+  }
+  50% {
+    height: 24px;
+    opacity: 1;
+  }
+}
+
+.animate-soundwave {
+  animation: soundwave 0.8s ease-in-out infinite;
+}
+
+/* Custom scrollbars with theme tint */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--stella-primary, rgba(0, 240, 255, 0.25));
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--stella-primary, rgba(0, 240, 255, 0.5));
+}

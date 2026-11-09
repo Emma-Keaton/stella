@@ -1,6 +1,6 @@
 ---
 name: hummingbot_backtest
-description: Backtest Hummingbot strategies on historical data.
+description: Run a Hummingbot backtest for any supported market.
 category: trading
 source: stella
 version: 1.0.0

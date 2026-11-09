@@ -45,3 +45,88 @@ def run(params: Dict[str, Any]) -> Dict[str, Any]:
         return {"ok": True, "source": "api_anything", "data": r2.json()}
     except Exception as e:
         return {"ok": False, "error": str(e)}
+
+
+def _op(operation: str, ok: bool, value=None, error: str = "") -> dict:
+    return {"operation": operation, "ok": ok, "value": value, "error": error}
+
+
+def _op_fetch(kwargs: dict) -> dict:
+    return run(kwargs)
+
+
+def _op_sources(kwargs: dict) -> dict:
+    return _op("sources", True, {
+        "sources": ["stella_browser", "api_anything"],
+        "content": "API anything via Stella browser endpoint or api-anything service.",
+    })
+
+
+_OPERATIONS = {
+    "fetch": _op_fetch,
+    "sources": _op_sources,
+}
+
+_OPERATION_TITLES = {
+    "fetch": "API Anything Fetch",
+    "sources": "API Anything Sources",
+}
+
+_ALIASES = {
+    "fetch": "fetch",
+    "watch": "fetch",
+    "poll": "fetch",
+    "list_sources": "sources",
+}
+
+
+def _summary(operation: str, record: dict) -> str:
+    if operation == "sources":
+        return f"{len(record.get('value', {}).get('sources') or [])} source(s)"
+    return record.get("error") or "Operation complete."
+
+
+def execute(**kwargs) -> dict:
+    """Turn any website/app into an API using browser automation."""
+    operation = (kwargs.get("operation") or "fetch").strip().lower()
+    operation = _ALIASES.get(operation, operation)
+    handler = _OPERATIONS.get(operation)
+    if handler is None:
+        return {
+            "title": "API Anything",
+            "summary": f"Unknown operation '{operation}'. One of: {', '.join(sorted(_OPERATIONS))}.",
+            "spoken_narrative": f"Unknown operation {operation}.",
+            "ok": False,
+            "operation": operation,
+        }
+    try:
+        record = handler(kwargs)
+    except TypeError as exc:
+        return {
+            "title": "API Anything",
+            "summary": f"Bad arguments for '{operation}': {exc}",
+            "spoken_narrative": f"Bad arguments for {operation}.",
+            "ok": False,
+            "operation": operation,
+        }
+    except Exception as exc:
+        return {
+            "title": "API Anything",
+            "summary": f"{type(exc).__name__}: {exc}",
+            "spoken_narrative": f"API error: {type(exc).__name__}.",
+            "ok": False,
+            "operation": operation,
+        }
+    return {
+        "title": _OPERATION_TITLES.get(operation, "API Anything"),
+        "summary": _summary(operation, record),
+        "spoken_narrative": _summary(operation, record),
+        "operation": operation,
+        "ok": bool(record.get("ok")),
+        "record": record,
+    }
+
+
+if __name__ == "__main__":  # pragma: no cover
+    import pprint
+    pprint.pprint(execute(operation="sources"))

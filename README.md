@@ -1,13 +1,13 @@
-# ⚡ Stella AI — Personal AI Assistant
+﻿# ⚡ Stella AI — Personal AI Assistant
 
 <div align="center">
 
 <img src="assets/stella_logo.png" alt="Stella AI Logo" width="220" />
 
-### *Modular, Self-Evolving AI Assistant with Electron Desktop + Android Companion*
+### *An adaptive, self-improving AI companion that molds to your workflow, voice, and daily needs.*
 
 [![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.12%20%7C%203.13-blue?logo=python&logoColor=white)](https://python.org)
-[![Electron](https://img.shields.io/badge/GUI-Electron%20%2B%20SolidJS-black?logo=electron&logoColor=white)](https://www.electronjs.org/)
+[![Next.js](https://img.shields.io/badge/Frontend-Next.js-black?logo=nextdotjs&logoColor=white)](https://nextjs.org/)
 [![WebSocket](https://img.shields.io/badge/IPC-WebSocket%20IPC-blue?logo=websockets&logoColor=white)](https://websockets.org/)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)](https://python.org)
 [![Android](https://img.shields.io/badge/Android-Kotlin%20%2B%20Compose-72C534?logo=android&logoColor=white)](https://developer.android.com/)
@@ -18,176 +18,63 @@
 
 ## 🌌 Overview
 
-**Stella AI** is a modular, self-evolving personal AI assistant. It runs a Python backend with an Electron + SolidJS desktop frontend and a Kotlin/Compose Android companion. Users choose their LLM provider during onboarding (Gemini Live, OpenAI-compatible, Anthropic, OpenRouter, Groq, Ollama, LM Studio, or custom). Stella includes built-in actions, drop-in plugins, packaged skills, and a Dr. Zero-inspired self-evolution system that trains and improves without training data dumps.
+**Stella AI** is a modular, self-evolving personal AI assistant. It runs a Python backend with a Next.js frontend and a Kotlin/Compose Android companion. Users choose their LLM provider during onboarding (Gemini Live, OpenAI-compatible, Anthropic, OpenRouter, Groq, Ollama, LM Studio, or custom). Stella includes built-in actions, drop-in plugins, packaged skills (110+), and a Dr. Zero-inspired self-evolution system that trains and improves without training data dumps.
 
 ---
 
 ## 🏗️ Architecture
 
-```
+\`
 Stella/
-├── main.py                     # Python backend entry point (WebSocket IPC server)
-├── requirements.txt            # Python dependencies
-├── bootstrap.py                # Cross-platform tiered installer (moved to scripts/)
-├── setup.py                    # Dependency installer (moved to scripts/)
-├── stella_redesign.md          # Full redesign plan
+├── main.py                     # Python backend entry point (WebSocket IPC server on :8765)
+├── requirements/               # Python dependency groups
+├── scripts/                    # Build, start, and utility scripts
+│   ├── start-all.js            # Unified launcher: starts backend + frontend together
+│   ├── start-stella.bat        # Windows launcher for all endpoints
+│   └── bootstrap.ps1           # Dependency bootstrap
+├── frontend/                   # Next.js frontend (port 3000)
+├── src/backend/                # Python backend core
+│   ├── agent/                  # Agentic runtime (loop, planner, executor, tools)
+│   │   ├── loop.py             # Think→act→observe→verify loop
+│   │   ├── planner.py          # Task planner (JSON tool steps)
+│   │   ├── executor.py         # AgentExecutor (all layers dispatch)
+│   │   ├── tools.py            # Tool dataclass, Registry, built-in tools
+│   │   ├── skill_loader.py     # Loads skills from skills/
+│   │   ├── integration.py      # Bridge UI/voice → agent loop
+│   │   └── evolution/          # Dr. Zero self-evolution (NEW)
+│   │       ├── proposer.py     # Generates diverse questions
+│   │       ├── solver.py       # Attempts questions using agent tools
+│   │       ├── curriculum.py   # Automated difficulty curriculum
+│   │       ├── hrpo.py         # Hop-grouped relative policy optimization
+│   │       └── engine.py       # Evolution loop orchestrator
+│   ├── core/                   # Engine, config, memory, theme tokens
+│   ├── integrations/           # CRM, newsletter, jobs, business dir, events
+│   └── starnet/                # Multi-agent crew, skills catalog, budget/consent, cron
+├── skills/                     # 110+ packaged skills (SKILL.md + skill.py)
+├── themes.json                 # Single source of truth for all themes (incl. Solar)
 ├── LICENSE
 ├── README.md
 ├── CODE_OF_CONDUCT.md
 ├── CONTRIBUTING.md
 ├── SECURITY.md
-├── TRADEMARK.md
-│
-├── apps/                       # Deployable applications
-│   ├── desktop/                # Electron + SolidJS desktop app
-│   │   ├── src/main/           # Electron main process (lifecycle, IPC)
-│   │   ├── src/preload/        # Typed bridge: window.stella API
-│   │   └── src/renderer/       # SolidJS UI components
-│   ├── dashboard/              # FastAPI web dashboard
-│   └── stella-connect/         # Device pairing gateway service
-│
-├── packages/                   # Shared libraries
-│   ├── contracts/              # IPC/wire protocol types (TS + Python)
-│   ├── ui/                     # Shared design tokens, theme
-│   ├── logging/                # Audit logging
-│   └── brand/                  # Logos, avatars
-│
-├── src/                        # Python backend core
-│   ├── backend/
-│   │   ├── agent/              # Agentic runtime (loop, planner, executor, tools)
-│   │   │   ├── loop.py         # Think→act→observe→verify loop
-│   │   │   ├── planner.py      # Task planner (JSON tool steps)
-│   │   │   ├── executor.py     # AgentExecutor (all layers dispatch)
-│   │   │   ├── tools.py        # Tool dataclass, Registry, built-in tools
-│   │   │   ├── skill_loader.py # Loads skills from skills/
-│   │   │   ├── integration.py  # Bridge UI/voice → agent loop
-│   │   │   └── evolution/      # Dr. Zero self-evolution (NEW)
-│   │   │       ├── proposer.py     # Generates diverse questions
-│   │   │       ├── solver.py       # Attempts questions using agent tools
-│   │   │       ├── curriculum.py   # Automated difficulty curriculum
-│   │   │       ├── hrpo.py         # Hop-grouped relative policy optimization
-│   │   │       └── engine.py       # Evolution loop orchestrator
-│   │   ├── core/               # Core engine services
-│   │   │   ├── engine.py       # Stella engine main loop (single emit() touchpoint)
-│   │   │   ├── action_loader.py   # Auto-discovers actions/ TOOL dicts
-│   │   │   ├── plugin_loader.py   # Auto-discovers plugins/ PLUGIN dicts
-│   │   │   ├── server.py          # llama.cpp server manager
-│   │   │   ├── llm_router.py      # LLM provider routing
-│   │   │   ├── memory_manager.py  # Core memory manager
-│   │   │   ├── providers/         # LLM provider abstraction
-│   │   │   │   ├── base.py        # Provider contracts
-│   │   │   │   ├── registry.py    # Provider discovery + build cache
-│   │   │   │   ├── schema.py      # Tool declaration translation + budget
-│   │   │   │   ├── adapters.py    # Wire format adapters
-│   │   │   │   ├── keys.py        # API key resolution
-│   │   │   │   ├── catalogue.py   # Service credential catalogue
-│   │   │   │   ├── llm_client.py  # Legacy LLM client (moved)
-│   │   │   │   ├── groq_client.py # Legacy Groq client (moved)
-│   │   │   │   └── or_client.py   # Legacy OpenRouter client (moved)
-│   │   │   ├── mcp/, net/, media/, astro/, radio/, security/
-│   │   └── memory/             # Memory layer
-│   │       ├── config_manager.py  # api_keys.json single source of truth
-│   │       └── memory_manager.py  # Long-term memory store
-│   │       └── workspace_store.py # Workspace/conversation store (moved)
-│   ├── main/                   # Python app lifecycle
-│   └── preload/                # Python-side bridge
-│
-├── actions/                    # Built-in core skills (TOOL dict pattern)
-│   ├── weather_report.py       # Each file: module-level TOOL dict + handler
-│   ├── web_search.py
-│   ├── file_controller.py
-│   ├── computer_control.py
-│   ├── ... (~50 actions preserved)
-│   └── spotify_mcp_server/     # TypeScript MCP server
-│
-├── plugins/                    # Drop-in user plugins (PLUGIN dict pattern)
-│   ├── __init__.py
-│   └── _template.py            # Drop-in plugin template
-│
-├── skills/                     # Packaged shareable skills (SKILL.md + skill.py)
-│   ├── <skill-slug>/           # One folder per skill
-│   │   ├── SKILL.md            # YAML frontmatter: name, description, category, source
-│   │   ├── skill.py            # execute(**kwargs)
-│   │   └── assets/             # Skill-specific assets
-│   ├── skills-lock.json        # Lockfile: skill file hashes + versions
-│   └── skills-disabled/        # Disabled skills staging area
-│
-├── features/                   # Existing feature skills preserved (skill.py + manifest.json)
-│   └── <feature-slug>/
-│       ├── skill.py
-│       ├── manifest.json
-│       └── test_cases.json (optional)
-│
-├── config/                     # Configuration (api_keys.json single source of truth)
-│   ├── api_keys.json           # ALL config: provider keys, plugin enablement, voice, etc.
-│   ├── identity.json
-│   ├── providers.json          # Provider capability definitions (shared with Android)
-│   ├── tool_policy.json
-│   └── certs/
-│
-├── memory/                     # Memory storage (JSON/JSONL)
-├── models/                     # GGUF model files (user-managed, NOT bundled)
-│   └── .gitkeep                # Download via download hub, not committed
-│
-├── assets/                     # Static assets (images, sounds, fonts, web_background)
-├── stella-connect-android/     # Kotlin/Compose Android companion (unchanged)
-├── tests/                      # Test suite
-├── scripts/                    # Build, update, model manager, dependency sync
-├── docs/                       # Documentation
-├── build/, dist/, installer/, evals/, vendor/
-```
+└── TRADEMARK.md
+\
 
 ---
 
-## 🎯 Skill Layers (Three Tiers)
+## 🎯 Features
 
-Stella organizes capabilities into three layers, inspired by Mark-LVI and OpenBot:
-
-| Layer | Location | Pattern | Purpose |
-|---|---|---|---|
-| **Actions** | `actions/` | Module-level `TOOL` dict | Built-in core capabilities (~50 preserved) |
-| **Plugins** | `plugins/` | Module-level `PLUGIN` dict + `run()` | Drop-in user extensions (opt-out enablement) |
-| **Skills** | `skills/` | `SKILL.md` + `skill.py` + `skills-lock.json` | Packaged, versioned, shareable skills |
-
-**Writing skill** (`skills/writing/`) — Comprehensive writing assistant with operations:
-- `document` — Structured documents (title, sections, conclusion)
-- `email` — Professional/casual emails
-- `report` — Findings reports with recommendations
-- `letter` — Formal/personal letters
-- `note` — Short notes/memos with tags and priority
-- `summary` — Extractive text summarization
-- `rewrite` — Tone/style rewriting
-- `proofread` — Grammar, spelling, clarity checking
-
-Example: `{"operation": "email", "to": "team@example.com", "subject": "Deadline", "body": "...", "tone": "professional"}`
+- **Real-time voice & text chat** with streaming speech synthesis (Leokani-TTS small model, 7M params)
+- **Wake word activation** ("hey stella")
+- **Device control** — volume, brightness, flashlight, Wi-Fi, Bluetooth, DND, timers, reminders
+- **Screen context** — attach and analyze your current screen
+- **Device linking** — peer-to-peer device mesh across desktop and Android
+- **110+ skills** — currency exchange, country info, CVE lookup, forex, news, weather, market data, CRM, habit tracker, and more
+- **Themes** — Void, OLED, Nebula, Light, Solar Flare (and more)
+- **Self-evolution** — Dr. Zero-inspired system (proposer → solver → curriculum → HRPO)
+- **Android companion** — Kotlin/Compose app connecting via WebSocket IPC
 
 ---
-
-## 🎯 Recent Updates (2025-11-06)
-
-**New Skills Integrated:**
-- **stella_trading_orderflow** - Order flow analysis (heatmaps, footprint, DOM ladder, CVD, volume profile)
-- **stella_watch** - Sonarr TV + IPTV m3u channels with app routing for TV/radio streaming
-- **stella_teaching** - Maiu classroom with LearnHouse for courses, assignments, PDF extraction, and AI tutoring
-- **stella_oversight_integrated** - Enhanced God's Eye View with full user visibility and directive control
-
-Updated `stella_multi_agent` to v1.2.0 with Maiu classroom integration.
-
-### Media Playback & Device Interaction
-
-**Stella Watch** now routes media through available device applications:
-- Auto-detects VLC, Kodi, MPV, mplayer, or similar on device
-- Suggests slim open-source apps: VLC, MPV, Kodi, IINA, GOM Player for TV/IPTV/radio
-- Streams TV shows, movies, and radio channels through optimal apps
-- Manages both Sonarr downloads and IPTV m3u playlists
-
-**God's Eye View (Oversight)**
-Stella can see, hear and interact with devices and networks she flows through:
-- Full user visibility loop - all operations transparent
-- User can direct Stella's objectives and directives in real-time
-- Network surveillance with user approval
-- Device interaction logging for accountability
-- Geospatial monitoring with user control
 
 ## 🧠 Self-Evolution (Dr. Zero)
 
@@ -198,16 +85,16 @@ Stella includes a Dr. Zero-inspired self-evolution system that trains and improv
 - **Curriculum** — Automated difficulty adjustment based on solver success rate
 - **HRPO** — Hop-Grouped Relative Policy Optimization for efficient evaluation
 
-The engine runs in the background: `propose → solve → evaluate → adjust difficulty → repeat`. Zero training data required.
+The engine runs in the background: \propose → solve → evaluate → adjust difficulty → repeat\. Zero training data required.
 
 ---
 
 ## 🔌 Provider Selection
 
-Users choose their LLM provider during onboarding. The choice is stored in `config/api_keys.json`:
+Users choose their LLM provider during onboarding. The choice is stored in \config/api_keys.json\:
 
 - **Gemini Live** (default) — Native audio conversation
-- **OpenAI-compatible** — Any `/v1/chat/completions` endpoint
+- **OpenAI-compatible** — Any \/v1/chat/completions\ endpoint
 - **Anthropic** — Claude models
 - **OpenRouter** — Multiple models via one key
 - **Groq** — Fast inference
@@ -221,13 +108,13 @@ K2 models are **not bundled**. If you want K2 Horizon or other K2 models, downlo
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Python 3.11+ 
-- Node.js 18+ (for Electron desktop)
+- Python 3.11+
+- Node.js 18+ (for Next.js frontend)
 - A Google Gemini API key (or another provider key)
 
-### Backend (Python)
+### Backend + Frontend (Unified Launcher)
 
-```powershell
+\\\powershell
 # Clone the repository
 git clone https://github.com/Emma-Keaton/stella.git
 cd stella
@@ -239,37 +126,47 @@ python -m venv .venv
 # Install dependencies
 pip install -r requirements.txt
 
-# Run the backend
-python main.py
-```
+# Start all endpoints together (backend + frontend)
+node scripts/start-all.js
+# or
+scripts\start-stella.bat
+\\\
 
-The backend starts a WebSocket IPC server on `ws://127.0.0.1:8765`.
+The unified launcher starts:
+- **Backend WebSocket:** \ws://localhost:8765\
+- **Frontend dev server:** \http://localhost:3000\
 
-### Desktop (Electron + SolidJS)
-
-```powershell
-cd apps/desktop
-npm install
-npm run dev
-```
-
-The Electron app connects to the Python backend via WebSocket.
+Press **Ctrl+C** to shut down all endpoints.
 
 ### Android (Kotlin/Compose)
 
-Open `stella-connect-android/` in Android Studio and build. The app connects to the same WebSocket backend using the StellaProtocol wire format.
+Open \stella-connect-android/\ in Android Studio and build. The app connects to the Python backend via WebSocket using the StellaProtocol wire format.
 
 ---
 
 ## 📱 Android Companion (Stella Connect)
 
-The Android app at `stella-connect-android/` is built with Kotlin + Jetpack Compose. It connects to the Python backend via WebSocket using `StellaProtocol` envelopes (`type`, `request_id`, `timestamp`, `payload`). Features:
+The Android app at \stella-connect-android/\ is built with Kotlin + Jetpack Compose. It connects to the Python backend via WebSocket using \StellaProtocol\ envelopes (\	ype\, \equest_id\, \	imestamp\, \payload\). Features:
 
 - Chat with Stella from your phone
-- Provider configuration synced from `config/providers.json`
+- Provider configuration synced from \config/providers.json\
 - Encrypted API key storage (Android Keystore)
 - Device pairing and command execution
 - HUD overlay and widgets
+
+---
+
+## 🎨 Themes
+
+Stella includes multiple themes defined in \	hemes.json\:
+
+- **Void** — Deep void with mint, cyan and violet neon glow (brand default)
+- **OLED** — True black for AMOLED savings
+- **Nebula** — Purple and violet gradient
+- **Light** — Daylight off-white surfaces
+- **Solar Flare** — Warm amber, orange, and crimson tones
+
+The solar theme and Leokani-TTS small voice model (7M parameters) are included by default.
 
 ---
 

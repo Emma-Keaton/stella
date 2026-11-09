@@ -1,6 +1,6 @@
 ---
 name: outreach_orchestrator
-description: Orchestrates lead finding, enrichment and outreach.
+description: Orchestrate full outreach workflow: find leads, enrich emails, store in CRM.
 category: outreach
 source: stella
 version: 1.0.0
