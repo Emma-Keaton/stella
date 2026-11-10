@@ -47,7 +47,8 @@ Stella/
 │   │       ├── curriculum.py   # Automated difficulty curriculum
 │   │       ├── hrpo.py         # Hop-grouped relative policy optimization
 │   │       └── engine.py       # Evolution loop orchestrator
-│   ├── core/                   # Engine, config, memory, theme tokens
+│   ├── core/                   # Engine, config, memory, theme tokens, voice clone, TTS
+│   │   └── tts_engine.py       # Always-on TTS engine (Kokoro-82M / Leokani Dala primary, edge-tts fallback)
 │   ├── integrations/           # CRM, newsletter, jobs, business dir, events
 │   └── starnet/                # Multi-agent crew, skills catalog, budget/consent, cron
 ├── skills/                     # 110+ packaged skills (SKILL.md + skill.py)
