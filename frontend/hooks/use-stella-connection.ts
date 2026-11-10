@@ -41,15 +41,8 @@ export function useStellaConnection(): UseStellaConnectionReturn {
   useEffect(() => {
     try {
       localStorage.setItem(CONNECTION_STATUS_KEY, status);
-      if (status === 'connected') {
-        setLastConnectedAt(new Date().toISOString());
-        localStorage.setItem(LAST_CONNECTED_KEY, lastConnectedAt || new Date().toISOString());
-      } else if (status === 'disconnected') {
-        setLastDisconnectedAt(new Date().toISOString());
-        localStorage.setItem(LAST_DISCONNECTED_KEY, lastDisconnectedAt || new Date().toISOString());
-      }
     } catch { /* localStorage may be unavailable */ }
-  }, [status, lastConnectedAt, lastDisconnectedAt]);
+  }, [status]);
 
   // Sync manager status to React state
   useEffect(() => {

@@ -1,6 +1,12 @@
 // GGUF (GGML Universal File) Binary Parser & Local Runtime Inspector for Stella
 import { LocalGgufModel } from './types';
 
+declare global {
+  interface Navigator {
+    deviceMemory?: number;
+  }
+}
+
 export async function parseGgufHeader(file: File): Promise<LocalGgufModel> {
   const sizeBytes = file.size;
   const sizeFormatted =
@@ -69,42 +75,134 @@ export async function parseGgufHeader(file: File): Promise<LocalGgufModel> {
   };
 }
 
-// Sample GGUF models users can try or load
-export const SAMPLE_LOCAL_MODELS: LocalGgufModel[] = [
-  {
-    fileName: 'Llama-3.2-3B-Instruct-Q4_K_M.gguf',
-    fileSize: '1.92 GB',
-    sizeBytes: 2061625344,
-    architecture: 'LLAMA',
-    quantization: 'Q4_K_M (4-bit Balanced)',
-    contextLength: 8192,
-    tensorCount: 196,
-    magicValidated: true,
-    loadedAt: 'Bundled',
-    status: 'ready',
-  },
-  {
-    fileName: 'Phi-3.5-mini-instruct-Q4_K_M.gguf',
-    fileSize: '2.18 GB',
-    sizeBytes: 2340827136,
-    architecture: 'PHI3',
-    quantization: 'Q4_K_M (4-bit Balanced)',
-    contextLength: 4096,
-    tensorCount: 224,
-    magicValidated: true,
-    loadedAt: 'Bundled',
-    status: 'ready',
-  },
-  {
-    fileName: 'Qwen2.5-1.5B-Instruct-Q8_0.gguf',
-    fileSize: '1.61 GB',
-    sizeBytes: 1728520192,
-    architecture: 'QWEN2.5',
-    quantization: 'Q8_0 (8-bit High Fidelity)',
-    contextLength: 32768,
-    tensorCount: 168,
-    magicValidated: true,
-    loadedAt: 'Bundled',
-    status: 'ready',
-  },
-];
+// Device capability detection for model recommendations
+export interface DeviceSpecs {
+  totalRAM: number; // bytes
+  availableRAM: number; // bytes
+  totalStorage: number; // bytes
+  availableStorage: number; // bytes
+  cpuCores: number;
+  hasGPU: boolean;
+  isAndroid: boolean;
+  isLowEnd: boolean;
+}
+
+export interface ModelCompatibility {
+  compatible: boolean;
+  reason?: string;
+  estimatedRAMNeeded: number; // bytes
+  fitsStorage: boolean;
+}
+
+export interface CloudProviderSuggestion {
+  name: string;
+  models: string[];
+  freeTier: string;
+  signupUrl: string;
+}
+
+export function detectDeviceSpecs(): DeviceSpecs {
+  const isAndroid = /Android/i.test(navigator.userAgent);
+  const deviceMemory = navigator.deviceMemory;
+  const isLowEnd = isAndroid || (typeof deviceMemory === 'number' && deviceMemory <= 4);
+
+  const totalRAM = navigator.deviceMemory
+    ? navigator.deviceMemory * 1024 * 1024 * 1024
+    : 8 * 1024 * 1024 * 1024;
+
+  const totalStorage = 64 * 1024 * 1024 * 1024;
+  const availableStorage = totalStorage * 0.5;
+
+  return {
+    totalRAM,
+    availableRAM: totalRAM * 0.7,
+    totalStorage,
+    availableStorage,
+    cpuCores: navigator.hardwareConcurrency || 4,
+    hasGPU: !isAndroid,
+    isAndroid,
+    isLowEnd,
+  };
+}
+
+export function checkModelCompatibility(
+  modelSizeBytes: number,
+  specs: DeviceSpecs
+): ModelCompatibility {
+  const estimatedRAMNeeded = modelSizeBytes * 1.5;
+  const fitsStorage = modelSizeBytes <= specs.availableStorage;
+  const fitsRAM = estimatedRAMNeeded <= specs.availableRAM;
+
+  let reason: string | undefined;
+  if (!fitsRAM) {
+    reason = `Device has ~${(specs.availableRAM / (1024 * 1024 * 1024)).toFixed(1)}GB RAM available. Model needs ~${(estimatedRAMNeeded / (1024 * 1024 * 1024)).toFixed(1)}GB.`;
+  } else if (!fitsStorage) {
+    reason = `Not enough storage space. Need ~${(modelSizeBytes / (1024 * 1024 * 1024)).toFixed(1)}GB free.`;
+  }
+
+  return {
+    compatible: fitsRAM && fitsStorage,
+    reason,
+    estimatedRAMNeeded,
+    fitsStorage,
+  };
+}
+
+export function getCloudProviderSuggestions(): CloudProviderSuggestion[] {
+  return [
+    {
+      name: 'Groq',
+      models: ['llama-3.1-8b-instant', 'llama-3.3-70b-versatile'],
+      freeTier: '14,400 tokens/min (free tier)',
+      signupUrl: 'https://console.groq.com',
+    },
+    {
+      name: 'OpenRouter',
+      models: ['meta-llama/llama-3.2-3b-instruct:free', 'google/gemma-2-9b-it:free'],
+      freeTier: 'Free tier available for select models',
+      signupUrl: 'https://openrouter.ai',
+    },
+    {
+      name: 'Gemini',
+      models: ['gemini-1.5-flash', 'gemini-2.0-flash-exp'],
+      freeTier: 'Free tier with rate limits',
+      signupUrl: 'https://aistudio.google.com',
+    },
+    {
+      name: 'OpenAI-compatible',
+      models: ['gpt-4o-mini', 'gpt-3.5-turbo'],
+      freeTier: 'Trial credits for new accounts',
+      signupUrl: 'https://platform.openai.com',
+    },
+  ];
+}
+
+export function getFreeUpSpaceSuggestions(
+  modelSizeBytes: number,
+  specs: DeviceSpecs
+): string[] {
+  const suggestions: string[] = [];
+  const neededGB = (modelSizeBytes / (1024 * 1024 * 1024)).toFixed(1);
+  const availableGB = (specs.availableStorage / (1024 * 1024 * 1024)).toFixed(1);
+  const fitsStorage = modelSizeBytes <= specs.availableStorage;
+
+  if (!fitsStorage) {
+    suggestions.push(
+      `Free up ~${neededGB}GB of storage space. Currently ${availableGB}GB available.`
+    );
+    suggestions.push('Move existing GGUF models to external storage or SD card.');
+    suggestions.push('Clear app cache and temporary files in Stella Settings.');
+    suggestions.push('Uninstall unused apps to free device storage.');
+  }
+
+  if (specs.isLowEnd || specs.isAndroid) {
+    suggestions.push(
+      'Consider using a smaller Q4_K_M quantized model (under 2GB) for better performance.'
+    );
+  }
+
+  return suggestions;
+}
+
+// Export empty - no hardcoded models. Users provide their own via download or file upload.
+export const SAMPLE_LOCAL_MODELS: LocalGgufModel[] = [];

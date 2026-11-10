@@ -5,6 +5,7 @@ import React, { useState, useEffect, useRef, useCallback, useSyncExternalStore }
 const emptySubscribe = () => () => {};
 import { motion, AnimatePresence } from 'motion/react';
 import { useStellaConnection } from '@/hooks/use-stella-connection';
+import { setTtsVoice, getTtsVoice } from '@/lib/audio';
 import { createWSMessage, stellaWS } from '@/lib/websocket';
 import {
   Menu,
@@ -45,9 +46,10 @@ import {
   ProviderType,
   DeferredTask,
   LocalGgufModel,
+  TTSVoice,
+  TTSProviderType,
 } from '@/lib/types';
-import { SAMPLE_LOCAL_MODELS } from '@/lib/gguf';
-import { sounds, speakText, stopSpeaking, SpeechStreamQueue, setMasterAudioVolume, LEOKANI_TTS_CONFIG } from '@/lib/audio';
+import { sounds, speakText, stopSpeaking, SpeechStreamQueue, setMasterAudioVolume, STELLA_TTS_CONFIG } from '@/lib/audio';
 
 // Stella backend WebSocket IPC (persistent connection via stellaWS, see lib/websocket.ts)
 
@@ -130,15 +132,15 @@ const INITIAL_PROMPT_SUGGESTIONS = [
     text: 'Hello Stella, what can you help me with?',
   },
   {
-    icon: '⚡',
+    icon: '🔦',
     text: 'Turn on flashlight and set device volume to 80%',
   },
   {
-    icon: '⏰',
+    icon: '⏱️',
     text: 'Set a 15-minute timer for my focus session',
   },
   {
-    icon: '✉️',
+    icon: '📝',
     text: 'Draft a concise update about our on-device AI assistant launch',
   },
 ];
@@ -164,7 +166,7 @@ export default function StellaApp() {
   });
 
   // Backend WebSocket connection status (persistent connection with auto-reconnect)
-  const { status: connStatus, isConnected: wsConnected, connect: wsConnect, lastConnectedAt, lastDisconnectedAt } = useStellaConnection();
+  const { status: connStatus, isConnected: wsConnected, connect: wsConnect, request, onMessage, lastConnectedAt, lastDisconnectedAt } = useStellaConnection();
 
   // Hydration-safe theme retrieval from localStorage
   const savedTheme = useSyncExternalStore(
@@ -196,7 +198,63 @@ export default function StellaApp() {
     pauseThresholdMs: 1400, // Detects silence after 1.4s of speaking and triggers response
     soundEffects: true,
     hapticFeedback: true,
+    ttsProvider: 'auto',
+    ttsVoiceId: 'af_bella',
   });
+
+  // Initialize TTS voice from settings
+  useEffect(() => {
+    setTtsVoice(settings.ttsVoiceId || 'af_bella');
+  }, [settings.ttsVoiceId]);
+
+  // TTS Voice & Provider State
+  const [ttsVoices, setTtsVoices] = useState<TTSVoice[]>([
+    {
+      id: 'af_bella',
+      name: 'Bella',
+      provider: 'kokoro',
+      gender: 'female',
+      language: 'en-US',
+      description: 'Warm, friendly female voice (Kokoro)',
+      active: true,
+    },
+    {
+      id: 'am_adam',
+      name: 'Adam',
+      provider: 'kokoro',
+      gender: 'male',
+      language: 'en-US',
+      description: 'Clear, confident male voice (Kokoro)',
+      active: false,
+    },
+    {
+      id: 'edge_en-us-aria',
+      name: 'Aria',
+      provider: 'edge',
+      gender: 'female',
+      language: 'en-US',
+      description: 'Natural female voice (Edge TTS)',
+      active: false,
+    },
+    {
+      id: 'edge_en-us-guy',
+      name: 'Guy',
+      provider: 'edge',
+      gender: 'male',
+      language: 'en-US',
+      description: 'Natural male voice (Edge TTS)',
+      active: false,
+    },
+  ]);
+
+  const handleChangeTtsVoice = useCallback((voiceId: string) => {
+    setTtsVoices((prev) => prev.map((v) => ({ ...v, active: v.id === voiceId })));
+    setSettings((prev) => ({ ...prev, ttsVoiceId: voiceId }));
+  }, []);
+
+  const handleChangeTtsProvider = useCallback((provider: TTSProviderType) => {
+    setSettings((prev) => ({ ...prev, ttsProvider: provider }));
+  }, []);
 
   // Sync theme to root CSS & localStorage on mount/update
   useEffect(() => {
@@ -207,55 +265,56 @@ export default function StellaApp() {
     } catch {}
   }, [settings.theme, savedTheme]);
 
-  // Workspaces & Chat Threads (persisted to localStorage so chats survive refresh)
-  const storedWorkspaces = (() => {
-    try {
-      const raw = localStorage.getItem('stella_workspaces');
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
-  })();
-  const [workspaces, setWorkspaces] = useState<Workspace[]>(storedWorkspaces ?? [
-    {
-      id: 'ws-1',
-      name: 'Main Workspace',
-      threads: [
-        {
-          id: 'th-1',
-          title: 'Voice Session with Stella',
-          updatedAt: 'Just now',
-          isDeviceAssistantChat: false,
-        },
-      ],
-    },
-  ]);
-  const [activeWorkspaceId, setActiveWorkspaceId] = useState('ws-1');
-  const [activeThreadId, setActiveThreadId] = useState('th-1');
+  // Workspaces & Chat Threads – persisted in backend workspace_store
+  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+  const [activeWorkspaceId, setActiveWorkspaceId] = useState<string>('personal');
+  const [activeThreadId, setActiveThreadId] = useState<string>('');
 
-  // Messages in current thread (persisted to localStorage)
-  const storedMessages = (() => {
-    try {
-      const raw = localStorage.getItem('stella_messages');
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
-  })();
-  const [messages, setMessages] = useState<ChatMessage[]>(storedMessages ?? []);
+  // Messages in current thread – loaded from backend
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
 
-  // Persist workspaces & messages to localStorage whenever they change
+  // Load workspaces & active thread from backend on mount / connection
   useEffect(() => {
-    try {
-      localStorage.setItem('stella_workspaces', JSON.stringify(workspaces));
-    } catch {}
-  }, [workspaces]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('stella_messages', JSON.stringify(messages));
-    } catch {}
-  }, [messages]);
+    let cancelled = false;
+    async function load() {
+      try {
+        const wsRes = await request('workspace.list_workspaces', {});
+        if (!cancelled && wsRes?.workspaces) {
+          const wsList: Workspace[] = wsRes.workspaces.map((w:any)=>({
+            id: w.id,
+            name: w.name,
+            threads: []
+          }));
+          setWorkspaces(wsList);
+          if (!activeWorkspaceId && wsList[0]) setActiveWorkspaceId(wsList[0].id);
+        }
+        const convRes = await request('workspace.get_active_conversation', {});
+        if (!cancelled && convRes?.conversation_id) {
+          setActiveThreadId(convRes.conversation_id);
+          const msgRes = await request('workspace.get_conversation', { id: convRes.conversation_id });
+          if (msgRes?.messages) {
+            setMessages(msgRes.messages.map((m:any)=>({
+              id: `${convRes.conversation_id}-${m.timestamp}`,
+              role: m.role,
+              content: m.content,
+            })));
+          }
+        }
+      } catch {}
+    }
+    load();
+    // Voice streaming listener
+    const unsub = onMessage((msg:any)=>{
+      if(msg.endpoint==='voice.stream' && msg.result?.audio){
+        const audio = msg.result.audio;
+        const blob = audio instanceof Blob ? audio : new Blob([audio], {type:'audio/wav'});
+        const url = URL.createObjectURL(blob);
+        const a = new Audio(url);
+        a.play().catch(()=>{});
+      }
+    });
+    return ()=>{ cancelled=true; unsub(); };
+  }, []);
 
   // Modals & Drawers
   const [isWorkspacesOpen, setIsWorkspacesOpen] = useState(false);
@@ -286,8 +345,37 @@ export default function StellaApp() {
 
   // Active Provider & Model Preferences
   const [activeProvider, setActiveProvider] = useState<ProviderType>('gemini');
-  const [activeModel, setActiveModel] = useState<string>('Gemini 3.8 Flash (Stella Default)');
-  const [localGgufModel, setLocalGgufModel] = useState<LocalGgufModel | null>(SAMPLE_LOCAL_MODELS[0]);
+  const [activeModel, setActiveModel] = useState<string>('');
+  const [localGgufModel, setLocalGgufModel] = useState<LocalGgufModel | null>(null);
+
+  // Provider configuration lifecycle:
+  //  - apiKeyTested: user's key has been verified against the provider
+  //  - modelsPulled: authorized model list has been fetched
+  //  - modelAuthorized: user selected a model that is authorized
+  const [apiKeyTested, setApiKeyTested] = useState(false);
+  const [modelsPulled, setModelsPulled] = useState(false);
+  const [modelAuthorized, setModelAuthorized] = useState(false);
+
+  // Derived "active" status: backend reachable + key tested + models pulled + model selected
+  const isModelActive =
+    wsConnected &&
+    apiKeyTested &&
+    modelsPulled &&
+    modelAuthorized &&
+    !!activeModel;
+
+  // Callbacks exposed to SettingsModal so it can report configuration milestones
+  const onProviderConfigured = useCallback(() => {
+    setApiKeyTested(true);
+    setModelsPulled(true);
+    setModelAuthorized(true);
+  }, []);
+
+  const onModelDeauthorized = useCallback(() => {
+    setApiKeyTested(false);
+    setModelsPulled(false);
+    setModelAuthorized(false);
+  }, []);
 
   // Client hydration splash timer
   useEffect(() => {
@@ -831,52 +919,28 @@ export default function StellaApp() {
   };
 
   // New Thread
-  const handleNewThread = () => {
+  const handleNewThread = async () => {
     stopSpeaking();
     if (speechStreamQueueRef.current) speechStreamQueueRef.current.cancel();
-    const newId = `th-${Date.now()}`;
-    setWorkspaces((prev) =>
-      prev.map((ws) =>
-        ws.id === activeWorkspaceId
-          ? {
-              ...ws,
-              threads: [
-                {
-                  id: newId,
-                  title: 'New Conversation',
-                  updatedAt: 'Just now',
-                },
-                ...ws.threads,
-              ],
-            }
-          : ws
-      )
-    );
-    setActiveThreadId(newId);
-    setMessages([]);
-    setActiveScreenContext(null);
+
+    const res = await request('workspace.create_conversation',{workspace_id:activeWorkspaceId,title:'New Conversation'});
+    if (res?.id) {
+      setActiveThreadId(res.id);
+      setMessages([]);
+      setActiveScreenContext(null);
+    }
   };
 
   // New Workspace
-  const handleNewWorkspace = () => {
+  const handleNewWorkspace = async () => {
     const name = prompt('Workspace Name:', 'Personal Workspace');
     if (!name) return;
-    const wsId = `ws-${Date.now()}`;
-    const newWs: Workspace = {
-      id: wsId,
-      name,
-      threads: [
-        {
-          id: `th-${Date.now()}`,
-          title: 'Initial thread',
-          updatedAt: 'Just now',
-        },
-      ],
-    };
-    setWorkspaces((prev) => [...prev, newWs]);
-    setActiveWorkspaceId(wsId);
-    setActiveThreadId(newWs.threads[0].id);
-    setMessages([]);
+
+    const res = await request('workspace.create_workspace',{name});
+    if (res?.id) {
+      setWorkspaces(prev=>[...prev,{id:res.id,name,threads:[] }]);
+      setActiveWorkspaceId(res.id);
+    }
   };
 
   const themeConfig = THEME_CONFIGS[settings.theme] || THEME_CONFIGS.void;
@@ -895,7 +959,7 @@ export default function StellaApp() {
     const deferMessage: ChatMessage = {
       id: `defer-${Date.now()}`,
       role: 'assistant',
-      content: `⚡ **Distributed Task Deferral Executed**\n• **Task**: ${task.title}\n• **Target Node**: ${task.targetDevice}\n• **Status**: Completed\n• **Telemetry**: ${task.result || 'Execution verified on linked hardware.'}`,
+      content: `🚀 **Distributed Task Deferral Executed**\n• **Task**: ${task.title}\n• **Target Node**: ${task.targetDevice}\n• **Status**: Completed\n• **Telemetry**: ${task.result || 'Execution verified on linked hardware.'}`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
     setMessages((prev) => [...prev, deferMessage]);
@@ -983,27 +1047,63 @@ export default function StellaApp() {
           <button
             type="button"
             onClick={() => setIsSettingsOpen(true)}
-            className="flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#090d18] hover:bg-[#0f172a] border text-xs text-slate-200 transition-all group"
+            className="flex items-center gap-2 px-3.5 py-1 rounded-full border text-xs transition-all group"
             style={{
-              borderColor: themeConfig.primaryHex + '35',
-              boxShadow: `0 0 12px ${themeConfig.primaryHex}15`,
+              borderColor: isModelActive
+                ? themeConfig.primaryHex + '50'
+                : themeConfig.primaryHex + '25',
+              background: isModelActive
+                ? `${themeConfig.primaryHex}15`
+                : '#090d18',
+              boxShadow: isModelActive
+                ? `0 0 12px ${themeConfig.primaryHex}25`
+                : `0 0 12px ${themeConfig.primaryHex}10`,
             }}
             title="Change Model & Provider"
           >
             <Sparkles
               className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform"
-              style={{ color: themeConfig.primaryHex }}
+              style={{ color: isModelActive ? themeConfig.primaryHex : '#94a3b8' }}
             />
-            <span className="font-medium text-slate-100 truncate max-w-[140px]">
-              {activeModel.replace(/\(.*\)/, '').trim()}
-            </span>
-            <span className="text-[10px] text-emerald-400 font-mono flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-              active
-            </span>
-          </button>
+            <span className="font-medium text-slate-100 truncate max-w-[160px]">
+              {(() => {
+                const providerDisplayName = activeProvider
+                  .split('_')
+                  .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                  .join(' ');
 
-          {/* Backend Connection Status Pill */}
+                // Local GGUF models are active when loaded (no API key needed)
+                if (localGgufModel) {
+                  return `[Local GGUF] ${localGgufModel.fileName}`;
+                }
+                // Fully active: key tested + models pulled + model authorized + backend connected
+                if (isModelActive) {
+                  return `${activeModel} • ${providerDisplayName}`;
+                }
+                // Provider selected but key not tested → provider name only, inactive
+                if (activeProvider && !apiKeyTested) {
+                  return providerDisplayName;
+                }
+                // Key tested but backend/network offline → show model+provider but inactive
+                if (activeModel && apiKeyTested && !wsConnected) {
+                  return `${activeModel} • ${providerDisplayName}`;
+                }
+                return 'No Model Active';
+              })()}
+            </span>
+            {isModelActive || (localGgufModel && wsConnected) ? (
+              <span className="text-[10px] text-emerald-400 font-mono flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                active
+              </span>
+            ) : (
+              <span className="text-[10px] text-slate-500 font-mono flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-700" />
+                inactive
+              </span>
+            )}
+          </button>
+{/* Backend Connection Status Pill */}
           <button
             type="button"
             onClick={wsConnect}
@@ -1014,9 +1114,12 @@ export default function StellaApp() {
     color: connStatus === 'connected' ? '#4ade80' : connStatus === 'reconnecting' ? '#fbbf24' : '#f97316'
 }}
             title={"Backend WebSocket: " + connStatus}
+            suppressHydrationWarning
           >
             <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-            <span>{connStatus === 'connected' ? 'Backend Connected' : connStatus === 'reconnecting' ? 'Reconnecting...' : 'Disconnected'}</span>
+            <span suppressHydrationWarning>
+              {connStatus === 'connected' ? 'Backend Connected' : connStatus === 'reconnecting' ? 'Reconnecting...' : 'Disconnected'}
+            </span>
           </button>
 
           {/* Device Link Hub Pill */}
@@ -1031,8 +1134,8 @@ export default function StellaApp() {
             }}
             title="Open Device Link Hub (Cross-Connect Up to 5 Devices)"
           >
-            <span>✦</span>
-            <span>Device Link (4 Mesh)</span>
+            <span>🔗</span>
+            <span>Device Link</span>
           </button>
         </div>
 
@@ -1324,10 +1427,10 @@ export default function StellaApp() {
                         }
                         className="inline-flex items-center gap-1.5 text-xs hover:text-white transition-colors"
                         style={{ color: themeConfig.primaryHex }}
-                        title="Replay Voice (Leokani-TTS Dala)"
+                        title="Replay Voice"
                       >
                         <Volume2 className="w-3.5 h-3.5 shrink-0" />
-                        <span>Replay Voice (Leokani Dala)</span>
+                        <span>Replay Voice</span>
                       </button>
                       {isSpeaking && index === messages.length - 1 && (
                         <div
@@ -1335,7 +1438,7 @@ export default function StellaApp() {
                           style={{ color: themeConfig.secondaryHex }}
                         >
                           <Radio className="w-3 h-3 animate-spin shrink-0" />
-                          <span>Speaking via Leokani-TTS...</span>
+                          <span>Speaking via Stella...</span>
                         </div>
                       )}
                     </div>
@@ -1545,6 +1648,13 @@ export default function StellaApp() {
         onNewThread={handleNewThread}
         onNewWorkspace={handleNewWorkspace}
         onOpenSettings={() => setIsSettingsOpen(true)}
+        onDeleteThread={async (threadId) => {
+      
+          await request('workspace.delete_conversation',{id:threadId});
+          setActiveThreadId('');
+          setMessages([]);
+          // refresh threads
+        }}
       />
 
       {/* SETTINGS MODAL */}
@@ -1565,6 +1675,11 @@ export default function StellaApp() {
         onChangeModel={setActiveModel}
         localGgufModel={localGgufModel}
         onSelectLocalGgufModel={setLocalGgufModel}
+        onProviderConfigured={onProviderConfigured}
+        onModelDeauthorized={onModelDeauthorized}
+        ttsVoices={ttsVoices}
+        onChangeTtsVoice={handleChangeTtsVoice}
+        onChangeTtsProvider={handleChangeTtsProvider}
       />
 
       {/* DEVICE ASSISTANT MODAL */}
@@ -1644,3 +1759,5 @@ export default function StellaApp() {
     </div>
   );
 }
+
+

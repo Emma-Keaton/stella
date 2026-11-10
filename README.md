@@ -10,7 +10,7 @@
 [![Next.js](https://img.shields.io/badge/Frontend-Next.js-black?logo=nextdotjs&logoColor=white)](https://nextjs.org/)
 [![WebSocket](https://img.shields.io/badge/IPC-WebSocket%20IPC-blue?logo=websockets&logoColor=white)](https://websockets.org/)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)](https://python.org)
-[![Android](https://img.shields.io/badge/Android-Kotlin%20%2B%20Compose-72C534?logo=android&logoColor=white)](https://developer.android.com/)
+[![Android](https://img.shields.io/badge/Android-Termux%20%2B%20WebView-blue?logo=android&logoColor=white)](https://termux.dev/)
 
 </div>
 
@@ -18,7 +18,7 @@
 
 ## 🌌 Overview
 
-**Stella AI** is a modular, self-evolving personal AI assistant. It runs a Python backend with a Next.js frontend and a Kotlin/Compose Android companion. Users choose their LLM provider during onboarding (Gemini Live, OpenAI-compatible, Anthropic, OpenRouter, Groq, Ollama, LM Studio, or custom). Stella includes built-in actions, drop-in plugins, packaged skills (110+), and a Dr. Zero-inspired self-evolution system that trains and improves without training data dumps.
+**Stella AI** is a modular, self-evolving personal AI assistant. It runs a Python backend with a Next.js frontend and a Termux Android companion. Users choose their LLM provider during onboarding (Gemini Live, OpenAI-compatible, Anthropic, OpenRouter, Groq, Ollama, LM Studio, or custom). Stella includes built-in actions, drop-in plugins, packaged skills (110+), and a Dr. Zero-inspired self-evolution system that trains and improves without training data dumps.
 
 ---
 
@@ -72,7 +72,7 @@ Stella/
 - **110+ skills** — currency exchange, country info, CVE lookup, forex, news, weather, market data, CRM, habit tracker, and more
 - **Themes** — Void, OLED, Nebula, Light, Solar Flare (and more)
 - **Self-evolution** — Dr. Zero-inspired system (proposer → solver → curriculum → HRPO)
-- **Android companion** — Kotlin/Compose app connecting via WebSocket IPC
+- **Android companion** 📱 Termux app running Python backend via local WebSocket
 
 ---
 
@@ -138,15 +138,37 @@ The unified launcher starts:
 
 Press **Ctrl+C** to shut down all endpoints.
 
-### Android (Kotlin/Compose)
+### Android (Termux + WebView)
 
-Open \stella-connect-android/\ in Android Studio and build. The app connects to the Python backend via WebSocket using the StellaProtocol wire format.
+The Android app runs the Python backend directly on your device via Termux. It connects to the backend WebSocket at `ws://127.0.0.1:8765` locally — no external server, no Modal, no cloud required.
+
+**Install on Android device:**
+
+1. Install **Termux** (F-Droid or Google Play)
+2. Run setup: `curl -sSL https://raw.githubusercontent.com/Emma-Keaton/stella/master/termux/setup_stella.sh | bash`
+3. Copy backend files: `main.py` and `src/` to `~/stella/`
+4. Copy GGUF models (optional): `*.gguf` to `~/stella/models/`
+5. Start backend: `./termux/start_stella.sh`
+6. Open the Stella Android app — it auto-launches the backend and connects
+
+**Termux scripts:**
+- `setup_stella.sh` — Install Python + dependencies + llama servers
+- `start_stella.sh` — Start backend persistently (WebSocket :8765)
+- `stop_stella.sh` — Stop backend + watcher
+- `status.sh` — Check backend health
+- `watcher.sh` — Auto-restart backend on crash (persistent uptime)
+
+**API Keys:** Configure via Stella App Settings > Providers (stored in `~/stella/config/api_keys.json`)
+
+**Local Models:** Place GGUF models in `~/stella/models/`. The frontend Download Hub (Settings > Local GGUF Model) lets you download models from URLs with progress tracking.
+
 
 ---
 
 ## 📱 Android Companion (Stella Connect)
 
-The Android app at \stella-connect-android/\ is built with Kotlin + Jetpack Compose. It connects to the Python backend via WebSocket using \StellaProtocol\ envelopes (\	ype\, \equest_id\, \	imestamp\, \payload\). Features:
+The Android app runs the Python backend directly on your device via Termux. It connects to the backend WebSocket at ws://127.0.0.1:8765 locally — no external server, no Modal, no cloud required.
+equest_id\, \	imestamp\, \payload\). Features:
 
 - Chat with Stella from your phone
 - Provider configuration synced from \config/providers.json\
@@ -168,7 +190,33 @@ Stella includes multiple themes defined in \	hemes.json\:
 
 The solar theme and Leokani-TTS small voice model (7M parameters) are included by default.
 
+## 📥 Download Hub (Local GGUF Models)
+
+Stella's download hub is **device-aware** — it checks your device specs (RAM, storage, CPU) and recommends models that will actually run locally.
+
+**How it works:**
+
+1. **Device Detection:** On load, Stella detects your device's RAM, storage, CPU cores, and whether it's Android
+2. **Compatibility Check:** Before downloading any GGUF model, Stella estimates RAM needed (~1.5x model size) and checks available storage
+3. **Smart Recommendations:** If your device can't run a model locally, Stella shows cloud provider free-tier suggestions (Groq, OpenRouter, Gemini, OpenAI)
+4. **Free Up Space:** If storage is insufficient, Stella gives specific suggestions to free up space (move models to SD card, clear cache, etc.)
+
+**Usage:**
+- Paste any GGUF model URL in the download hub (Settings > Local GGUF Model)
+- Choose a download destination path (default: `~/stella/models/model.gguf`)
+- Watch real-time download progress
+- Select the downloaded model to run locally with zero network latency
+
+**Cloud Provider Free Tiers:**
+| Provider | Free Tier | Models |
+|----------|-----------|--------|
+| Groq | 14,400 tokens/min | llama-3.1-8b-instant, llama-3.3-70b-versatile |
+| OpenRouter | Free tier for select models | llama-3.2-3b:free, gemma-2-9b-it:free |
+| Gemini | Free tier with rate limits | gemini-1.5-flash, gemini-2.0-flash-exp |
+| OpenAI | Trial credits for new accounts | gpt-4o-mini, gpt-3.5-turbo |
+
 ---
+
 
 ## 📄 License
 

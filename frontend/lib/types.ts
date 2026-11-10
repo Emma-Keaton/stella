@@ -43,6 +43,9 @@ export interface AssistantSettings {
   pauseThresholdMs: number; // Duration of pause before auto-responding (e.g. 1500ms)
   soundEffects: boolean;
   hapticFeedback: boolean;
+  // TTS voice settings
+  ttsProvider: TTSProviderType;
+  ttsVoiceId: string;
 }
 
 export interface ChatMessage {
@@ -104,6 +107,18 @@ export interface DeferredTask {
 
 export type ProviderType = 'gemini' | 'nvidia' | 'openrouter' | 'openai' | 'groq' | 'anthropic' | 'google_maps' | 'local_gguf';
 
+export type TTSProviderType = 'kokoro' | 'edge' | 'auto';
+
+export interface TTSVoice {
+  id: string;
+  name: string;
+  provider: TTSProviderType;
+  gender: 'female' | 'male';
+  language: string;
+  description: string;
+  active: boolean;
+}
+
 export interface LocalGgufModel {
   fileName: string;
   fileSize: string;
@@ -114,7 +129,12 @@ export interface LocalGgufModel {
   tensorCount: number;
   magicValidated: boolean;
   loadedAt: string;
-  status: 'ready' | 'loading' | 'serving';
+  status: 'ready' | 'loading' | 'serving' | 'downloading' | 'downloaded';
+  // Download hub fields
+  downloadUrl?: string;
+  downloadPath?: string;      // Local destination path (e.g. ~/stella/models/model.gguf)
+  downloadProgress?: number;  // 0-100
+  downloadSource?: 'url' | 'sample' | 'local';
 }
 
 export interface ModelOption {

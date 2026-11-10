@@ -31,7 +31,7 @@ import {
   Palette,
   HardDrive,
 } from 'lucide-react';
-import { AssistantSettings, AssistantTheme, ModelOption, ProviderType, LocalGgufModel } from '@/lib/types';
+import { AssistantSettings, AssistantTheme, ModelOption, ProviderType, LocalGgufModel, TTSVoice, TTSProviderType } from '@/lib/types';
 import { THEME_CONFIGS } from '@/lib/theme';
 import { StarSpinner } from './StarSpinner';
 import { LocalGgufSelector } from './LocalGgufSelector';
@@ -51,6 +51,11 @@ interface SettingsModalProps {
   onChangeModel: (model: string) => void;
   localGgufModel: LocalGgufModel | null;
   onSelectLocalGgufModel: (model: LocalGgufModel) => void;
+  onProviderConfigured: () => void;
+  onModelDeauthorized: () => void;
+  ttsVoices: TTSVoice[];
+  onChangeTtsVoice: (voiceId: string) => void;
+  onChangeTtsProvider: (provider: TTSProviderType) => void;
 }
 
 export function SettingsModal({
@@ -68,6 +73,11 @@ export function SettingsModal({
   onChangeModel,
   localGgufModel,
   onSelectLocalGgufModel,
+  onProviderConfigured,
+  onModelDeauthorized,
+  ttsVoices,
+  onChangeTtsVoice,
+  onChangeTtsProvider,
 }: SettingsModalProps) {
   const themeConfig = THEME_CONFIGS[settings.theme] || THEME_CONFIGS.void;
 
@@ -95,36 +105,9 @@ export function SettingsModal({
     fixSuggestion?: string;
   } | null>(null);
 
-  // Available Models verified for current provider
-  const [availableModels, setAvailableModels] = useState<ModelOption[]>([
-    {
-      id: 'gemini-3.8-flash',
-      name: 'Gemini 3.8 Flash (Stella Default)',
-      provider: 'gemini',
-      tier: 'Tier 1 • High Throughput',
-      description: 'Sub-second audio synthesis, streaming tokens, and device hardware control.',
-      contextWindow: '1M tokens',
-      isAuthorized: true,
-    },
-    {
-      id: 'gemini-3.5-flash',
-      name: 'Gemini 3.5 Flash',
-      provider: 'gemini',
-      tier: 'Tier 1 • Fast Multimodal',
-      description: 'Optimized for speech processing and real-time screen attachments.',
-      contextWindow: '1M tokens',
-      isAuthorized: true,
-    },
-    {
-      id: 'gemini-4-argon',
-      name: 'Gemini 4 Argon (Deep Reasoning)',
-      provider: 'gemini',
-      tier: 'Tier 2 • Pro Reasoning',
-      description: 'Multi-step logic execution, cross-device orchestration, and advanced code synthesis.',
-      contextWindow: '2M tokens',
-      isAuthorized: true,
-    },
-  ]);
+  // Available Models verified for current provider — populated only after API key is tested
+  // and the provider returns its authorized model list. No hardcoded model names.
+  const [availableModels, setAvailableModels] = useState<ModelOption[]>([]);
 
   const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -271,6 +254,7 @@ export function SettingsModal({
           }
         }
         onChangeProvider(selectedProvider);
+        onProviderConfigured();
         showToast(`Key verified! ${data.models?.length || 0} models unlocked.`);
       } else {
         setTestResult({
@@ -278,6 +262,7 @@ export function SettingsModal({
           error: data.error || 'Authorization Failed',
           fixSuggestion: data.fixSuggestion || 'Please verify that your API key is accurate.',
         });
+        onModelDeauthorized();
       }
     } catch (err) {
       setTestResult({
@@ -419,6 +404,7 @@ export function SettingsModal({
                           onClick={() => {
                             setSelectedProvider(p.id);
                             setTestResult(null);
+                            onModelDeauthorized();
                           }}
                           className={`p-3 rounded-xl border text-left transition-all ${
                             isSelected
@@ -588,6 +574,9 @@ export function SettingsModal({
                           type="button"
                           onClick={() => {
                             onChangeModel(m.name);
+                            if (m.isAuthorized) {
+                              onProviderConfigured();
+                            }
                             showToast(`Active model switched to ${m.name}`);
                           }}
                           className={`w-full text-left p-3 rounded-xl border transition-all flex items-start justify-between ${
@@ -678,6 +667,7 @@ export function SettingsModal({
                     onSelectLocalGgufModel(model);
                     onChangeProvider('local_gguf');
                     onChangeModel(`[Local GGUF] ${model.fileName}`);
+                    onProviderConfigured();
                     showToast(`Local model ${model.fileName} is now active on Stella!`);
                   }}
                   theme={settings.theme}
@@ -869,7 +859,7 @@ export function SettingsModal({
                     <div>
                       <h3 className="text-sm font-medium text-white">Auto-speak Responses</h3>
                       <p className="text-xs text-slate-400 mt-0.5">
-                        Voice replies aloud with token-streamed speech (Leokani-TTS Dala)
+                        Voice replies aloud with token-streamed speech
                       </p>
                     </div>
                   </div>
@@ -922,6 +912,49 @@ export function SettingsModal({
                 </div>
               </div>
             </div>
+
+                  {/* TTS Voice Selector */}
+                  <div className="p-4 space-y-3 border-t border-slate-800/80">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-slate-300 font-medium">Stella Voice</span>
+                      <span className="text-[10px] text-slate-500 font-mono">
+                        {ttsVoices.find((v) => v.active)?.name || 'Bella (Leokani Dala)'}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {ttsVoices.map((voice) => (
+                        <button
+                          key={voice.id}
+                          type="button"
+                          onClick={() => {
+                            onChangeTtsVoice(voice.id);
+                            onChangeTtsProvider(voice.provider);
+                          }}
+                          className={`flex items-center gap-2 p-3 rounded-xl border transition-all ${
+                            voice.active
+                              ? 'bg-cyan-950/40 border-cyan-400/80 text-white shadow-md'
+                              : 'bg-[#10121a] border-slate-800 text-slate-400 hover:border-slate-700'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            {voice.active && (
+                              <span className="w-3 h-3 rounded-full bg-cyan-400 shrink-0" />
+                            )}
+                            <span className="text-xs font-medium text-white truncate">
+                              {voice.name}
+                            </span>
+                          </div>
+                          <span className="text-[10px] text-slate-500 block truncate">
+                            {voice.description}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-[10px] text-slate-500">
+                      Leokani Dala (Kokoro-82M) runs locally on the backend. Edge is the online fallback.
+                    </p>
+                  </div>
+
 
             {/* ONBOARDING REPLAY & HELP */}
             <div className="space-y-2">
@@ -1025,7 +1058,7 @@ export function SettingsModal({
                 </div>
               </div>
               <p className="text-xs text-slate-500 mt-1">
-                Voice: Leokani-TTS small model (7M params) &bull; Theme: {settings.theme} &bull; Backend: Stella agent + skills
+                Voice: Stella-TTS small model (7M params) &bull; Theme: {settings.theme} &bull; Backend: Stella agent + skills
               </p>
             </div>
           </div>

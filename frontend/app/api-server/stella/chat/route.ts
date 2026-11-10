@@ -10,7 +10,7 @@ const ai = new GoogleGenAI({
   },
 });
 
-const STELLA_SYSTEM_INSTRUCTION = `You are Stella, an advanced futuristic AI voice and device assistant.
+const STELLA_SYSTEM_INSTRUCTION = `You are Stella, an AI assistant that molds to your workflow, voice, and daily needs.
 You communicate conversationally with the user via real-time speech and streaming text.
 
 Tone & Voice Guidelines:

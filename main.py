@@ -1147,6 +1147,22 @@ class StellaBackend:
                 ],
             }
 
+        # ── TTS endpoints ──
+        if endpoint == "tts.list_voices":
+            return {"voices": tts_list_voices()}
+        if endpoint == "tts.set_voice":
+            ok = tts_set_voice(payload.get("voice_id", ""))
+            return {"ok": ok, "voice_id": payload.get("voice_id", "")}
+        if endpoint == "tts.speak":
+            text = payload.get("text", "")
+            voice_id = payload.get("voice_id", None)
+            audio_path = tts_speak(text, voice_id)
+            if audio_path:
+                import base64
+                audio_data = Path(audio_path).read_bytes()
+                return {"ok": True, "audio_base64": base64.b64encode(audio_data).decode(), "voice_id": voice_id or get_engine().voice_id}
+            return {"ok": False, "error": "TTS synthesis failed"}
+
         raise ValueError(f"Unknown integration endpoint: {endpoint}")
 
     async def _send_electron_response(self, websocket, msg_id: Any, endpoint: str, result: Any) -> None:

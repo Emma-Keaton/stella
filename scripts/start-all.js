@@ -180,9 +180,9 @@ ${colors.reset}
   spawnProcess('python-backend', pythonCmd, ['main.py'], { cwd: REPO_ROOT });
   log('launcher', 'Backend WebSocket:  ws://localhost:8765', colors.magenta);
 
-  spawnProcess('nextjs-frontend', 'npm', ['run', 'dev'], {
+  spawnProcess('nextjs-frontend', 'npm', ['run', 'dev', '--', '--port', '3000'], {
     cwd: FRONTEND_DIR,
-    env: { ...process.env, NODE_ENV: 'development', BROWSER: 'none' },
+    env: { ...process.env, NODE_ENV: 'development', BROWSER: 'none', PORT: '3000' },
   });
   log('launcher', 'Frontend dev server: http://localhost:3000', colors.green);
 

@@ -150,6 +150,12 @@ class StellaWebSocketManager {
   private sendRaw(message: StellaWSMessage): void { if (this.socket && this.socket.readyState === WebSocket.OPEN) { try { this.socket.send(JSON.stringify(message)); } catch { /* ignore */ } } }
 
   private handleIncomingMessage(data: any): void {
+    // Binary voice frames
+    if (data instanceof ArrayBuffer || data instanceof Blob) {
+      const voiceMsg = { id:'voice', endpoint:'voice.stream', ok:true, result:{ audio:data } };
+      this.messageListeners.forEach((listener) => { try { listener(voiceMsg as StellaWSResponse); } catch {} });
+      return;
+    }
     try { const msg = JSON.parse(data) as StellaWSResponse; if (msg.id && msg.id.startsWith('hb-') && msg.endpoint === 'backend.ping') { if (this.heartbeatPongTimer) { clearTimeout(this.heartbeatPongTimer); this.heartbeatPongTimer = null; } return; } if (msg.id && this.pendingRequests.has(msg.id)) { const pending = this.pendingRequests.get(msg.id)!; clearTimeout(pending.timer); this.pendingRequests.delete(msg.id); if (!msg.ok) { pending.reject(new Error(msg.error?.message || `Backend error for endpoint ${msg.endpoint}`)); } else { pending.resolve(msg.result ?? msg.reply ?? msg); } return; } this.messageListeners.forEach((listener) => { try { listener(msg); } catch { /* swallow */ } }); } catch (err) { console.warn('[StellaWS] Failed to parse incoming message:', err); }
   }
 

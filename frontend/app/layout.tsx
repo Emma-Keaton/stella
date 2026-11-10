@@ -21,7 +21,7 @@ const firaCode = Fira_Code({
 });
 
 export const metadata: Metadata = {
-  title: 'Stella - Futuristic AI Voice & Device Assistant',
+  title: 'Your AI assistant that molds to your workflow, voice, and daily needs.',
   description:
     'Your AI assistant that molds to your workflow, voice, and daily needs.',
   icons: {
@@ -30,20 +30,23 @@ export const metadata: Metadata = {
     apple: '/favicon.ico',
   },
   openGraph: {
-    title: 'Stella - Futuristic AI Voice & Device Assistant',
+    title: 'Your AI assistant that molds to your workflow, voice, and daily needs.',
     description:
       'Your AI assistant that molds to your workflow, voice, and daily needs.',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Stella - Futuristic AI Voice & Device Assistant',
+    title: 'Your AI assistant that molds to your workflow, voice, and daily needs.',
     description:
       'Your AI assistant that molds to your workflow, voice, and daily needs.',
   },
   manifest: '/manifest.json',
-  colorScheme: 'dark',
+};
+
+export const viewport = {
   themeColor: '#00E5A3',
+  colorScheme: 'dark',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

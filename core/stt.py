@@ -52,6 +52,29 @@ def cloud_stt(pcm_bytes: bytes, sample_rate: int = 16000, sample_width: int = 2)
     except Exception:
         return None
 
+def _have_phonon() -> bool:
+    try:
+        import phonon2  # noqa: F401
+        return True
+    except Exception:
+        return False
+
+def phonon_stt(pcm_bytes: bytes, sample_rate: int = 16000) -> Optional[str]:
+    """Transcribe via Phonon 2 local model. Returns text or None."""
+    if not _have_phonon():
+        return None
+    try:
+        import numpy as np
+        # Phonon 2 expects float32 PCM array
+        arr = np.frombuffer(pcm_bytes, dtype=np.int16).astype(np.float32) / 32768.0
+        from phonon2 import PhononModel
+        model = PhononModel()
+        # Assume model.transcribe expects audio array
+        text = model.transcribe(arr, sample_rate=sample_rate)
+        return text if isinstance(text, str) else None
+    except Exception:
+        return None
+
 
 # --------------------------------------------------------------------------
 # Offline fallback: wake-word + a small fixed command vocabulary.
@@ -97,9 +120,10 @@ def transcribe(pcm_bytes: Optional[bytes], *, hint_text: str = "",
                allow_cloud: bool = True) -> dict:
     """Unified entry point. Returns a dict describing the outcome:
 
-        {"text": str|None, "engine": "cloud"|"offline"|"none", "intent": str|None}
+        {"text": str|None, "engine": "cloud"|"phonon"|"offline"|"none", "intent": str|None}
 
     - Tries cloud STT first (when installed + online).
+    - Tries Phonon 2 local STT for voice commands / wake words.
     - Falls back to the offline command matcher using `hint_text`.
     - Never raises.
     """
@@ -108,6 +132,14 @@ def transcribe(pcm_bytes: Optional[bytes], *, hint_text: str = "",
         text = cloud_stt(pcm_bytes, sample_rate, sample_width)
         if text:
             return {"text": text, "engine": "cloud", "intent": None}
+
+    # 1b. Phonon 2 local STT
+    if pcm_bytes and _have_phonon():
+        text = phonon_stt(pcm_bytes, sample_rate)
+        if text:
+            # Optionally match intent from transcription
+            intent = match_offline_command(text)
+            return {"text": text, "engine": "phonon", "intent": intent}
 
     # 2. Offline: best-effort fixed-command match from whatever hint we have.
     intent = match_offline_command(hint_text)

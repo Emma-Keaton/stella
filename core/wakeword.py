@@ -33,6 +33,13 @@ from __future__ import annotations
 
 import re
 
+def _have_phonon() -> bool:
+    try:
+        import phonon2  # noqa: F401
+        return True
+    except Exception:
+        return False
+
 # Phrases that wake Stella. Each is matched after normalization (lowercased,
 # punctuation stripped, whitespace collapsed). Every entry contains the name, so
 # a bare greeting can never trigger it.
@@ -270,4 +277,18 @@ def is_wake_enrolled() -> bool:
     """True once we have captured enough wake-phrase samples to bind the AI."""
     e = get_enrollment()
     return bool(e.get("count", 0) >= 2)
-    return parts[1].strip() if len(parts) > 1 else ""
+
+
+def detect_wake_audio(pcm_bytes: bytes, sample_rate: int = 16000) -> bool:
+    """Detect wake phrase using Phonon 2 local model if available."""
+    if not _have_phonon():
+        return False
+    try:
+        import numpy as np
+        from core.stt import phonon_stt
+        text = phonon_stt(pcm_bytes, sample_rate)
+        if not text:
+            return False
+        return matches_wake(_normalize(text))
+    except Exception:
+        return False

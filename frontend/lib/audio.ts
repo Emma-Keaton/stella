@@ -1,7 +1,38 @@
-// Web Audio API Synthesizer & Streaming Speech Engine for Stella
-// Pure client-side audio without external audio dependencies
+﻿// Web Audio API Synthesizer & Streaming Speech Engine for Stella
+// Uses backend TTS (Kokoro/Stella voice primary, edge-tts fallback) via WebSocket
+
+import { stellaWS, createWSMessage } from '@/lib/websocket';
 
 let globalMasterVolume = 0.7;
+
+let currentTtsVoiceId: string | null = null;
+
+export function setTtsVoice(voiceId: string) {
+  currentTtsVoiceId = voiceId;
+}
+
+export function getTtsVoice(): string | null {
+  return currentTtsVoiceId;
+}
+
+async function playBase64Audio(base64Audio: string): Promise<void> {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioData = atob(base64Audio);
+    const bytes = new Uint8Array(audioData.length);
+    for (let i = 0; i < audioData.length; i++) {
+      bytes[i] = audioData.charCodeAt(i);
+    }
+    const blob = new Blob([bytes], { type: 'audio/mpeg' });
+    const url = URL.createObjectURL(blob);
+    const audio = new Audio(url);
+    audio.volume = globalMasterVolume;
+    await audio.play();
+    URL.revokeObjectURL(url);
+  } catch {
+    // Audio playback failed silently
+  }
+}
 
 export function setMasterAudioVolume(volumeFraction: number) {
   globalMasterVolume = Math.min(1, Math.max(0, volumeFraction));
@@ -152,15 +183,15 @@ class SoundEngine {
 
 export const sounds = new SoundEngine();
 
-// Leokani-TTS (7M parameters) Voice Architecture by Milliwatt Labs
-// Preset: "Dala" US English Female, synthetic data curated from Kokoro-82M
+// Stella-TTS (7M parameters) Voice Architecture by Milliwatt Labs
+// Preset: Stella voice, US English female, synthesized via Kokoro-82M
 // Runs at >100x real-time with built-in zero-dependency phonemizer and 7.8 MB INT8 ONNX footprint
-export const LEOKANI_TTS_CONFIG = {
-  model: 'Leokani-TTS',
+export const STELLA_TTS_CONFIG = {
+  model: 'Stella-TTS',
   parameters: '7M Parameters',
   developer: 'Milliwatt Labs',
-  preset: 'Dala',
-  voiceName: 'Leokani-TTS (7M) • Dala (US English)',
+  preset: 'Stella',
+  voiceName: 'Stella-TTS (7M) Ã¢â‚¬Â¢ Stella (US English)',
   gender: 'Female',
   accent: 'US English',
   sourceDataset: 'Kokoro-82M Curated',
@@ -171,76 +202,86 @@ export const LEOKANI_TTS_CONFIG = {
   latencyTTFT: '~12ms',
 };
 
-// Natural Text to Speech helper using Leokani-TTS "Dala" neural profile
-export function speakText(
-  text: string,
-  options?: {
-    rate?: number;
-    pitch?: number;
-    onStart?: () => void;
-    onEnd?: () => void;
-    onError?: () => void;
-  }
-): SpeechSynthesisUtterance | null {
+// Natural Text to Speech helper using Stella-TTS neural profile
+export async function speakText(text: string, options?: { rate?: number; pitch?: number; onStart?: () => void; onEnd?: () => void; onError?: () => void; }): Promise<SpeechSynthesisUtterance | null> {
   if (typeof window === 'undefined' || !('speechSynthesis' in window) || globalMasterVolume === 0) {
     return null;
   }
 
   try {
-    // Clean markdown symbols & tags for natural speech
+        // Clean markdown symbols & tags for natural speech
     const cleanSpeech = text
       .replace(/\[ACTION:[\s\S]*?\]/g, '')
-      .replace(/[*_#`~[\]]/g, '')
+      .replace(/[*_#`~\[\]]/g, '')
       .replace(/https?:\/\/\S+/g, 'link')
       .trim();
 
     if (!cleanSpeech) return null;
 
-    const utterance = new SpeechSynthesisUtterance(cleanSpeech);
-    // Apply hardware volume control to speech synthesis
-    utterance.volume = globalMasterVolume;
-    // Calibrated to Leokani Dala preset (natural American female pitch and smooth cadence)
-    utterance.rate = options?.rate ?? 1.05;
-    utterance.pitch = options?.pitch ?? 1.08;
+    // Use backend TTS via WebSocket (Kokoro/Stella voice primary, edge-tts fallback)
+    try {
+      const voiceId = currentTtsVoiceId || 'af_bella';
+      const result = await stellaWS.request(
+        createWSMessage('tts.speak', { text: cleanSpeech, voice_id: voiceId }),
+        30000
+      );
 
-    // Pick best matching neural female voice for Dala preset
-    const voices = window.speechSynthesis.getVoices();
-    const dalaVoice =
-      voices.find(
-        (v) =>
-          (v.name.includes('Samantha') ||
-            v.name.includes('Victoria') ||
-            v.name.includes('Jenny') ||
-            v.name.includes('Google US English') ||
-            v.name.includes('Ava') ||
-            v.name.includes('Zira') ||
-            (v.name.includes('Female') && v.lang.startsWith('en'))) &&
-          !v.name.includes('Whisper')
-      ) ||
-      voices.find((v) => v.lang === 'en-US' || v.lang.startsWith('en')) ||
-      voices[0];
-
-    if (dalaVoice) {
-      utterance.voice = dalaVoice;
+      if (result?.ok && result?.audio_base64) {
+        options?.onStart?.();
+        await playBase64Audio(result.audio_base64);
+        options?.onEnd?.();
+        return null;
+      }
+    } catch {
+      // Backend TTS failed, fall through to browser speech synthesis
     }
 
-    utterance.onstart = () => {
-      options?.onStart?.();
-    };
-    utterance.onend = () => {
-      options?.onEnd?.();
-    };
-    utterance.onerror = () => {
-      options?.onError?.();
-    };
+    // Fallback: browser Web Speech API
+    try {
+      const utterance = new SpeechSynthesisUtterance(cleanSpeech);
+      utterance.volume = globalMasterVolume;
+      utterance.rate = options?.rate ?? 1.05;
+      utterance.pitch = options?.pitch ?? 1.08;
 
-    window.speechSynthesis.speak(utterance);
-    return utterance;
+      const voices = window.speechSynthesis.getVoices();
+      const stellaVoice =
+        voices.find(
+          (v) =>
+            (v.name.includes('Samantha') ||
+              v.name.includes('Victoria') ||
+              v.name.includes('Jenny') ||
+              v.name.includes('Google US English') ||
+              v.name.includes('Ava') ||
+              v.name.includes('Zira') ||
+              (v.name.includes('Female') && v.lang.startsWith('en'))) &&
+            !v.name.includes('Whisper')
+        ) ||
+        voices.find((v) => v.lang === 'en-US' || v.lang.startsWith('en')) ||
+        voices[0];
+
+      if (stellaVoice) {
+        utterance.voice = stellaVoice;
+      }
+
+      utterance.onstart = () => {
+        options?.onStart?.();
+      };
+      utterance.onend = () => {
+        options?.onEnd?.();
+      };
+      utterance.onerror = () => {
+        options?.onError?.();
+      };
+
+      window.speechSynthesis.speak(utterance);
+      return utterance;
+    } catch {
+      return null;
+    }
   } catch {
     return null;
   }
 }
-
 export function stopSpeaking() {
   if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
     try {
@@ -349,3 +390,7 @@ export class SpeechStreamQueue {
     });
   }
 }
+
+
+
+

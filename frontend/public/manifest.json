@@ -1,6 +1,6 @@
 {
   "id": "/",
-  "name": "Stella - AI Voice & Device Assistant",
+  "name": "Your AI assistant that molds to your workflow, voice, and daily needs.",
   "short_name": "Stella",
   "description": "Your AI assistant that molds to your workflow, voice, and daily needs. Connects to the Stella backend via WebSocket for real-time device control and AI chat.",
   "start_url": "/",

@@ -2,4 +2,9 @@ sounddevice
 SpeechRecognition
 pycaw
 comtypes
-piper-tts
+dala
+kokoro
+tiny-tts
+pocket-tts
+soundfile
+phonon-2

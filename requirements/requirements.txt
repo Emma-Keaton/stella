@@ -41,3 +41,7 @@ matplotlib
 speedtest-cli
 piper-tts
 pyinstaller
+tiny-tts
+pocket-tts
+soundfile
+phonon-2

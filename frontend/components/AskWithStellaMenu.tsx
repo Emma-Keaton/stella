@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Sparkles, Volume2, X } from 'lucide-react';
 import { AssistantTheme } from '@/lib/types';
 import { THEME_CONFIGS } from '@/lib/theme';
+import { speakText } from '@/lib/audio';
 
 interface AskWithStellaMenuProps {
   enabled: boolean;
@@ -156,7 +157,7 @@ export function AskWithStellaMenu({
             <button
               type="button"
               onClick={() => {
-                onAsk('Read Aloud with Voice', selectedText);
+                speakText(selectedText);
                 setPosition(null);
               }}
               className="p-1.5 rounded-full bg-[#171b29] hover:bg-slate-700 transition-all shrink-0 active:scale-95 border border-slate-800 hover:border-slate-600"

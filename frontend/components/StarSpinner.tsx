@@ -201,8 +201,8 @@ export function StarSpinner({
             <p className="text-sm font-semibold text-slate-100">
               {text || 'initializing stella'}
             </p>
-            <p className="text-xs text-slate-500 font-mono">
-              Real-time voice &bull; Multi-device mesh &bull; Gemini 3.8 Flash
+            <p className="text-xs text-slate-500 font-mono" suppressHydrationWarning>
+              Real-time voice • Multi-device mesh • AI powered
             </p>
           </div>
         </div>
