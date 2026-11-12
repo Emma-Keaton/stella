@@ -368,3 +368,49 @@ def _ensure_models() -> bool:
     if not STELLA_VOICE_PATH.exists():
         ok = _download(KOKORO_VOICES_URL.format(voice="af_bella"), STELLA_VOICE_PATH) and ok
     return ok
+
+
+def _ensure_tiny() -> bool:
+    """Make sure tiny-tts is importable. Install if missing."""
+    try:
+        import tiny_tts  # noqa: F401
+        return True
+    except ImportError:
+        pass
+    try:
+        print("[tts_engine] Installing tiny-tts ...")
+        subprocess.check_call(
+            [sys.executable, "-m", "pip", "install", "tiny-tts", "--quiet"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=300,
+        )
+        import tiny_tts  # noqa: F401
+        print("[tts_engine] tiny-tts installed.")
+        return True
+    except Exception as exc:
+        print(f"[tts_engine] Could not install tiny-tts: {exc}")
+        return False
+
+
+def _ensure_pocket() -> bool:
+    """Make sure pocket-tts is importable. Install if missing."""
+    try:
+        import pocket_tts  # noqa: F401
+        return True
+    except ImportError:
+        pass
+    try:
+        print("[tts_engine] Installing pocket-tts ...")
+        subprocess.check_call(
+            [sys.executable, "-m", "pip", "install", "pocket-tts", "--quiet"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=300,
+        )
+        import pocket_tts  # noqa: F401
+        print("[tts_engine] pocket-tts installed.")
+        return True
+    except Exception as exc:
+        print(f"[tts_engine] Could not install pocket-tts: {exc}")
+        return False

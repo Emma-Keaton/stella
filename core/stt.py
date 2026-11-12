@@ -19,6 +19,8 @@ instead", which the UI surfaces.
 from __future__ import annotations
 
 import re
+import subprocess
+import sys
 from typing import Optional
 
 
@@ -57,6 +59,29 @@ def _have_phonon() -> bool:
         import phonon2  # noqa: F401
         return True
     except Exception:
+        return False
+
+
+def _ensure_phonon() -> bool:
+    """Make sure phonon-2 is importable. Install if missing."""
+    try:
+        import phonon2  # noqa: F401
+        return True
+    except ImportError:
+        pass
+    try:
+        print("[stt] Installing phonon-2 ...")
+        subprocess.check_call(
+            [sys.executable, "-m", "pip", "install", "phonon-2", "--quiet"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=300,
+        )
+        import phonon2  # noqa: F401
+        print("[stt] phonon-2 installed.")
+        return True
+    except Exception as exc:
+        print(f"[stt] Could not install phonon-2: {exc}")
         return False
 
 def phonon_stt(pcm_bytes: bytes, sample_rate: int = 16000) -> Optional[str]:

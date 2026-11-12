@@ -32,12 +32,37 @@ one that is slightly out of date.
 from __future__ import annotations
 
 import re
+import subprocess
+import sys
 
 def _have_phonon() -> bool:
     try:
         import phonon2  # noqa: F401
         return True
     except Exception:
+        return False
+
+
+def _ensure_phonon() -> bool:
+    """Make sure phonon-2 is importable. Install if missing."""
+    try:
+        import phonon2  # noqa: F401
+        return True
+    except ImportError:
+        pass
+    try:
+        print("[wakeword] Installing phonon-2 ...")
+        subprocess.check_call(
+            [sys.executable, "-m", "pip", "install", "phonon-2", "--quiet"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=300,
+        )
+        import phonon2  # noqa: F401
+        print("[wakeword] phonon-2 installed.")
+        return True
+    except Exception as exc:
+        print(f"[wakeword] Could not install phonon-2: {exc}")
         return False
 
 # Phrases that wake Stella. Each is matched after normalization (lowercased,

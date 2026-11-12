@@ -85,7 +85,7 @@ if (-not (Test-Path $VenvPython)) {
 # 6. Install Dependencies
 Write-Host "Updating pip and installing dependencies..." -ForegroundColor Cyan
 Start-Process -FilePath $VenvPython -ArgumentList "-m pip install --upgrade pip setuptools wheel" -Wait -NoNewWindow
-Start-Process -FilePath $VenvPython -ArgumentList "-m pip install -r requirements.txt" -Wait -NoNewWindow
+Start-Process -FilePath $VenvPython -ArgumentList "-m pip install -r ../requirements/requirements-core.txt --ignore-requires-python" -Wait -NoNewWindow
 
 Write-Host "Installing Playwright browsers..." -ForegroundColor Cyan
 Start-Process -FilePath $VenvPython -ArgumentList "-m playwright install" -Wait -NoNewWindow

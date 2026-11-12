@@ -29,9 +29,7 @@ Stella/
 ├── main.py                     # Python backend entry point (WebSocket IPC server on :8765)
 ├── requirements/               # Python dependency groups
 ├── scripts/                    # Build, start, and utility scripts
-│   ├── start-all.js            # Unified launcher: starts backend + frontend together
-│   ├── start-stella.bat        # Windows launcher for all endpoints
-│   └── bootstrap.ps1           # Dependency bootstrap
+│   └── start-stella.ps1        # Unified launcher: checks deps, installs missing, downloads llama servers, boots backend + frontend
 ├── frontend/                   # Next.js frontend (port 3000)
 ├── src/backend/                # Python backend core
 │   ├── agent/                  # Agentic runtime (loop, planner, executor, tools)
@@ -116,29 +114,29 @@ K2 models are **not bundled**. If you want K2 Horizon or other K2 models, downlo
 
 ### Backend + Frontend (Unified Launcher)
 
-\\\powershell
+Use the single unified startup script — it checks requirements, installs missing packages (including tiny-tts, pocket-tts, phonon-2), downloads llama.cpp servers, and boots backend + frontend together:
+
+```powershell
 # Clone the repository
 git clone https://github.com/Emma-Keaton/stella.git
 cd stella
 
-# Create and activate venv
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Start all endpoints together (backend + frontend)
-node scripts/start-all.js
-# or
-scripts\start-stella.bat
-\\\
+# Run the unified launcher (self-elevates to Administrator)
+.\scripts\start-stella.ps1
+```
 
 The unified launcher starts:
-- **Backend WebSocket:** \ws://localhost:8765\
-- **Frontend dev server:** \http://localhost:3000\
+- **Backend WebSocket:** ws://localhost:8765
+- **Frontend dev server:** http://localhost:3000
 
-Press **Ctrl+C** to shut down all endpoints.
+Optional flags:
+- `-NoStart` — Setup only, don't start servers
+- `-SkipLlama` — Skip llama.cpp server downloads
+- `-SkipFrontend` — Skip Node.js frontend
+- `-SkipBackend` — Skip Python backend
+- `-Dev` — Development mode
+
+Press **Ctrl+C** to shut down all services.
 
 ### Android (Termux + WebView)
 
@@ -258,6 +256,23 @@ Stella includes multiple themes defined in \	hemes.json\:
 - **Solar Flare** — Warm amber, orange, and crimson tones
 
 The solar theme and Leokani-TTS small voice model (7M parameters) are included by default.
+
+## 🎙️ Voice & TTS
+
+Stella includes an always-on local text-to-speech engine with three tiers:
+
+| Tier | Engine | Voices | Notes |
+|------|--------|--------|-------|
+| **Primary** | Kokoro-82M (Leokani Dala) | Bella, Sarah, Sky, Aoede, Nicole, Nova, Alloy, Heart, Alicia, Laura | Local, female voices, >100x real-time |
+| **Secondary** | Kyutai Pocket TTS | Alba Casual, Alba Clarity | Local, ultra-compact (1.9M params) |
+| **Tertiary** | TinyTTS | Tiny Female | Local, edge-optimized (1.6M params) |
+| **Fallback** | Microsoft Edge TTS | en-US-AriaNeural | Online, used when local models fail |
+
+Voice models (kokoro-v0_19.onnx + voice .pt files) are downloaded automatically from HuggingFace on first launch and kept resident in `%LOCALAPPDATA%/StellaAI/tts_models/`.
+
+### Voice Selector
+
+The Settings modal includes a voice selector dropdown — choose your preferred female voice. The active voice is saved to `app_settings.json` under the `tts` group (`ttsProvider`, `ttsVoiceId`) and persists across restarts.
 
 ## 📥 Download Hub (Local GGUF Models)
 

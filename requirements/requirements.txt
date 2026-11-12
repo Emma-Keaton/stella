@@ -34,8 +34,6 @@ uvicorn[standard]
 cryptography
 qrcode[pil]
 python-multipart
-PyQt6
-PyQt6-WebEngine
 edge-tts
 matplotlib
 speedtest-cli
