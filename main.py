@@ -1,4 +1,4 @@
-﻿"""
+"""
 main.py — Stella Python backend entry point.
 
 Bootstraps the Stella engine and exposes it to frontends via a WebSocket IPC
@@ -37,6 +37,7 @@ if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
 from src.backend.core.engine import StellaEngine  # noqa: E402
+from core.device_command_handler import handle_device_command  # noqa: E402
 from src.backend.memory.config_manager import config_manager  # noqa: E402
 from src.backend.starnet import (  # noqa: E402
     CrewManager,
@@ -678,6 +679,77 @@ class StellaBackend:
                 "device_id": device_id,
                 "status": "linked",
                 "linked_devices": sorted(_LINK_GRAPH.get(device_id, set())),
+            }
+
+        # ── Device control (volume, brightness, processes, networks, keystroke,
+        # ── click, type, launch, status) — Stella takes direct control of host ──
+        if endpoint == "device.command":
+            command = payload.get("command", "")
+            result = handle_device_command(command, payload.get("payload", {}))
+            if result.get("ok"):
+                # Broadcast the new device state so every connected frontend's
+                # sliders/toggles stay in sync with the real device.
+                try:
+                    status = handle_device_command("device.status", {})
+                    self._emit("device.state.changed", status.get("status", {}))
+                except Exception:
+                    pass
+            return result
+
+        if endpoint == "device.status":
+            return handle_device_command("device.status", {})
+
+        if endpoint == "device.processes":
+            return handle_device_command("process.list", {})
+
+        if endpoint == "device.networks":
+            return handle_device_command("network.scan", {})
+
+        if endpoint == "device.keystroke":
+            return handle_device_command(
+                "keystroke", {"keys": payload.get("keys", "") or payload.get("key", "")}
+            )
+
+        if endpoint == "device.type":
+            return handle_device_command(
+                "type",
+                {"text": payload.get("text", "") or payload.get("message", "")},
+            )
+
+        if endpoint == "device.click":
+            return handle_device_command(
+                "click",
+                {
+                    "x": payload.get("x", 0),
+                    "y": payload.get("y", 0),
+                    "button": payload.get("button", "left"),
+                },
+            )
+
+        if endpoint == "device.link.execute":
+            # Execute a command on a linked peer device (cross-device task transfer).
+            target = payload.get("target_device", "desktop")
+            action = payload.get("action", "")
+            parameters = payload.get("parameters", {})
+            engine = self._engine
+            if target in ("desktop", "this", "pc") or not target:
+                if not engine:
+                    return {"success": False, "error": "PC engine not available"}
+                try:
+                    result = engine.integration.executor.execute(action, parameters, {"source": "device_link"})
+                    return {"success": True, "action": action, "result": result, "executed_on": "desktop"}
+                except Exception as e:
+                    return {"success": False, "error": str(e), "executed_on": "desktop"}
+            # Route to a linked peer via the link graph.
+            peer = _LINKED_DEVICES.get(target)
+            if not peer:
+                return {"success": False, "error": f"linked device not found: {target}"}
+            return {
+                "success": True,
+                "action": action,
+                "result": f"Handoff queued for linked peer {target} ({peer.get('platform')}) capabilities={peer.get('capabilities')}.",
+                "executed_on": target,
+                "peer_capabilities": peer.get("capabilities", []),
             }
 
         raise ValueError(f"Unknown endpoint: {endpoint}")

@@ -23,7 +23,7 @@ export interface StellaWSResponse {
 type StatusListener = (status: ConnectionStatus) => void;
 type MessageListener = (message: StellaWSResponse) => void;
 
-const DEFAULT_WS_URL = 'ws://localhost:8765';
+const DEFAULT_WS_URL = process.env.NEXT_PUBLIC_BACKEND_WS_URL || 'ws://localhost:8765';
 const RECONNECT_BASE_DELAY = 1500;
 const MAX_RECONNECT_DELAY = 30000;
 const HEARTBEAT_INTERVAL = 30000;

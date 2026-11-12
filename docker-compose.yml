@@ -1,0 +1,43 @@
+﻿# Stella Docker Setup
+# Alternative to Windows installation
+
+version: '3.8'
+
+services:
+  backend:
+    image: python:3.11-slim
+    container_name: stella-backend
+    working_dir: /app
+    volumes:
+      - E:\\Projects\\stella:/app
+      - /app/node_modules
+    command: python main.py --host 0.0.0.0 --port 8765
+    ports:
+      - "8765:8765"
+    networks:
+      - stella-network
+    restart: unless-stopped
+    environment:
+      - PYTHONPATH=/app
+      - ENVIRONMENT=production
+   
+  frontend:
+    image: node:20-alpine
+    container_name: stella-frontend
+    working_dir: /app/frontend
+    volumes:
+      - E:\\Projects\\stella/frontend:/app/frontend
+      - /app/frontend/node_modules
+    command: sh -c "npm install && npm run build && npm start -- --port 3000"
+    ports:
+      - "3000:3000"
+    networks:
+      - stella-network
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+
+networks:
+  stella-network:
+    driver: bridge

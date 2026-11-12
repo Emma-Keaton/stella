@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -30,11 +30,13 @@ import {
   Layers,
   Palette,
   HardDrive,
+  Sun,
 } from 'lucide-react';
 import { AssistantSettings, AssistantTheme, ModelOption, ProviderType, LocalGgufModel, TTSVoice, TTSProviderType } from '@/lib/types';
 import { THEME_CONFIGS } from '@/lib/theme';
 import { StarSpinner } from './StarSpinner';
 import { LocalGgufSelector } from './LocalGgufSelector';
+import { stellaWS, createWSMessage } from '@/lib/websocket';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -115,6 +117,30 @@ export function SettingsModal({
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 2500);
+  };
+
+  // ── Device Controls (wired to backend WebSocket) ──
+  const [deviceControls, setDeviceControls] = useState<{ volume: number; brightness: number }>({
+    volume: 70,
+    brightness: 85,
+  });
+  const [deviceControlStatus, setDeviceControlStatus] = useState<string | null>(null);
+
+  const sendDeviceCommand = async (command: string, payload: any) => {
+    setDeviceControlStatus('sending…');
+    try {
+      const res = await stellaWS.request(
+        createWSMessage('device.command', { command, payload }),
+        15000
+      );
+      setDeviceControlStatus(res?.ok ? 'applied' : (res?.error || 'failed'));
+      setTimeout(() => setDeviceControlStatus(null), 1500);
+      return res;
+    } catch (err) {
+      setDeviceControlStatus('error');
+      setTimeout(() => setDeviceControlStatus(null), 1500);
+      console.warn('[Stella Settings] device.command failed:', err);
+    }
   };
 
   // ── Load all provider keys from backend on mount ──
@@ -710,6 +736,67 @@ export function SettingsModal({
                   </div>
                   <ChevronRight className="w-4 h-4 text-slate-400" />
                 </button>
+              {/* Device Controls: volume & brightness sliders wired to WebSocket */}
+              <div className="rounded-2xl bg-[#14161d] border border-slate-800 p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-semibold tracking-wider text-slate-400 uppercase px-1">
+                    Device Controls
+                  </span>
+                  {deviceControlStatus && (
+                    <span className={deviceControlStatus === 'applied' ? 'text-[10px] font-mono px-2 py-0.5 rounded border border-emerald-500/50 bg-emerald-500/10 text-emerald-400' : 'text-[10px] font-mono px-2 py-0.5 rounded border border-rose-500/50 bg-rose-500/10 text-rose-400'}>
+                      {deviceControlStatus}
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-1.5 text-slate-300">
+                        <Volume2 className="w-4 h-4 text-cyan-400" />
+                        <span>Volume</span>
+                      </div>
+                      <span className="text-slate-400 font-mono">{deviceControls.volume}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={deviceControls.volume}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value);
+                        setDeviceControls((prev) => ({ ...prev, volume: val }));
+                        sendDeviceCommand('volume', { level: val });
+                      }}
+                      className="w-full h-1.5 bg-slate-700 rounded-lg accent-cyan-400 cursor-pointer"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center gap-1.5 text-slate-300">
+                        <Sun className="w-4 h-4 text-amber-400" />
+                        <span>Brightness</span>
+                      </div>
+                      <span className="text-slate-400 font-mono">{deviceControls.brightness}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="10"
+                      max="100"
+                      value={deviceControls.brightness}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value);
+                        setDeviceControls((prev) => ({ ...prev, brightness: val }));
+                        sendDeviceCommand('brightness', { level: val });
+                      }}
+                      className="w-full h-1.5 bg-slate-700 rounded-lg accent-amber-400 cursor-pointer"
+                    />
+                  </div>
+                  <p className="text-[10px] text-slate-500">
+                    Sliders send commands to the device over Stella's local WebSocket.
+                  </p>
+                </div>
+              </div>
+
               </div>
             </div>
 

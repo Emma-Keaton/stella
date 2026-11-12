@@ -111,6 +111,21 @@ async function queryStellaBackend({
     pump();
   });
 }
+
+/** Send a device control command (volume, brightness, flashlight, wifi, etc.) to the backend over WebSocket. */
+async function sendDeviceCommand(command: string, payload: any = {}) {
+  try {
+    const res = await stellaWS.request(
+      createWSMessage('device.command', { command, payload }),
+      15000
+    );
+    return res;
+  } catch (err) {
+    console.warn('[Stella] device.command failed:', err);
+    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
 import { THEME_CONFIGS, applyTheme } from '@/lib/theme';
 import { WorkspacesDrawer } from '@/components/WorkspacesDrawer';
 import { SettingsModal } from '@/components/SettingsModal';
@@ -121,6 +136,7 @@ import { AskWithStellaMenu } from '@/components/AskWithStellaMenu';
 import { StellaOrb } from '@/components/StellaOrb';
 import { StarSpinner } from '@/components/StarSpinner';
 import { OnboardingModal } from '@/components/OnboardingModal';
+import { PWAInstallBanner } from '@/components/PWAInstallBanner';
 import { DeviceLinkModal } from '@/components/DeviceLinkModal';
 import { BatteryIndicator } from '@/components/BatteryIndicator';
 import { LocationMapsModal } from '@/components/LocationMapsModal';
@@ -128,19 +144,19 @@ import { LocationMapsModal } from '@/components/LocationMapsModal';
 
 const INITIAL_PROMPT_SUGGESTIONS = [
   {
-    icon: '💬',
+    icon: 'ðŸ’¬',
     text: 'Hello Stella, what can you help me with?',
   },
   {
-    icon: '🔦',
+    icon: 'ðŸ”¦',
     text: 'Turn on flashlight and set device volume to 80%',
   },
   {
-    icon: '⏱️',
+    icon: 'â±ï¸',
     text: 'Set a 15-minute timer for my focus session',
   },
   {
-    icon: '📝',
+    icon: 'ðŸ“',
     text: 'Draft a concise update about our on-device AI assistant launch',
   },
 ];
@@ -265,12 +281,12 @@ export default function StellaApp() {
     } catch {}
   }, [settings.theme, savedTheme]);
 
-  // Workspaces & Chat Threads – persisted in backend workspace_store
+  // Workspaces & Chat Threads â€“ persisted in backend workspace_store
   const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
   const [activeWorkspaceId, setActiveWorkspaceId] = useState<string>('personal');
   const [activeThreadId, setActiveThreadId] = useState<string>('');
 
-  // Messages in current thread – loaded from backend
+  // Messages in current thread â€“ loaded from backend
   const [messages, setMessages] = useState<ChatMessage[]>([]);
 
   // Load workspaces & active thread from backend on mount / connection
@@ -302,6 +318,26 @@ export default function StellaApp() {
         }
       } catch {}
     }
+
+    // Fetch real device status from the backend so sliders reflect the actual device.
+    async function refreshDeviceStatus() {
+      try {
+        const res = await request('device.status', {});
+        const status = res?.status;
+        if (status) {
+          setDeviceState((prev) => ({
+            ...prev,
+            volume: status.volume ?? prev.volume,
+            brightness: status.brightness ?? prev.brightness,
+            isMuted: status.isMuted ?? prev.isMuted,
+            batteryLevel: status.batteryLevel ?? prev.batteryLevel,
+            isCharging: status.isCharging ?? prev.isCharging,
+          }));
+        }
+      } catch {}
+    }
+    refreshDeviceStatus();
+
     load();
     // Voice streaming listener
     const unsub = onMessage((msg:any)=>{
@@ -311,6 +347,18 @@ export default function StellaApp() {
         const url = URL.createObjectURL(blob);
         const a = new Audio(url);
         a.play().catch(()=>{});
+      }
+      // Keep every connected frontend's sliders in sync when the device state changes.
+      if (msg.endpoint === 'device.state.changed' && msg.result?.status) {
+        const st = msg.result.status;
+        setDeviceState((prev) => ({
+          ...prev,
+          volume: st.volume ?? prev.volume,
+          brightness: st.brightness ?? prev.brightness,
+          isMuted: st.isMuted ?? prev.isMuted,
+          batteryLevel: st.batteryLevel ?? prev.batteryLevel,
+          isCharging: st.isCharging ?? prev.isCharging,
+        }));
       }
     });
     return ()=>{ cancelled=true; unsub(); };
@@ -959,7 +1007,7 @@ export default function StellaApp() {
     const deferMessage: ChatMessage = {
       id: `defer-${Date.now()}`,
       role: 'assistant',
-      content: `🚀 **Distributed Task Deferral Executed**\n• **Task**: ${task.title}\n• **Target Node**: ${task.targetDevice}\n• **Status**: Completed\n• **Telemetry**: ${task.result || 'Execution verified on linked hardware.'}`,
+      content: `ðŸš€ **Distributed Task Deferral Executed**\nâ€¢ **Task**: ${task.title}\nâ€¢ **Target Node**: ${task.targetDevice}\nâ€¢ **Status**: Completed\nâ€¢ **Telemetry**: ${task.result || 'Execution verified on linked hardware.'}`,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     };
     setMessages((prev) => [...prev, deferMessage]);
@@ -1078,15 +1126,15 @@ export default function StellaApp() {
                 }
                 // Fully active: key tested + models pulled + model authorized + backend connected
                 if (isModelActive) {
-                  return `${activeModel} • ${providerDisplayName}`;
+                  return `${activeModel} â€¢ ${providerDisplayName}`;
                 }
-                // Provider selected but key not tested → provider name only, inactive
+                // Provider selected but key not tested â†’ provider name only, inactive
                 if (activeProvider && !apiKeyTested) {
                   return providerDisplayName;
                 }
-                // Key tested but backend/network offline → show model+provider but inactive
+                // Key tested but backend/network offline â†’ show model+provider but inactive
                 if (activeModel && apiKeyTested && !wsConnected) {
-                  return `${activeModel} • ${providerDisplayName}`;
+                  return `${activeModel} â€¢ ${providerDisplayName}`;
                 }
                 return 'No Model Active';
               })()}
@@ -1134,7 +1182,7 @@ export default function StellaApp() {
             }}
             title="Open Device Link Hub (Cross-Connect Up to 5 Devices)"
           >
-            <span>🔗</span>
+            <span>ðŸ”—</span>
             <span>Device Link</span>
           </button>
         </div>
@@ -1474,7 +1522,7 @@ export default function StellaApp() {
                     </span>
                     {isPausing ? (
                       <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold border border-emerald-400 text-[10px] animate-pulse">
-                        Pause detected • Responding...
+                        Pause detected â€¢ Responding...
                       </span>
                     ) : (
                       <span className="text-slate-400 text-[10px]">
@@ -1512,7 +1560,7 @@ export default function StellaApp() {
       </main>
 
       {/* FLOATING PROMPT INPUT BAR with Reactive Theme Accents */}
-      <footer className="shrink-0 z-30 w-full max-w-4xl mx-auto px-4 sm:px-6 py-3 bg-[#030509]/95 border-t border-slate-800/50 backdrop-blur-xl">
+      <footer className="shrink-0 z-30 w-full max-w-4xl mx-auto px-4 sm:px-6 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] bg-[#030509]/95 border-t border-slate-800/50 backdrop-blur-xl">
         <div className="max-w-2xl mx-auto space-y-2">
           {/* Pause Status Indicator Banner if listening */}
           <AnimatePresence>
@@ -1717,6 +1765,7 @@ export default function StellaApp() {
       <DeviceControlPanel
         deviceState={deviceState}
         onUpdateState={(st) => setDeviceState((prev) => ({ ...prev, ...st }))}
+        onDeviceCommand={(cmd, payload) => sendDeviceCommand(cmd, payload)}
         isOpen={isDeviceControlsOpen}
         onClose={() => setIsDeviceControlsOpen(false)}
       />
@@ -1756,8 +1805,13 @@ export default function StellaApp() {
           handleSendMessage(`Can you analyze this location or provide details: ${info}`);
         }}
       />
+    
+
+      {/* PWA INSTALL BANNER */}
+      <PWAInstallBanner theme={settings.theme} />
     </div>
   );
 }
+
 
 

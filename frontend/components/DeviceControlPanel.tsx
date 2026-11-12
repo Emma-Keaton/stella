@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -30,6 +30,8 @@ interface DeviceControlPanelProps {
   onUpdateState: (newState: Partial<DeviceState>) => void;
   isOpen: boolean;
   onClose: () => void;
+  /** Send a hardware control command to the device over WebSocket. */
+  onDeviceCommand?: (command: string, payload: any) => void;
 }
 
 export function DeviceControlPanel({
@@ -37,6 +39,7 @@ export function DeviceControlPanel({
   onUpdateState,
   isOpen,
   onClose,
+  onDeviceCommand,
 }: DeviceControlPanelProps) {
   const [newReminderText, setNewReminderText] = useState('');
   const onUpdateStateRef = useRef(onUpdateState);
@@ -293,6 +296,7 @@ export function DeviceControlPanel({
                         isMuted: val === 0,
                         dnd: val > 0 ? false : deviceState.dnd,
                       });
+                      onDeviceCommand?.('volume', { level: val });
                     }}
                     className="w-full h-1.5 bg-slate-700 rounded-lg accent-cyan-400 cursor-pointer"
                   />
@@ -314,9 +318,11 @@ export function DeviceControlPanel({
                     min="10"
                     max="100"
                     value={deviceState.brightness}
-                    onChange={(e) =>
-                      onUpdateState({ brightness: parseInt(e.target.value) })
-                    }
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value);
+                      onUpdateState({ brightness: val });
+                      onDeviceCommand?.('brightness', { level: val });
+                    }}
                     className="w-full h-1.5 bg-slate-700 rounded-lg accent-amber-400 cursor-pointer"
                   />
                 </div>

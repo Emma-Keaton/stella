@@ -67,7 +67,8 @@ Stella/
 
 - **Real-time voice & text chat** with streaming speech synthesis (Leokani-TTS small model, 7M params)
 - **Wake word activation** ("hey stella")
-- **Device control** — volume, brightness, flashlight, Wi-Fi, Bluetooth, DND, timers, reminders
+- **Device control** — volume, brightness, flashlight, Wi-Fi, Bluetooth, DND, timers, reminders. Sliders in the Device Settings modal and Device Controls panel send commands over the local WebSocket (ws://localhost:8765) to control the real device.
+- **Full device control** — Stella can launch and operate any app or software (keystrokes, typing, mouse clicks), list all running tasks/processes, scan wireless networks, and read battery/CPU/memory — taking full control of the host device.
 - **Screen context** — attach and analyze your current screen
 - **Device linking** — peer-to-peer device mesh across desktop and Android
 - **110+ skills** — currency exchange, country info, CVE lookup, forex, news, weather, market data, CRM, habit tracker, and more
@@ -178,6 +179,73 @@ equest_id\, \	imestamp\, \payload\). Features:
 - HUD overlay and widgets
 
 ---
+
+
+
+## 🎛️ Device Control (WebSocket)
+
+Stella's device settings and quick-controls panels are wired to the backend WebSocket, so moving a slider or toggling a switch
+actually controls the device — locally, with no cloud.
+
+**How it works**
+- Frontend (`http://localhost:3000`) ↔ Backend WebSocket (`ws://localhost:8765`) both run on your PC.
+- The **Device Settings** modal and **Device Controls** panel send `device.command` messages (`volume`, `brightness`, etc.)
+  over the WebSocket. The backend executes them on the host device and broadcasts `device.state.changed` so every connected
+  frontend's sliders stay in sync with the real device.
+- Volume/brightness are verified with read-back (the slider shows the *actual* level, not just what was requested).
+
+**Backend device-control endpoints**
+| Endpoint | Action |
+|---|---|
+| `device.command` | Generic actuator: volume, brightness, notify, launch, keystroke, type, click, network.scan, process.list, process.kill, device.status |
+| `device.status` | Snapshot: volume, brightness, battery, CPU, memory, wireless networks |
+| `device.processes` | List all running tasks/processes |
+| `device.networks` | Scan wireless (Wi-Fi) networks |
+| `device.keystroke` / `device.type` / `device.click` | Operate any app/software (hotkeys, typing, mouse clicks) |
+| `device.link.execute` | Execute a task on a linked remote device (cross-device task transfer) |
+
+**Device linking / cross-device tasks**
+Linked devices register in the device-link graph (`device.link.create` / `device.link.handoff`). Once connected via Stella, users can
+defer tasks and execute commands on connected remote devices (`device.link.execute`) — mobile↔mobile, PC↔PC, or PC→mobile — as long as the
+target device is online and running Stella.
+
+---
+
+## 💻 Run Fully Local (No Cloud)
+
+Stella is designed to run entirely on your device — backend, WebSocket, and frontend all execute locally on the PC. The core, agent,
+loop, skills, and everything else run fully on the device; nothing is required to leave your machine.
+
+**Local stack (default ports)**
+- **Backend:** Python WebSocket IPC server on `ws://localhost:8765` (`main.py`)
+- **Frontend:** Next.js on `http://localhost:3000`
+- **Device control:** Core/agent/loop/skills run on the device and drive volume, brightness, apps, processes, networks, etc.
+
+**Start everything together (local only)**
+```powershell
+# Windows
+cd /d E:\Projects\stella
+scripts\start-stella.bat
+# or
+node scripts/start-all.js
+```
+
+```bash
+# macOS / Linux
+cd /path/to/stella
+node scripts/start-all.js
+```
+
+Because Stella takes **full control of the device** (operating apps, reading processes/networks, sending keystrokes/clicks), run it with
+elevated privileges so device commands succeed:
+
+- **Windows:** Run `scriptsootstrap.ps1` or `start-stella.bat` **as Administrator** (the bootstrap script self-elevates via UAC).
+- **macOS:** `sudo python main.py` — also grant Terminal/Python **Accessibility** and **Input Monitoring** in System Settings for keystroke/click control.
+- **Linux:** `sudo python main.py` — install `xdotool`, `brightnessctl`, `nmcli`/`iw` for full device control.
+- **Android (Termux):** `./termux/start_stella.sh` — install `termux-api` and grant the requested Android permissions.
+
+**Android companion:** The Termux app runs the Python backend directly on your device and connects to the local WebSocket — no external
+server, no Modal, no cloud required. Connected devices can execute tasks for each other over the Stella device link.
 
 ## 🎨 Themes
 
