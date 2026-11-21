@@ -37,7 +37,7 @@ The dashboard (`dashboard/`) is served by `main.py` on first run. Open the print
 
 ## 3. Android
 
-**Path A — Termux** (no root): install Termux + `python`, clone the repo, `python setup.py`, run `main.py` with `--no-gui` headless + dashboard, open the dashboard URL in Chrome → Add to Home screen.
+**Path A — StellaMobile app**: build/install the APK from `E:/Projects/stella mobile/StellaMobile`; pair it with the desktop backend via Device Connect (host/join).
 
 **Path B — native APK**: `stella-connect-android/` holds the companion app. Build with Android Studio → APK. Models live in the app's `models/` dir; the manager script picks quants that fit the phone's RAM (Q4_K_M → Q3 on tight devices).
 

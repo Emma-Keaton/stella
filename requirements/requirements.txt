@@ -43,3 +43,5 @@ tiny-tts
 pocket-tts
 soundfile
 phonon-2
+cactus-compute
+pyautogui; platform_system == "Windows" or platform_system == "Darwin" or platform_system == "Linux"

@@ -1,0 +1,21 @@
+{
+  "name": "@stella/packages",
+  "version": "0.2.0",
+  "private": true,
+  "description": "Stella AI shared packages workspace",
+  "workspaces": [
+    "stella-types",
+    "stella-adapters",
+    "stella-db",
+    "stella-skills",
+    "stella-mcp",
+    "stella-acp"
+  ],
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0"
+  }
+}

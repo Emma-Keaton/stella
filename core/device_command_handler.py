@@ -7,9 +7,7 @@ volume, brightness, launching any app, sending keystrokes/types/clicks so the
 agent can operate any software, listing running tasks/processes, scanning
 wireless networks, and showing notifications. Every command works on Windows,
 macOS and Linux using only the standard library (plus psutil, already a
-Stella dependency). On Android the call is forwarded to the Termux
-`stella_connect.android_bridge` node so Stella has the same control surface
-on mobile regardless of OS.
+Stella dependency). On Android the call is forwarded to the StellaMobile companion app (native bridge) so Stella has the same control surface on mobile regardless of OS.
 """
 from __future__ import annotations
 
@@ -546,8 +544,20 @@ def handle_device_command(command, payload=None):
         return handle_type_text(payload.get("text", "") or payload.get("message", ""))
     if cmd == "click":
         return handle_click(payload.get("x", 0), payload.get("y", 0), payload.get("button", "left"))
-    if cmd == "device.status":
+    if cmd in ("device.status", "device_status", "status"):
         return handle_device_status()
+    if cmd in ("network.scan", "wifi.scan", "networks", "network_scan", "wifi_scan"):
+        return handle_network_scan()
+    if cmd in ("apps.list", "app_list", "list_apps"):
+        return handle_app_list()
+    if cmd in ("process.list", "process_list", "processes"):
+        return handle_process_list()
+    if cmd in ("process.kill", "process_kill", "kill"):
+        return handle_process_kill(payload.get("target", "") or payload.get("pid", ""))
+    if cmd in ("type", "type_text"):
+        return handle_type_text(payload.get("text", "") or payload.get("message", ""))
+    if cmd in ("keystroke", "key"):
+        return handle_keystroke(payload.get("keys", "") or payload.get("key", ""))
     # Fall back to Android bridge for any mobile-only command
     res = _android_bridge(cmd, payload)
     if res is not None:

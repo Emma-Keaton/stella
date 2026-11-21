@@ -206,6 +206,11 @@
       "version": "1.0.0",
       "source": "stella"
     },
+    "web_search": {
+      "hash": "web-search-v1",
+      "version": "1.0.0",
+      "source": "stella"
+    },
     "anatomy_3d_modeling": {
       "hash": "anatomy_3d-v1",
       "version": "1.0.0",
@@ -330,7 +335,56 @@
       "hash": "stella_oversight_integrated-v1",
       "version": "1.0.0",
       "source": "gods-eye-view"
+    },
+    "copywriter": {
+      "hash": "copywriter-v1",
+      "version": "1.0.0",
+      "source": "claude-skills"
+    },
+    "saas_metrics": {
+      "hash": "saas_metrics-v1",
+      "version": "1.0.0",
+      "source": "claude-skills"
+    },
+    "pricing_strategy": {
+      "hash": "pricing_strategy-v1",
+      "version": "1.0.0",
+      "source": "claude-skills"
+    },
+    "seo_specialist": {
+      "hash": "seo_specialist-v1",
+      "version": "1.0.0",
+      "source": "claude-skills"
+    },
+    "sop_creator": {
+      "hash": "sop_creator-v1",
+      "version": "1.0.0",
+      "source": "claude-skills"
+    },
+    "okr_planner": {
+      "hash": "okr_planner-v1",
+      "version": "1.0.0",
+      "source": "claude-skills"
+    },
+    "gdpr_compliance": {
+      "hash": "gdpr_compliance-v1",
+      "version": "1.0.0",
+      "source": "claude-skills"
+    },
+    "soc2_compliance": {
+      "hash": "soc2_compliance-v1",
+      "version": "1.0.0",
+      "source": "claude-skills"
+    },
+    "classroom_explanation": {
+      "hash": "classroom_explanation-v1",
+      "version": "1.0.0",
+      "source": "openmaic"
+    },
+    "openmaic_classroom": {
+      "hash": "openmaic_classroom-v1",
+      "version": "1.0.0",
+      "source": "openmaic"
     }
   }
-}\   " s t e l l a _ t r a d i n g _ o r d e r f l o w \ :   { "  
- 
+}

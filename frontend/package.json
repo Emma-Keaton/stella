@@ -12,7 +12,9 @@
     "tauri": "tauri",
     "tauri:dev": "tauri dev",
     "tauri:build": "tauri build",
-    "desktop:build": "npm run export && npm run tauri:build"
+    "desktop:build": "npm run export && npm run tauri:build",
+    "desktop:dev": "tauri dev",
+    "desktop:build:win": "powershell -File ../scripts/build-desktop.ps1"
   },
   "dependencies": {
     "@google/genai": "^3.0.0",

@@ -10,7 +10,7 @@
 [![Next.js](https://img.shields.io/badge/Frontend-Next.js-black?logo=nextdotjs&logoColor=white)](https://nextjs.org/)
 [![WebSocket](https://img.shields.io/badge/IPC-WebSocket%20IPC-blue?logo=websockets&logoColor=white)](https://websockets.org/)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)](https://python.org)
-[![Android](https://img.shields.io/badge/Android-Termux%20%2B%20WebView-blue?logo=android&logoColor=white)](https://termux.dev/)
+[![Android](https://img.shields.io/badge/Android-StellaMobile-blue?logo=android&logoColor=white)](https://github.com/Emma-Keaton/stella)
 
 </div>
 
@@ -18,48 +18,10 @@
 
 ## 🌌 Overview
 
-**Stella AI** is a modular, self-evolving personal AI assistant. It runs a Python backend with a Next.js frontend and a Termux Android companion. Users choose their LLM provider during onboarding (Gemini Live, OpenAI-compatible, Anthropic, OpenRouter, Groq, Ollama, LM Studio, or custom). Stella includes built-in actions, drop-in plugins, packaged skills (110+), and a Dr. Zero-inspired self-evolution system that trains and improves without training data dumps.
+**Stella AI** is a modular, self-evolving personal AI assistant. It runs a Python backend with a Next.js frontend and the StellaMobile Android companion app. Users choose their LLM provider during onboarding (Gemini Live, OpenAI-compatible, Anthropic, OpenRouter, Groq, Ollama, LM Studio, or custom). Stella includes built-in actions, drop-in plugins, packaged skills (110+), and a Dr. Zero-inspired self-evolution system that trains and improves without training data dumps.
 
 ---
 
-## 🏗️ Architecture
-
-\`
-Stella/
-├── main.py                     # Python backend entry point (WebSocket IPC server on :8765)
-├── requirements/               # Python dependency groups
-├── scripts/                    # Build, start, and utility scripts
-│   └── start-stella.ps1        # Unified launcher: checks deps, installs missing, downloads llama servers, boots backend + frontend
-├── frontend/                   # Next.js frontend (port 3000)
-├── src/backend/                # Python backend core
-│   ├── agent/                  # Agentic runtime (loop, planner, executor, tools)
-│   │   ├── loop.py             # Think→act→observe→verify loop
-│   │   ├── planner.py          # Task planner (JSON tool steps)
-│   │   ├── executor.py         # AgentExecutor (all layers dispatch)
-│   │   ├── tools.py            # Tool dataclass, Registry, built-in tools
-│   │   ├── skill_loader.py     # Loads skills from skills/
-│   │   ├── integration.py      # Bridge UI/voice → agent loop
-│   │   └── evolution/          # Dr. Zero self-evolution (NEW)
-│   │       ├── proposer.py     # Generates diverse questions
-│   │       ├── solver.py       # Attempts questions using agent tools
-│   │       ├── curriculum.py   # Automated difficulty curriculum
-│   │       ├── hrpo.py         # Hop-grouped relative policy optimization
-│   │       └── engine.py       # Evolution loop orchestrator
-│   ├── core/                   # Engine, config, memory, theme tokens, voice clone, TTS
-│   │   └── tts_engine.py       # Always-on TTS engine (Kokoro-82M / Leokani Dala primary, edge-tts fallback)
-│   ├── integrations/           # CRM, newsletter, jobs, business dir, events
-│   └── starnet/                # Multi-agent crew, skills catalog, budget/consent, cron
-├── skills/                     # 110+ packaged skills (SKILL.md + skill.py)
-├── themes.json                 # Single source of truth for all themes (incl. Solar)
-├── LICENSE
-├── README.md
-├── CODE_OF_CONDUCT.md
-├── CONTRIBUTING.md
-├── SECURITY.md
-└── TRADEMARK.md
-\
-
----
 
 ## 🎯 Features
 
@@ -72,7 +34,7 @@ Stella/
 - **110+ skills** — currency exchange, country info, CVE lookup, forex, news, weather, market data, CRM, habit tracker, and more
 - **Themes** — Void, OLED, Nebula, Light, Solar Flare (and more)
 - **Self-evolution** — Dr. Zero-inspired system (proposer → solver → curriculum → HRPO)
-- **Android companion** 📱 Termux app running Python backend via local WebSocket
+- **Android companion** StellaMobile native app (React Native + Kotlin) with on-device Cactus/Needle model
 
 ---
 
@@ -104,6 +66,48 @@ Users choose their LLM provider during onboarding. The choice is stored in \conf
 K2 models are **not bundled**. If you want K2 Horizon or other K2 models, download them yourself via the download hub in Settings.
 
 ---
+
+## 🏗️ Architecture (Paperclip-inspired)
+
+Stella uses a dual-language architecture: Python backend for agent execution and device control, TypeScript packages for shared types, adapters, database, and frontend.
+
+```
+Stella/
+├── packages/                   # TypeScript packages (shared across frontend, CLI, mobile)
+│   ├── stella-types/           # Agent, Skill, Task, Adapter, MCP, ACP types
+│   ├── stella-adapters/        # LLM provider adapters (Claude, OpenAI, Gemini, Ollama)
+│   ├── stella-db/              # Embedded SQLite database layer
+│   ├── stella-skills/          # Skills catalog & execution engine
+│   ├── stella-mcp/             # Model Context Protocol client
+│   └── stella-acp/             # Agent Client Protocol implementation
+├── frontend/                   # Next.js frontend (port 3000)
+├── main.py                     # Python backend entry point (WebSocket IPC on :8765)
+└── src/backend/                # Python backend core
+```
+
+### Core Concepts
+
+| Concept | Description |
+|---------|-------------|
+| **Agent** | Autonomous LLM-driven worker with model, provider, system prompt, and capabilities |
+| **Skill** | Discrete capability (builtin, MCP, Python, TypeScript, ACP) that agents can invoke |
+| **Task** | Unit of work assigned to an agent, with input/output and artifact tracking |
+| **Artifact** | Output produced by a task (text, code, image, audio, file, JSON, URL) |
+| **Team** | Group of agents collaborating on shared objectives |
+| **Adapter** | LLM provider adapter (MCP, Claude, Codex, OpenAI, Google, XAI, Ollama, local GGUF) |
+| **MCP** | Model Context Protocol server connection for tools and resources |
+| **ACP** | Agent Client Protocol for inter-agent and client-to-agent messaging |
+
+### Data Flow
+
+```
+User → Frontend (Next.js) → WebSocket (:8765) → Python Backend
+                                    ↓
+                            Agent → Skill → Tool (MCP/Local)
+                                    ↓
+                            Artifact → Frontend
+```
+
 
 ## 🚀 Quick Start
 
@@ -138,25 +142,19 @@ Optional flags:
 
 Press **Ctrl+C** to shut down all services.
 
-### Android (Termux + WebView)
+### Android (StellaMobile app)
 
-The Android app runs the Python backend directly on your device via Termux. It connects to the backend WebSocket at `ws://127.0.0.1:8765` locally — no external server, no Modal, no cloud required.
+The StellaMobile app is a native Android companion. Pair it with the desktop backend over the StellaProtocol WebSocket (host/join via QR or pairing code) for PC-mobile and mobile-mobile task handoff — no external server required.
 
 **Install on Android device:**
 
-1. Install **Termux** (F-Droid or Google Play)
-2. Run setup: `curl -sSL https://raw.githubusercontent.com/Emma-Keaton/stella/master/termux/setup_stella.sh | bash`
+1. Install the **StellaMobile** APK (see `E:/Projects/stella mobile/StellaMobile`)
+2. Open StellaMobile > Device Connect > Host or Join
 3. Copy backend files: `main.py` and `src/` to `~/stella/`
 4. Copy GGUF models (optional): `*.gguf` to `~/stella/models/`
-5. Start backend: `./termux/start_stella.sh`
 6. Open the Stella Android app — it auto-launches the backend and connects
 
-**Termux scripts:**
-- `setup_stella.sh` — Install Python + dependencies + llama servers
-- `start_stella.sh` — Start backend persistently (WebSocket :8765)
-- `stop_stella.sh` — Stop backend + watcher
-- `status.sh` — Check backend health
-- `watcher.sh` — Auto-restart backend on crash (persistent uptime)
+
 
 **API Keys:** Configure via Stella App Settings > Providers (stored in `~/stella/config/api_keys.json`)
 
@@ -167,7 +165,7 @@ The Android app runs the Python backend directly on your device via Termux. It c
 
 ## 📱 Android Companion (Stella Connect)
 
-The Android app runs the Python backend directly on your device via Termux. It connects to the backend WebSocket at ws://127.0.0.1:8765 locally — no external server, no Modal, no cloud required.
+StellaMobile pairs with the desktop backend over WebSocket for cross-device control.
 equest_id\, \	imestamp\, \payload\). Features:
 
 - Chat with Stella from your phone
@@ -179,6 +177,34 @@ equest_id\, \	imestamp\, \payload\). Features:
 ---
 
 
+
+
+## 🖥️ Desktop App (native window, no browser)
+
+Stella ships as a **native desktop app** via [Tauri 2](frontend/src-tauri) — the Next.js UI is
+static-exported and loaded in a native WebView window that auto-starts the Python backend
+(sidecar) on launch. The frontend talks to it at ws://localhost:8765 as usual.
+
+**Build the installer (Windows):**
+```powershell
+.\scripts\build-desktop.ps1     # or: cd frontend && npm run desktop:build:win
+# output: frontend/src-tauri/target/release/bundle/msi/Stella_*.msi  (installer)
+#         frontend/src-tauri/target/release/stella-desktop.exe      (portable)
+```
+The build: PyInstaller bundles the backend into src-tauri/binaries/stella-backend-<target> (declared
+as a Tauri `externalBin` sidecar), `npm run export` static-exports the frontend to frontend/out, and
+`tauri build` produces the native app + installer. main.rs spawns the sidecar on launch and kills it on exit.
+
+**Dev mode (native window + hot reload):**
+```powershell
+cd frontend && npm run desktop:dev    # = tauri dev  (backend falls back to python main.py)
+```
+
+**Prereqs for building on Windows:** Rust (rustup), a C linker — either MSVC Build Tools
+("Desktop development with C++") or `rustup target add x86_64-pc-windows-gnu` + MinGW — plus
+Node.js 18+ and the WebView2 runtime (bundled with Windows 11).
+
+---
 
 ## 🎛️ Device Control (WebSocket)
 
@@ -240,10 +266,9 @@ elevated privileges so device commands succeed:
 - **Windows:** Run `scriptsootstrap.ps1` or `start-stella.bat` **as Administrator** (the bootstrap script self-elevates via UAC).
 - **macOS:** `sudo python main.py` — also grant Terminal/Python **Accessibility** and **Input Monitoring** in System Settings for keystroke/click control.
 - **Linux:** `sudo python main.py` — install `xdotool`, `brightnessctl`, `nmcli`/`iw` for full device control.
-- **Android (Termux):** `./termux/start_stella.sh` — install `termux-api` and grant the requested Android permissions.
+- **Android (StellaMobile):** host or join a device session from the Device Connect screen; grant Accessibility + notification permissions.
 
-**Android companion:** The Termux app runs the Python backend directly on your device and connects to the local WebSocket — no external
-server, no Modal, no cloud required. Connected devices can execute tasks for each other over the Stella device link.
+**Android companion:** StellaMobile connects to the local WebSocket as a linked peer — no external server, no cloud required.
 
 ## 🎨 Themes
 

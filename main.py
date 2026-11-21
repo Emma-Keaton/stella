@@ -100,6 +100,12 @@ class StellaProtocol:
     HANDOFF = "handoff"
     DEVICE_LINK = "device_link"
     DEVICE_STATUS = "device_status"
+    HOST = "device_host"
+    JOIN = "device_join"
+    RELAY = "device_relay"
+    PEERS = "device_peers"
+    HANDOFFS_PULL = "device_handoffs_pull"
+    DEVICE_COMMAND = "device_command"
 
     @staticmethod
     def envelope(type_: str, payload: dict = None, request_id: str = None) -> dict:
@@ -121,6 +127,107 @@ _CLIENT_PROTOCOL: Dict[Any, str] = {}  # websocket -> "electron" | "android"
 # capabilities; the PC link layer routes handoffs to a capable peer.
 _LINKED_DEVICES: Dict[str, dict] = {}  # device_id -> {platform, capabilities, connected_at, last_seen, linked_by}
 _LINK_GRAPH: Dict[str, Set[str]] = {}  # device_id -> set of linked device_ids
+# ── Mesh session state (any device can host or join; PC acts as relay host) ──
+_WS_BY_DEVICE: Dict[str, Any] = {}  # device_id -> websocket (for peer push)
+_HOST_SESSIONS: Dict[str, dict] = {}  # session_id -> {host_device_id, members, created_at}
+_HANDOFF_QUEUE: list = []  # pending handoffs for peers to pull
+_PEER_CLIENTS: Dict[str, Any] = {}  # peer device_id -> outbound PeerClient (PC-to-PC)
+
+
+class PeerClient:
+    """Outbound StellaProtocol client: this PC connects to another Stella PC.
+
+    Speaks the same envelope protocol as the server side, registers itself
+    (hello + device_link + device_host) so the remote treats it as a linked
+    peer, and runs a reader loop that executes inbound device_commands
+    locally and relays results back.
+    """
+
+    def __init__(self, url: str, device_id: str, device_name: str,
+                 capabilities: list, backend: "StellaBackend"):
+        self.url = url
+        self.device_id = device_id
+        self.device_name = device_name
+        self.capabilities = capabilities
+        self.backend = backend
+        self.ws = None
+        self.reader_task = None
+        self.alive = False
+
+    async def connect(self) -> dict:
+        import websockets as _ws
+        self.ws = await _ws.connect(self.url, max_size=10 * 1024 * 1024)
+        self.alive = True
+        self.reader_task = asyncio.ensure_future(self._reader())
+        await self._send(StellaProtocol.HELLO, {
+            "device_id": self.device_id, "device_name": self.device_name,
+            "platform": "desktop", "capabilities": self.capabilities,
+        })
+        await self._send(StellaProtocol.DEVICE_LINK, {
+            "device_id": self.device_id, "platform": "desktop",
+            "capabilities": self.capabilities, "link_to": "stella-desktop",
+        })
+        await self._send(StellaProtocol.HOST, {
+            "device_id": self.device_id, "platform": "desktop",
+            "capabilities": self.capabilities,
+        })
+        return {"ok": True, "url": self.url, "device_id": self.device_id}
+
+    async def _send(self, type_: str, payload: dict) -> dict:
+        msg = StellaProtocol.envelope(type_, payload)
+        await self.ws.send(json.dumps(msg))
+        return msg
+
+    async def call(self, type_: str, payload: dict, timeout: float = 15.0) -> dict:
+        """Send a request and wait for the matching response (by request_id)."""
+        msg = await self._send(type_, payload)
+        rid = msg["request_id"]
+        fut = asyncio.get_event_loop().create_future()
+        self.backend._peer_pending[rid] = fut
+        try:
+            return await asyncio.wait_for(fut, timeout)
+        finally:
+            self.backend._peer_pending.pop(rid, None)
+
+    async def _reader(self):
+        try:
+            async for raw in self.ws:
+                try:
+                    msg = json.loads(raw)
+                except Exception:
+                    continue
+                rid = msg.get("request_id")
+                if rid and rid in self.backend._peer_pending:
+                    fut = self.backend._peer_pending[rid]
+                    if not fut.done():
+                        fut.set_result(msg.get("payload", {}))
+                    continue
+                if msg.get("type") == StellaProtocol.EVENT:
+                    payload = msg.get("payload", {})
+                    message = payload.get("message", {})
+                    if message.get("kind") == "device_command":
+                        result = handle_device_command(message.get("command", ""),
+                                                       message.get("payload", {}))
+                        await self._send(StellaProtocol.RESULT, {
+                            "from_device": self.device_id,
+                            "to_device": payload.get("from_device"),
+                            "command": message.get("command"),
+                            "result": result,
+                        })
+        except Exception as e:
+            logger.info("PeerClient reader ended: %s", e)
+        finally:
+            self.alive = False
+
+    async def close(self):
+        self.alive = False
+        try:
+            if self.reader_task:
+                self.reader_task.cancel()
+            if self.ws:
+                await self.ws.close()
+        except Exception:
+            pass
 
 
 class StellaBackend:
@@ -137,6 +244,7 @@ class StellaBackend:
         self._clients: Set[Any] = set()
         self._engine: Optional[StellaEngine] = None
         self._running = False
+        self._peer_pending: Dict[str, Any] = {}  # request_id -> Future (outbound peer calls)
 
         # ── StarNet subsystems (desktop port) ──
         self.starnet_crew = CrewManager()
@@ -350,12 +458,137 @@ class StellaBackend:
                 result = await self._android_device_status(payload)
                 await self._send_android_response(websocket, request_id, StellaProtocol.RESULT, result)
 
+            elif msg_type == StellaProtocol.HOST:
+                result = await self._mesh_host(payload)
+                _WS_BY_DEVICE[result.get("device_id", "")] = websocket
+                await self._send_android_response(websocket, request_id, StellaProtocol.DEVICE_ONLINE, result)
+
+            elif msg_type == StellaProtocol.JOIN:
+                result = await self._mesh_join(payload)
+                if result.get("device_id"):
+                    _WS_BY_DEVICE[result["device_id"]] = websocket
+                await self._send_android_response(websocket, request_id, StellaProtocol.DEVICE_ONLINE, result)
+
+            elif msg_type == StellaProtocol.RELAY:
+                result = await self._mesh_relay(websocket, payload)
+                await self._send_android_response(websocket, request_id, StellaProtocol.RESULT, result)
+
+            elif msg_type == StellaProtocol.PEERS:
+                result = self._mesh_peers(payload)
+                await self._send_android_response(websocket, request_id, StellaProtocol.RESULT, result)
+
+            elif msg_type == StellaProtocol.HANDOFFS_PULL:
+                result = self._mesh_handoffs_pull(payload)
+                await self._send_android_response(websocket, request_id, StellaProtocol.RESULT, result)
+
+            elif msg_type == StellaProtocol.DEVICE_COMMAND:
+                result = await self._mesh_device_command(payload)
+                await self._send_android_response(websocket, request_id, StellaProtocol.RESULT, result)
+
             else:
                 await self._send_android_error(websocket, request_id, "unknown_type", f"Unknown Android message type: {msg_type}")
 
         except Exception as e:
             logger.error("Android handler error for %s: %s", msg_type, e)
             await self._send_android_error(websocket, request_id, "handler_error", str(e))
+
+    # ── Mesh handlers: host / join / relay / pull (PC↔mobile, mobile↔mobile) ──
+
+    async def _mesh_host(self, payload: dict) -> dict:
+        """A device hosts a session; the PC tracks it and accepts joiners."""
+        device_id = payload.get("device_id") or f"host-{uuid.uuid4().hex[:8]}"
+        session_id = payload.get("session_id") or uuid.uuid4().hex[:12]
+        _HOST_SESSIONS[session_id] = {
+            "host_device_id": device_id,
+            "members": [device_id],
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "pairing_code": payload.get("pairing_code") or uuid.uuid4().hex[:6].upper(),
+        }
+        _LINKED_DEVICES.setdefault(device_id, {
+            "platform": payload.get("platform", "unknown"),
+            "capabilities": payload.get("capabilities", []),
+            "connected_at": datetime.now(timezone.utc).isoformat(),
+            "last_seen": datetime.now(timezone.utc).isoformat(),
+            "linked_by": None,
+        })
+        _LINK_GRAPH.setdefault(device_id, set())
+        return {"device_id": device_id, "session_id": session_id,
+                "pairing_code": _HOST_SESSIONS[session_id]["pairing_code"],
+                "endpoint": f"ws://{self.host}:{self.port}", "hosting": True}
+
+    async def _mesh_join(self, payload: dict) -> dict:
+        """A device joins a session by pairing code or host device id."""
+        device_id = payload.get("device_id") or f"peer-{uuid.uuid4().hex[:8]}"
+        code = payload.get("pairing_code")
+        host_id = payload.get("host_device_id")
+        session = None
+        for sid, s in _HOST_SESSIONS.items():
+            if (code and s["pairing_code"] == code) or (host_id and s["host_device_id"] == host_id):
+                session = (sid, s)
+                break
+        if session is None:
+            return {"ok": False, "error": "no session found for that pairing code / host",
+                    "device_id": device_id}
+        sid, s = session
+        s["members"].append(device_id)
+        _LINK_GRAPH.setdefault(s["host_device_id"], set()).add(device_id)
+        _LINK_GRAPH.setdefault(device_id, set()).add(s["host_device_id"])
+        _LINKED_DEVICES.setdefault(device_id, {
+            "platform": payload.get("platform", "unknown"),
+            "capabilities": payload.get("capabilities", []),
+            "connected_at": datetime.now(timezone.utc).isoformat(),
+            "last_seen": datetime.now(timezone.utc).isoformat(),
+            "linked_by": s["host_device_id"],
+        })
+        return {"ok": True, "device_id": device_id, "session_id": sid,
+                "host_device_id": s["host_device_id"], "members": list(s["members"])}
+
+    async def _mesh_relay(self, websocket, payload: dict) -> dict:
+        """Relay a message from one peer to another through this host.
+
+        Payload: {to_device, message}. If to_device is a connected peer ws,
+        it is pushed as an EVENT envelope; the handoff queue is used when the
+        peer is offline.
+        """
+        to_device = payload.get("to_device")
+        message = payload.get("message", {})
+        from_device = payload.get("from_device", "unknown")
+        target_ws = _WS_BY_DEVICE.get(to_device)
+        if target_ws is not None:
+            try:
+                await target_ws.send(json.dumps(StellaProtocol.envelope(
+                    StellaProtocol.EVENT, {"from_device": from_device, "message": message})))
+                return {"ok": True, "delivered": "live", "to_device": to_device}
+            except Exception:
+                _WS_BY_DEVICE.pop(to_device, None)
+        _HANDOFF_QUEUE.append({"to_device": to_device, "from_device": from_device,
+                               "message": message, "queued_at": datetime.now(timezone.utc).isoformat()})
+        return {"ok": True, "delivered": "queued", "to_device": to_device}
+
+    def _mesh_peers(self, payload: dict) -> dict:
+        device_id = payload.get("device_id", "")
+        peers = sorted(_LINK_GRAPH.get(device_id, set()))
+        return {"device_id": device_id, "peers": peers,
+                "sessions": {sid: s for sid, s in _HOST_SESSIONS.items()},
+                "devices": _LINKED_DEVICES}
+
+    def _mesh_handoffs_pull(self, payload: dict) -> dict:
+        """A peer pulls its queued handoffs/relay messages."""
+        device_id = payload.get("device_id", "")
+        mine = [h for h in _HANDOFF_QUEUE if h.get("to_device") == device_id]
+        _HANDOFF_QUEUE[:] = [h for h in _HANDOFF_QUEUE if h.get("to_device") != device_id]
+        # Also queue handoff tasks targeting this device
+        return {"ok": True, "device_id": device_id, "messages": mine, "count": len(mine)}
+
+    async def _mesh_device_command(self, payload: dict) -> dict:
+        """Execute a device command on this host (PC) and return the result."""
+        command = payload.get("command", "")
+        cmd_payload = payload.get("payload", {})
+        try:
+            result = handle_device_command(command, cmd_payload)
+            return {"ok": True, "command": command, "result": result}
+        except Exception as e:
+            return {"ok": False, "command": command, "error": str(e)}
 
     # ── Android protocol handlers ──
 
@@ -559,12 +792,95 @@ class StellaBackend:
             "peer_capabilities": target_info.get("capabilities", []),
         }
 
+    # ── PC-to-PC peer dispatch ──
+
+    async def _dispatch_peer(self, endpoint: str, payload: dict) -> Any:
+        if endpoint == "peer.connect":
+            url = payload.get("url") or payload.get("endpoint")
+            if not url:
+                return {"ok": False, "error": "url required (ws://host:8765)"}
+            if not url.startswith("ws"):
+                url = "ws://" + url
+            device_id = payload.get("device_id") or f"pc-{uuid.uuid4().hex[:8]}"
+            client = PeerClient(url, device_id, payload.get("device_name") or device_id,
+                                payload.get("capabilities") or ["chat", "device_control"], self)
+            try:
+                res = await client.connect()
+            except Exception as e:
+                return {"ok": False, "error": str(e)}
+            _PEER_CLIENTS[device_id] = client
+            _LINKED_DEVICES[device_id] = {
+                "platform": "desktop", "capabilities": client.capabilities,
+                "connected_at": datetime.now(timezone.utc).isoformat(),
+                "last_seen": datetime.now(timezone.utc).isoformat(),
+                "linked_by": "outbound", "url": url,
+            }
+            _LINK_GRAPH.setdefault(device_id, set())
+            return {"ok": True, "device_id": device_id, "url": url}
+
+        if endpoint == "peer.list":
+            return {
+                "outbound": {did: {"url": c.url, "alive": c.alive}
+                             for did, c in _PEER_CLIENTS.items()},
+                "linked": _LINKED_DEVICES,
+                "sessions": _HOST_SESSIONS,
+            }
+
+        if endpoint == "peer.send":
+            device_id = payload.get("device_id")
+            client = _PEER_CLIENTS.get(device_id)
+            if not client or not client.alive:
+                return {"ok": False, "error": "peer not connected"}
+            return await client.call(StellaProtocol.RELAY, {
+                "to_device": payload.get("to_device", "stella-desktop"),
+                "from_device": payload.get("from_device", "local-pc"),
+                "message": payload.get("message", {}),
+            })
+
+        if endpoint == "peer.execute":
+            """Run a device command on the remote PC."""
+            device_id = payload.get("device_id")
+            client = _PEER_CLIENTS.get(device_id)
+            if not client or not client.alive:
+                return {"ok": False, "error": "peer not connected"}
+            return await client.call(StellaProtocol.DEVICE_COMMAND, {
+                "command": payload.get("command", ""),
+                "payload": payload.get("payload", {}),
+            })
+
+        if endpoint == "peer.handoff":
+            device_id = payload.get("device_id")
+            client = _PEER_CLIENTS.get(device_id)
+            if not client or not client.alive:
+                return {"ok": False, "error": "peer not connected"}
+            return await client.call(StellaProtocol.HANDOFF, {
+                "action": payload.get("action", ""),
+                "parameters": payload.get("parameters", {}),
+                "goal": payload.get("goal", ""),
+                "from_device": payload.get("from_device", "local-pc"),
+                "to_device": "stella-desktop",
+            })
+
+        if endpoint == "peer.disconnect":
+            device_id = payload.get("device_id")
+            client = _PEER_CLIENTS.pop(device_id, None)
+            if client:
+                await client.close()
+            _LINKED_DEVICES.pop(device_id, None)
+            return {"ok": True, "disconnected": device_id}
+
+        return {"ok": False, "error": f"unknown peer endpoint {endpoint}"}
+
     # ── Dispatch (shared between protocols) ──
 
     async def _dispatch(self, endpoint: str, payload: dict) -> Any:
         # ── StarNet endpoints (do not require the engine) ──
         if endpoint.startswith("starnet."):
             return await self._dispatch_starnet(endpoint, payload)
+
+        # ── PC-to-PC peer endpoints (no local engine required) ──
+        if endpoint.startswith("peer."):
+            return await self._dispatch_peer(endpoint, payload)
 
         # ── Integration endpoints (StarNet-governed, do not require the engine) ──
         if endpoint.startswith("integration."):

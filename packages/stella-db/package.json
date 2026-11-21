@@ -1,0 +1,23 @@
+{
+  "name": "@stella/db",
+  "version": "0.2.0",
+  "description": "Database layer for Stella AI - embedded SQLite with migration support",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "@stella/types": "workspace:*",
+    "better-sqlite3": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^1.1.0",
+    "typescript": "^5.0.0"
+  }
+}

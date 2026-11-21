@@ -77,6 +77,34 @@ class AgentIntegration:
         ctx["goal"] = text
         ctx["tool_descriptions"] = self._format_tools()
 
+        # Tier-1 reflexes: sub-15ms direct device commands bypass the LLM loop.
+        try:
+            from core.reflex import try_reflex
+            reflex = try_reflex(text)
+            if reflex is not None:
+                reply, result, elapsed_ms = reflex
+                logger.info("Tier-1 reflex handled %r in %.1fms", text[:40], elapsed_ms)
+                return f"{reply} (reflex, {elapsed_ms:.1f}ms)"
+        except Exception as _reflex_err:
+            logger.debug("reflex layer skipped: %s", _reflex_err)
+
+        # Cactus/Needle hybrid fast-path: let the bundled on-device tool-calling
+        # engine propose the first tool call; low-confidence turns fall through
+        # to the main model (see agent/needle_bridge.py for the trust gate).
+        try:
+            from core.cactus_engine import get_engine
+            from agent import needle_bridge
+            engine = get_engine()
+            if engine is not None:
+                tools = needle_bridge.to_needle_tools(self.executor.get_all_declarations())
+                source, completion, reason = needle_bridge.route_with_needle(
+                    engine, text, self.executor.get_all_declarations(), messages=[{"role": "user", "content": text}])
+                if source == needle_bridge.SOURCE_NEEDLE and completion:
+                    logger.info("Needle (Cactus) answered first: %s", reason)
+                    ctx["needle_completion"] = completion
+        except Exception as _cactus_err:
+            logger.debug("cactus fast-path skipped: %s", _cactus_err)
+
         # Phase 5: Frontier routing — classify before picking a backend
         route = self.frontier_router.route(text)
         ctx["frontier_route"] = {

@@ -472,9 +472,26 @@ def get_plugin_setting(namespace: str, key: str, default: Any = None) -> Any:
 # ── Providers ──
 
 
+def get_routing() -> dict:
+    """Per-mode provider selection: {"chat": ..., "agent": ..., "voice": ...}."""
+    routing = _read().get("routing")
+    return routing if isinstance(routing, dict) else {}
+
+
 def get_provider_mode() -> str:
-    """gemini | pipeline | local — defaults to gemini."""
-    return str(_read().get("provider_mode", "gemini") or "gemini")
+    """gemini | pipeline | local — defaults to gemini.
+
+    Honours the per-mode `routing` block first (routing.chat wins for chat),
+    then the legacy `provider_mode` / `default_ai_provider` settings — this
+    closes the write-only `routing` gap: what the Routing card writes is now
+    what chat actually reads.
+    """
+    routing = get_routing()
+    if routing.get("chat"):
+        return str(routing["chat"])
+    data = _read()
+    return str(data.get("provider_mode")
+               or data.get("default_ai_provider", "gemini") or "gemini")
 
 
 def save_provider_mode(mode: str) -> None:

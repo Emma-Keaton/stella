@@ -1,0 +1,21 @@
+{
+  "name": "@stella/adapters",
+  "version": "0.2.0",
+  "description": "LLM provider adapters for Stella AI - Claude, Codex, OpenAI, Gemini, Ollama, local GGUF",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "dependencies": {
+    "@stella/types": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}
