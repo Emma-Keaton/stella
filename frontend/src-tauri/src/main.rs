@@ -71,7 +71,7 @@ fn main() {
 
             // 3. Companion overlay window: transparent, always-on-top, frameless.
             //    Loads the /companion route which hosts StellaCompanion.
-            let companion = tauri::WebViewWindowBuilder::new(app, "companion", tauri::WebViewWindowUrl::App("/companion".into()))
+            let companion = tauri::WebviewWindowBuilder::new(app, "companion", tauri::WebviewWindow::App("/companion".into()))
                 .title("Stella Companion")
                 .transparent(true)
                 .always_on_top(true)
